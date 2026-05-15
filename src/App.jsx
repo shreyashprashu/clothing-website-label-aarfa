@@ -2597,8 +2597,8 @@ export default function App() {
 
         .animate-fadeIn { animation: fadeIn 500ms ease-out both; }
         .animate-slideUp { animation: slideUp 700ms cubic-bezier(0.22, 1, 0.36, 1) both; }
-        .animate-slideInRight { animation: slideInRight 380ms cubic-bezier(0.22, 1, 0.36, 1) both; }
-        .animate-slideInLeft { animation: slideInLeft 380ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .animate-slideInRight { animation: slideInRight 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .animate-slideInLeft { animation: slideInLeft 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
         .animate-scaleIn { animation: scaleIn 380ms cubic-bezier(0.22, 1, 0.36, 1) both; }
         .page-enter { animation: pageEnter 420ms cubic-bezier(0.22, 1, 0.36, 1) both; will-change: opacity, transform; }
 
