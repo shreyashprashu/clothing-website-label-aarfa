@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { items, shippingAddress, userId, guestEmail, paymentMethod = 'razorpay' } = req.body || {};
+    const { items, shippingAddress, userId, guestEmail, paymentMethod = 'razorpay', currency = 'INR' } = req.body || {};
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'No items in order' });
@@ -35,8 +35,14 @@ export default async function handler(req, res) {
         line_total_paise: line * 100,
       });
     }
-    const shippingInr = subtotalInr >= 2999 ? 0 : 99;
-    const totalInr = subtotalInr + shippingInr;
+
+    // Pricing rules:
+    //   Domestic (INR): free shipping >= ₹2999, else ₹99
+    //   International: flat ₹5000 service/shipping markup, no domestic shipping fee
+    const isIntl = String(currency).toUpperCase() !== 'INR';
+    const shippingInr = isIntl ? 0 : (subtotalInr >= 2999 ? 0 : 99);
+    const markupInr = isIntl ? 5000 : 0;
+    const totalInr = subtotalInr + shippingInr + markupInr;
 
     const sb = getServiceClient();
 
@@ -48,8 +54,9 @@ export default async function handler(req, res) {
         status: 'cod_confirmed',
         payment_method: 'cod',
         subtotal_paise: subtotalInr * 100,
-        shipping_paise: shippingInr * 100,
+        shipping_paise: (shippingInr + markupInr) * 100,
         total_paise: totalInr * 100,
+        currency: 'INR',
         shipping_address: shippingAddress,
       }).select().single();
       if (error) throw error;
@@ -83,8 +90,9 @@ export default async function handler(req, res) {
       status: 'created',
       payment_method: 'razorpay',
       subtotal_paise: subtotalInr * 100,
-      shipping_paise: shippingInr * 100,
+      shipping_paise: (shippingInr + markupInr) * 100,
       total_paise: totalInr * 100,
+      currency: 'INR',
       razorpay_order_id: rzpOrder.id,
       shipping_address: shippingAddress,
     }).select().single();

@@ -41,6 +41,7 @@ const PRODUCTS = [
    --gold:       #B8924A  muted antique gold (highlights)
    ================================================================ */
 
+// Currency rates default to a coarse static set; they get overwritten by /api/geo on mount.
 const CURRENCIES = {
   INR: { symbol: '₹', rate: 1 },
   USD: { symbol: '$', rate: 0.012 },
@@ -50,9 +51,14 @@ const CURRENCIES = {
   CAD: { symbol: 'C$', rate: 0.016 },
   AUD: { symbol: 'A$', rate: 0.018 },
 };
+// Flat international service/shipping fee. Applied to the ORDER (not per item)
+// when the customer's currency is non-INR. Server enforces it independently.
+const INTL_MARKUP_INR = 5000;
+
 const formatPrice = (inr, c) => {
-  const x = inr * CURRENCIES[c].rate;
-  return c === 'INR' ? `${CURRENCIES[c].symbol}${Math.round(x).toLocaleString('en-IN')}` : `${CURRENCIES[c].symbol}${x.toFixed(2)}`;
+  const cfg = CURRENCIES[c] || CURRENCIES.INR;
+  const x = inr * cfg.rate;
+  return c === 'INR' ? `${cfg.symbol}${Math.round(x).toLocaleString('en-IN')}` : `${cfg.symbol}${x.toFixed(2)}`;
 };
 
 /* ================================================================
@@ -109,10 +115,39 @@ function AppProvider({ children }) {
     showToast('Signed out');
   };
 
+  // Geo-detect currency + fetch live FX rates. Cached in localStorage for 6h.
+  const [ratesVersion, setRatesVersion] = useState(0);
+  useEffect(() => {
+    const KEY = 'la-geo-v1';
+    const cached = (() => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } })();
+    const fresh = cached.ts && Date.now() - cached.ts < 6 * 3600 * 1000;
+    if (fresh && cached.rates) {
+      Object.keys(cached.rates).forEach((c) => { if (CURRENCIES[c]) CURRENCIES[c].rate = cached.rates[c]; });
+      if (cached.currency) setCurrency(cached.currency);
+      setRatesVersion((v) => v + 1);
+      return;
+    }
+    fetch('/api/geo').then((r) => r.json()).then((data) => {
+      if (data?.rates) {
+        Object.keys(data.rates).forEach((c) => { if (CURRENCIES[c]) CURRENCIES[c].rate = data.rates[c]; });
+      }
+      if (data?.currency) setCurrency(data.currency);
+      setRatesVersion((v) => v + 1);
+      localStorage.setItem(KEY, JSON.stringify({ ts: Date.now(), ...data }));
+    }).catch(() => {});
+  }, []);
+
+  // Body scroll lock — stops underlying page from glitching when a drawer is open on mobile
+  useEffect(() => {
+    const anyOpen = mobileMenuOpen || cartOpen || searchOpen || authOpen;
+    document.body.style.overflow = anyOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileMenuOpen, cartOpen, searchOpen, authOpen]);
+
   useEffect(() => { applySeo(page); }, [page]);
 
   return (
-    <AppCtx.Provider value={{ page, navigate, cart, addToCart, updateQty, removeFromCart, setCart, wishlist, toggleWishlist, cartOpen, setCartOpen, searchOpen, setSearchOpen, mobileMenuOpen, setMobileMenuOpen, authOpen, setAuthOpen, user, setUser, signOut, currency, setCurrency, toast, showToast }}>
+    <AppCtx.Provider value={{ page, navigate, cart, addToCart, updateQty, removeFromCart, setCart, wishlist, toggleWishlist, cartOpen, setCartOpen, searchOpen, setSearchOpen, mobileMenuOpen, setMobileMenuOpen, authOpen, setAuthOpen, user, setUser, signOut, currency, setCurrency, ratesVersion, toast, showToast }}>
       {children}
     </AppCtx.Provider>
   );
@@ -310,10 +345,10 @@ function Header() {
           </div>
 
           {/* Logo center */}
-          <button onClick={() => navigate('home')} className="justify-self-center text-center flex items-center gap-2 sm:gap-3" aria-label="Label Aarfa — Home">
-            <img src={`${import.meta.env.BASE_URL}logo-mark.svg`} alt="" aria-hidden="true" className="h-7 sm:h-9 lg:h-10 w-auto" />
-            <div>
-              <div className="font-serif text-xl sm:text-2xl lg:text-[28px] tracking-[0.18em] leading-none" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, color: '#1F1A14' }}>
+          <button onClick={() => navigate('home')} className="justify-self-center text-center flex items-center gap-2 sm:gap-3 min-w-0" aria-label="Label Aarfa — Home">
+            <img src={`${import.meta.env.BASE_URL}logo-mark.svg`} alt="" aria-hidden="true" className="hidden sm:block h-9 lg:h-10 w-auto shrink-0" />
+            <div className="min-w-0">
+              <div className="font-serif text-base sm:text-2xl lg:text-[28px] tracking-[0.12em] sm:tracking-[0.18em] leading-none whitespace-nowrap" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, color: '#1F1A14' }}>
                 LABEL AARFA
               </div>
               <div className="hidden sm:block text-[8px] sm:text-[9px] tracking-[0.42em] uppercase font-light mt-1" style={{ color: '#7B1E28' }}>Fashion Redefined · Est. 2019</div>
@@ -377,7 +412,7 @@ function IconBtn({ children, badge, aria, hide = false, ...rest }) {
    MOBILE MENU
    ================================================================ */
 function MobileMenu() {
-  const { mobileMenuOpen, setMobileMenuOpen, navigate, currency, setCurrency, setAuthOpen, user, signOut } = useApp();
+  const { mobileMenuOpen, setMobileMenuOpen, navigate, currency, setAuthOpen, user, signOut } = useApp();
   if (!mobileMenuOpen) return null;
   const links = [
     { key: 'home', label: 'Home' },
@@ -436,11 +471,8 @@ function MobileMenu() {
               <User className="w-4 h-4" strokeWidth={1.5} /> Sign In
             </button>
           )}
-          <div>
-            <label className="text-[10px] tracking-[0.2em] uppercase mb-2 flex items-center gap-1.5" style={{ color: '#6B5F4F' }}><Globe className="w-3 h-3" /> Currency</label>
-            <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full p-3 text-sm" style={{ border: '1px solid #E8DDC9', backgroundColor: '#FBF8F3', borderRadius: '4px' }}>
-              {Object.keys(CURRENCIES).map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+          <div className="text-[10px] tracking-[0.2em] uppercase font-light flex items-center justify-center gap-1.5 pt-1" style={{ color: '#6B5F4F' }}>
+            <Globe className="w-3 h-3" /> Showing prices in {currency}
           </div>
         </div>
       </div>
@@ -1066,7 +1098,10 @@ function CartDrawer() {
   const { cartOpen, setCartOpen, cart, updateQty, removeFromCart, currency, navigate } = useApp();
   if (!cartOpen) return null;
   const subtotal = cart.reduce((a, b) => a + (b.product.salePrice || b.product.price) * b.quantity, 0);
-  const shipping = subtotal >= 2999 || subtotal === 0 ? 0 : 99;
+  const isIntl = currency !== 'INR';
+  const shipping = isIntl ? 0 : (subtotal >= 2999 || subtotal === 0 ? 0 : 99);
+  const intlFee = isIntl && cart.length > 0 ? INTL_MARKUP_INR : 0;
+  const total = subtotal + shipping + intlFee;
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0" style={{ backgroundColor: 'rgba(31, 26, 20, 0.55)' }} onClick={() => setCartOpen(false)} />
@@ -1109,7 +1144,10 @@ function CartDrawer() {
             <div className="p-5 space-y-3" style={{ borderTop: '1px solid #E8DDC9', backgroundColor: '#F6F0E5' }}>
               <div className="flex justify-between text-sm"><span className="font-light" style={{ color: '#6B5F4F' }}>Subtotal</span><span className="font-medium" style={{ color: '#1F1A14' }}>{formatPrice(subtotal, currency)}</span></div>
               <div className="flex justify-between text-sm"><span className="font-light" style={{ color: '#6B5F4F' }}>Shipping</span><span className="font-medium" style={{ color: '#1F1A14' }}>{shipping === 0 ? 'Free' : formatPrice(shipping, currency)}</span></div>
-              <div className="flex justify-between pt-3" style={{ borderTop: '1px solid #E8DDC9' }}><span className="font-medium tracking-[0.18em] uppercase text-xs" style={{ color: '#1F1A14' }}>Total</span><span className="font-semibold" style={{ color: '#1F1A14' }}>{formatPrice(subtotal + shipping, currency)}</span></div>
+              {intlFee > 0 && (
+                <div className="flex justify-between text-sm"><span className="font-light" style={{ color: '#6B5F4F' }}>International service</span><span className="font-medium" style={{ color: '#1F1A14' }}>{formatPrice(intlFee, currency)}</span></div>
+              )}
+              <div className="flex justify-between pt-3" style={{ borderTop: '1px solid #E8DDC9' }}><span className="font-medium tracking-[0.18em] uppercase text-xs" style={{ color: '#1F1A14' }}>Total</span><span className="font-semibold" style={{ color: '#1F1A14' }}>{formatPrice(total, currency)}</span></div>
               <button onClick={() => { setCartOpen(false); navigate('checkout'); }} className="w-full py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase transition-opacity hover:opacity-90 shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>Checkout</button>
             </div>
           </>
@@ -1614,8 +1652,10 @@ function CheckoutPage() {
   const [orderId, setOrderId] = useState(null);
 
   const subtotal = cart.reduce((a, b) => a + (b.product.salePrice || b.product.price) * b.quantity, 0);
-  const shipping = subtotal >= 2999 ? 0 : 99;
-  const total = subtotal + shipping;
+  const isIntl = currency !== 'INR';
+  const shipping = isIntl ? 0 : (subtotal >= 2999 ? 0 : 99);
+  const intlFee = isIntl && cart.length > 0 ? INTL_MARKUP_INR : 0;
+  const total = subtotal + shipping + intlFee;
 
   const goToPayment = (e) => { e.preventDefault(); setStep(2); };
 
@@ -1640,6 +1680,7 @@ function CheckoutPage() {
         userId: user?.id || null,
         guestEmail: user ? null : shippingAddress.email,
         paymentMethod: payment === 'cod' ? 'cod' : 'razorpay',
+        currency,
       };
 
       const result = await api.createOrder(payload);
@@ -1827,9 +1868,15 @@ function CheckoutPage() {
           <div className="mt-5 pt-4 space-y-2" style={{ borderTop: '1px solid #E8DDC9' }}>
             <Row label="Subtotal" value={formatPrice(subtotal, currency)} />
             <Row label="Shipping" value={shipping === 0 ? 'Free' : formatPrice(shipping, currency)} />
+            {intlFee > 0 && <Row label="International service" value={formatPrice(intlFee, currency)} />}
           </div>
-          <div className="mt-3 pt-3" style={{ borderTop: '1px solid #E8DDC9' }}>
+          <div className="mt-3 pt-3 space-y-1" style={{ borderTop: '1px solid #E8DDC9' }}>
             <Row label="Total" value={formatPrice(total, currency)} bold />
+            {isIntl && (
+              <div className="text-[10px] font-light text-right" style={{ color: '#6B5F4F' }}>
+                Charged in INR: ₹{Math.round(total).toLocaleString('en-IN')}
+              </div>
+            )}
           </div>
         </aside>
       </div>
