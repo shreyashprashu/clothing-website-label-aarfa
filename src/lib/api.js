@@ -1,18 +1,16 @@
 // Tiny fetch wrappers for the /api/* serverless endpoints.
 
-async function post(path, body) {
-  const res = await fetch(path, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+async function post(path, body, token) {
+  const headers = { 'content-type': 'application/json' };
+  if (token) headers.authorization = `Bearer ${token}`;
+  const res = await fetch(path, { method: 'POST', headers, body: JSON.stringify(body) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `${path} failed (${res.status})`);
   return data;
 }
 
 export const api = {
-  createOrder: (payload) => post('/api/orders/create', payload),
+  createOrder: (payload, token) => post('/api/orders/create', payload, token),
   verifyOrder: (payload) => post('/api/orders/verify', payload),
   contact:     (payload) => post('/api/contact', payload),
   newsletter:  (payload) => post('/api/newsletter', payload),

@@ -48,7 +48,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { items, shippingAddress, userId, guestEmail, paymentMethod = 'razorpay', currency = 'INR' } = req.body || {};
+    const { items, shippingAddress, userId: clientUserId, guestEmail, paymentMethod = 'razorpay', currency = 'INR' } = req.body || {};
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'No items in order' });
@@ -56,6 +56,28 @@ export default async function handler(req, res) {
     if (!shippingAddress || !shippingAddress.line1 || !shippingAddress.pincode || !shippingAddress.phone || !shippingAddress.name) {
       return res.status(400).json({ error: 'Shipping address incomplete' });
     }
+
+    const sb = getServiceClient();
+
+    // Server-authoritative user id: validate the Supabase access token if present.
+    // The `userId` in the request body is only a hint and is discarded if the token
+    // doesn't match (or isn't there at all → guest checkout).
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    const bearer = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    let userId = null;
+    if (bearer) {
+      const { data, error } = await sb.auth.getUser(bearer);
+      if (!error && data?.user) userId = data.user.id;
+    }
+    if (!userId && clientUserId) {
+      console.warn('orders/create: client sent userId without a valid token — treating as guest', { clientUserId });
+    }
+
+    // Server-authoritative intl detection: if Vercel says the request is from outside
+    // India, force intl pricing regardless of the currency the client claims. Empty
+    // header (local dev) falls back to the client value.
+    const headerCountry = (req.headers['x-vercel-ip-country'] || '').toUpperCase();
+    const headerForcesIntl = headerCountry && headerCountry !== 'IN';
 
     // Server-side price computation — never trust client totals.
     // Aggregate quantity per product across all (size,color) lines to enforce stock at the
@@ -90,12 +112,10 @@ export default async function handler(req, res) {
     // Pricing rules:
     //   Domestic (INR): free shipping >= ₹2999, else ₹99
     //   International: flat ₹5000 service/shipping markup, no domestic shipping fee
-    const isIntl = String(currency).toUpperCase() !== 'INR';
+    const isIntl = headerForcesIntl || (String(currency).toUpperCase() !== 'INR');
     const shippingInr = isIntl ? 0 : (subtotalInr >= 2999 ? 0 : 99);
     const markupInr = isIntl ? 5000 : 0;
     const totalInr = subtotalInr + shippingInr + markupInr;
-
-    const sb = getServiceClient();
 
     // ----- COD -----
     if (paymentMethod === 'cod') {
