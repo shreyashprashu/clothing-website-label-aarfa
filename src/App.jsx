@@ -208,6 +208,9 @@ function AppProvider({ children }) {
   //   2) wishlist — merge local with DB, persist union back to both
   //   3) cart — merge local with DB by key, MAX-quantity for shared rows.
   //      If a different user's cart was sitting in localStorage, discard it (don't leak across accounts).
+  //   4) profiles row — mirror name/avatar from Google (or any provider) so signing in
+  //      with email-OTP and signing in with Google for the same email end up with one
+  //      canonical profile (Supabase auto-links the auth.users row when the email is verified).
   useEffect(() => {
     cartSyncReadyRef.current = false;
     if (!user || !supabase) {
@@ -216,6 +219,16 @@ function AppProvider({ children }) {
       return;
     }
     let cancelled = false;
+
+    // 0. Profile sync — push the latest user_metadata to profiles. We only include
+    //    non-null fields so we never overwrite a saved value with null.
+    const meta = user.user_metadata || {};
+    const fullName = meta.full_name || meta.name || null;
+    const avatarUrl = meta.avatar_url || meta.picture || null;
+    const profilePatch = { id: user.id, email: user.email, updated_at: new Date().toISOString() };
+    if (fullName) profilePatch.full_name = fullName;
+    if (avatarUrl) profilePatch.avatar_url = avatarUrl;
+    supabase.from('profiles').upsert(profilePatch, { onConflict: 'id' }).then(() => {}, () => {});
 
     // 1. Default address
     supabase.from('addresses').select('*').eq('user_id', user.id).eq('is_default', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
@@ -1816,9 +1829,10 @@ function CheckoutPage() {
   // We only overwrite the form if the user hasn't manually typed in it yet (addressTouched=false).
   useEffect(() => {
     if (addressTouched) return;
+    const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || '';
     if (defaultAddress) {
       setAddress({
-        name: defaultAddress.full_name || '',
+        name: defaultAddress.full_name || displayName || '',
         phone: defaultAddress.phone || '',
         line1: defaultAddress.line1 || '',
         line2: defaultAddress.line2 || '',
@@ -1828,7 +1842,8 @@ function CheckoutPage() {
         email: user?.email || '',
       });
     } else if (user?.email) {
-      setAddress((a) => ({ ...a, email: a.email || user.email }));
+      // First-ever checkout for this user — pre-fill name from Google profile if we have it.
+      setAddress((a) => ({ ...a, name: a.name || displayName, email: a.email || user.email }));
     }
   }, [defaultAddress, user?.email]);
 

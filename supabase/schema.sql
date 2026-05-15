@@ -11,10 +11,13 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users on delete cascade,
   email text not null,
   full_name text,
+  avatar_url text,
   phone text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+-- Add avatar_url for older schemas that pre-dated this column.
+alter table public.profiles add column if not exists avatar_url text;
 
 -- Saved addresses (a user can have many)
 create table if not exists public.addresses (
@@ -130,8 +133,16 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email)
-  values (new.id, new.email)
+  -- Pull whatever profile fields the OAuth provider gave us (Google returns
+  -- full_name + avatar_url in raw_user_meta_data; email-OTP signups have neither
+  -- and stay null until the user later signs in with a provider that supplies them).
+  insert into public.profiles (id, email, full_name, avatar_url)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
+    coalesce(new.raw_user_meta_data->>'avatar_url', new.raw_user_meta_data->>'picture')
+  )
   on conflict (id) do nothing;
   return new;
 end;
