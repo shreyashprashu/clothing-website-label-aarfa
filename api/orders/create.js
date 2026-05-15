@@ -3,6 +3,47 @@ import { getServiceClient } from '../_lib/supabase.js';
 import { productById, effectivePriceInr } from '../_lib/products.js';
 import { sendOrderConfirmation } from '../_lib/email.js';
 
+// Best-effort: persist the address as the user's default so next time it's prefilled.
+async function saveDefaultAddress(sb, userId, addr) {
+  if (!userId || !addr) return;
+  try {
+    await sb.from('addresses').update({ is_default: false }).eq('user_id', userId);
+    await sb.from('addresses').insert({
+      user_id: userId,
+      full_name: addr.name || '',
+      phone: addr.phone || '',
+      line1: addr.line1 || '',
+      line2: addr.line2 || null,
+      city: addr.city || '',
+      state: addr.state || '',
+      pincode: addr.pincode || '',
+      country: 'IN',
+      is_default: true,
+    });
+  } catch (e) {
+    // Never let address-save failures cascade into the order flow
+    console.error('saveDefaultAddress failed', e?.message || e);
+  }
+}
+
+// Insert order then line items. If line items fail, roll back the order so we never
+// leave an orphan row behind.
+async function insertOrderAtomic(sb, orderRow, lineItems) {
+  const { data: order, error } = await sb.from('orders').insert(orderRow).select().single();
+  if (error) throw error;
+  try {
+    const { error: liErr } = await sb.from('order_items')
+      .insert(lineItems.map((li) => ({ ...li, order_id: order.id })));
+    if (liErr) throw liErr;
+    return order;
+  } catch (liErr) {
+    // Rollback — delete the orphan order
+    try { await sb.from('orders').delete().eq('id', order.id); }
+    catch (delErr) { console.error('rollback delete failed', delErr?.message || delErr); }
+    throw liErr;
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -12,7 +53,7 @@ export default async function handler(req, res) {
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'No items in order' });
     }
-    if (!shippingAddress || !shippingAddress.line1 || !shippingAddress.pincode || !shippingAddress.phone) {
+    if (!shippingAddress || !shippingAddress.line1 || !shippingAddress.pincode || !shippingAddress.phone || !shippingAddress.name) {
       return res.status(400).json({ error: 'Shipping address incomplete' });
     }
 
@@ -46,9 +87,9 @@ export default async function handler(req, res) {
 
     const sb = getServiceClient();
 
-    // COD: skip Razorpay, just create the order in the DB
+    // ----- COD -----
     if (paymentMethod === 'cod') {
-      const { data: order, error } = await sb.from('orders').insert({
+      const order = await insertOrderAtomic(sb, {
         user_id: userId || null,
         guest_email: userId ? null : (guestEmail || null),
         status: 'cod_confirmed',
@@ -58,10 +99,9 @@ export default async function handler(req, res) {
         total_paise: totalInr * 100,
         currency: 'INR',
         shipping_address: shippingAddress,
-      }).select().single();
-      if (error) throw error;
-      const { error: liErr } = await sb.from('order_items').insert(lineItems.map((li) => ({ ...li, order_id: order.id })));
-      if (liErr) throw liErr;
+      }, lineItems);
+
+      await saveDefaultAddress(sb, userId, shippingAddress);
 
       const to = shippingAddress?.email || guestEmail;
       let email = { ok: false, skipped: true };
@@ -72,7 +112,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ paymentMethod: 'cod', order, email });
     }
 
-    // Razorpay: create an Order with them, then mirror it in our DB with status=created
+    // ----- Razorpay -----
     const rzp = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -85,22 +125,27 @@ export default async function handler(req, res) {
       notes: { source: 'label-aarfa-web' },
     });
 
-    const { data: order, error } = await sb.from('orders').insert({
-      user_id: userId || null,
-      guest_email: userId ? null : (guestEmail || null),
-      status: 'created',
-      payment_method: 'razorpay',
-      subtotal_paise: subtotalInr * 100,
-      shipping_paise: (shippingInr + markupInr) * 100,
-      total_paise: totalInr * 100,
-      currency: 'INR',
-      razorpay_order_id: rzpOrder.id,
-      shipping_address: shippingAddress,
-    }).select().single();
-    if (error) throw error;
+    let order;
+    try {
+      order = await insertOrderAtomic(sb, {
+        user_id: userId || null,
+        guest_email: userId ? null : (guestEmail || null),
+        status: 'created',
+        payment_method: 'razorpay',
+        subtotal_paise: subtotalInr * 100,
+        shipping_paise: (shippingInr + markupInr) * 100,
+        total_paise: totalInr * 100,
+        currency: 'INR',
+        razorpay_order_id: rzpOrder.id,
+        shipping_address: shippingAddress,
+      }, lineItems);
+    } catch (dbErr) {
+      // Razorpay order will expire on its own in ~15 min if never paid.
+      console.error('Razorpay order created but DB insert failed — Razorpay order will auto-expire', { rzpOrderId: rzpOrder.id, err: dbErr?.message });
+      throw dbErr;
+    }
 
-    const { error: liErr } = await sb.from('order_items').insert(lineItems.map((li) => ({ ...li, order_id: order.id })));
-    if (liErr) throw liErr;
+    await saveDefaultAddress(sb, userId, shippingAddress);
 
     return res.status(200).json({
       paymentMethod: 'razorpay',

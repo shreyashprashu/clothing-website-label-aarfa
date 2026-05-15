@@ -67,15 +67,36 @@ const formatPrice = (inr, c) => {
 const AppCtx = createContext(null);
 const useApp = () => useContext(AppCtx);
 
+// Cart is stored in localStorage as { key, productId, size, color, quantity } — products
+// are rehydrated from the in-memory PRODUCTS array so we don't bloat storage with images.
+const loadStoredCart = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem('la-cart-v1') || '[]');
+    return raw
+      .map((c) => ({ ...c, product: PRODUCTS.find((p) => p.id === c.productId) }))
+      .filter((c) => c.product);
+  } catch { return []; }
+};
+const persistCart = (cart) => {
+  const stripped = cart.map(({ key, size, color, quantity, product }) => ({
+    key, productId: product.id, size, color, quantity,
+  }));
+  try { localStorage.setItem('la-cart-v1', JSON.stringify(stripped)); } catch {}
+};
+const loadStoredWishlist = () => {
+  try { return JSON.parse(localStorage.getItem('la-wishlist-v1') || '[]'); } catch { return []; }
+};
+
 function AppProvider({ children }) {
   const [page, setPage] = useState({ name: 'home', data: null });
-  const [cart, setCart] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
+  const [cart, setCart] = useState(loadStoredCart);
+  const [wishlist, setWishlist] = useState(loadStoredWishlist);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [defaultAddress, setDefaultAddress] = useState(null);  // last-used shipping address for logged-in user
   const [currency, setCurrency] = useState('INR');
   const [toast, setToast] = useState(null);
 
@@ -95,9 +116,22 @@ function AppProvider({ children }) {
   const updateQty = (key, d) => setCart((p) => p.map((i) => i.key === key ? { ...i, quantity: Math.max(0, i.quantity + d) } : i).filter((i) => i.quantity > 0));
   const removeFromCart = (key) => setCart((p) => p.filter((i) => i.key !== key));
   const toggleWishlist = (id) => setWishlist((p) => {
-    if (p.includes(id)) { showToast('Removed from wishlist'); return p.filter((x) => x !== id); }
-    showToast('Saved to wishlist'); return [...p, id];
+    const next = p.includes(id) ? p.filter((x) => x !== id) : [...p, id];
+    showToast(p.includes(id) ? 'Removed from wishlist' : 'Saved to wishlist');
+    // Fire-and-forget DB sync for logged-in users
+    if (user && supabase) {
+      if (p.includes(id)) {
+        supabase.from('wishlist_items').delete().eq('user_id', user.id).eq('product_id', id).then(() => {}, () => {});
+      } else {
+        supabase.from('wishlist_items').insert({ user_id: user.id, product_id: id }).then(() => {}, () => {});
+      }
+    }
+    return next;
   });
+
+  // Persist cart + wishlist to localStorage so they survive refresh
+  useEffect(() => { persistCart(cart); }, [cart]);
+  useEffect(() => { try { localStorage.setItem('la-wishlist-v1', JSON.stringify(wishlist)); } catch {} }, [wishlist]);
 
   // Hydrate Supabase session and subscribe to auth changes
   useEffect(() => {
@@ -112,8 +146,40 @@ function AppProvider({ children }) {
   const signOut = async () => {
     if (!supabase) { setUser(null); return; }
     await supabase.auth.signOut();
+    setDefaultAddress(null);
     showToast('Signed out');
   };
+
+  // When a user signs in, hydrate their saved profile data:
+  //   1) default shipping address (used as initial form values on checkout)
+  //   2) wishlist — merge local with DB, persist union back to both
+  useEffect(() => {
+    if (!user || !supabase) return;
+    let cancelled = false;
+
+    // 1. Default address
+    supabase.from('addresses').select('*').eq('user_id', user.id).eq('is_default', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
+      .then(({ data }) => { if (!cancelled && data) setDefaultAddress(data); }, () => {});
+
+    // 2. Wishlist — merge local with DB
+    supabase.from('wishlist_items').select('product_id').eq('user_id', user.id)
+      .then(({ data, error }) => {
+        if (cancelled || error || !data) return;
+        const dbIds = data.map((r) => r.product_id);
+        setWishlist((local) => {
+          const merged = Array.from(new Set([...local, ...dbIds]));
+          const toAdd = merged.filter((id) => !dbIds.includes(id));
+          if (toAdd.length > 0) {
+            supabase.from('wishlist_items')
+              .insert(toAdd.map((id) => ({ user_id: user.id, product_id: id })))
+              .then(() => {}, () => {});
+          }
+          return merged;
+        });
+      }, () => {});
+
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   // Geo-detect currency + fetch live FX rates. Cached in localStorage for 6h.
   const [ratesVersion, setRatesVersion] = useState(0);
@@ -147,7 +213,7 @@ function AppProvider({ children }) {
   useEffect(() => { applySeo(page); }, [page]);
 
   return (
-    <AppCtx.Provider value={{ page, navigate, cart, addToCart, updateQty, removeFromCart, setCart, wishlist, toggleWishlist, cartOpen, setCartOpen, searchOpen, setSearchOpen, mobileMenuOpen, setMobileMenuOpen, authOpen, setAuthOpen, user, setUser, signOut, currency, setCurrency, ratesVersion, toast, showToast }}>
+    <AppCtx.Provider value={{ page, navigate, cart, addToCart, updateQty, removeFromCart, setCart, wishlist, toggleWishlist, cartOpen, setCartOpen, searchOpen, setSearchOpen, mobileMenuOpen, setMobileMenuOpen, authOpen, setAuthOpen, user, setUser, signOut, defaultAddress, currency, setCurrency, ratesVersion, toast, showToast }}>
       {children}
     </AppCtx.Provider>
   );
@@ -1565,6 +1631,7 @@ function OrdersPage() {
     supabase
       .from('orders')
       .select('*, order_items(*)')
+      .neq('status', 'created')   // hide abandoned Razorpay attempts the customer never paid for
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (cancelled) return;
@@ -1673,9 +1740,35 @@ function Row({ label, value, bold = false }) {
 }
 
 function CheckoutPage() {
-  const { cart, currency, navigate, setCart, showToast, user } = useApp();
+  const { cart, currency, navigate, setCart, showToast, user, defaultAddress } = useApp();
   const [step, setStep] = useState(1);
   const [address, setAddress] = useState({ name: '', phone: '', pincode: '', line1: '', city: '', state: '', email: '' });
+  const [addressTouched, setAddressTouched] = useState(false);
+
+  // Pre-fill from saved default address whenever the user logs in or the saved row arrives.
+  // We only overwrite the form if the user hasn't manually typed in it yet (addressTouched=false).
+  useEffect(() => {
+    if (addressTouched) return;
+    if (defaultAddress) {
+      setAddress({
+        name: defaultAddress.full_name || '',
+        phone: defaultAddress.phone || '',
+        line1: defaultAddress.line1 || '',
+        line2: defaultAddress.line2 || '',
+        city: defaultAddress.city || '',
+        state: defaultAddress.state || '',
+        pincode: defaultAddress.pincode || '',
+        email: user?.email || '',
+      });
+    } else if (user?.email) {
+      setAddress((a) => ({ ...a, email: a.email || user.email }));
+    }
+  }, [defaultAddress, user?.email]);
+
+  const updateField = (field, value) => {
+    setAddressTouched(true);
+    setAddress((a) => ({ ...a, [field]: value }));
+  };
   const [payment, setPayment] = useState('cod');
   const [processing, setProcessing] = useState(false);
   const [orderId, setOrderId] = useState(null);
@@ -1837,15 +1930,15 @@ function CheckoutPage() {
             <form onSubmit={goToPayment} className="p-5 sm:p-6 lg:p-8 space-y-5 shadow-sm" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8DDC9', borderRadius: '12px' }}>
               <h2 className="font-serif text-xl sm:text-2xl mb-2" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>Shipping Address</h2>
               <div className="grid sm:grid-cols-2 gap-4">
-                <Input label="Full Name" required value={address.name} onChange={(v) => setAddress({...address, name: v})} />
-                <Input label="Phone" type="tel" required value={address.phone} onChange={(v) => setAddress({...address, phone: v})} />
+                <Input label="Full Name" required value={address.name} onChange={(v) => updateField('name', v)} />
+                <Input label="Phone" type="tel" required value={address.phone} onChange={(v) => updateField('phone', v)} />
               </div>
-              <Input label="Email" type="email" required={!user} placeholder={user?.email || 'you@example.com'} value={address.email} onChange={(v) => setAddress({...address, email: v})} />
-              <Input label="Address Line" required value={address.line1} onChange={(v) => setAddress({...address, line1: v})} />
+              <Input label="Email" type="email" required={!user} placeholder={user?.email || 'you@example.com'} value={address.email} onChange={(v) => updateField('email', v)} />
+              <Input label="Address Line" required value={address.line1} onChange={(v) => updateField('line1', v)} />
               <div className="grid sm:grid-cols-3 gap-4">
-                <Input label="City" required value={address.city} onChange={(v) => setAddress({...address, city: v})} />
-                <Input label="State" required value={address.state} onChange={(v) => setAddress({...address, state: v})} />
-                <Input label="Pincode" required value={address.pincode} onChange={(v) => setAddress({...address, pincode: v})} />
+                <Input label="City" required value={address.city} onChange={(v) => updateField('city', v)} />
+                <Input label="State" required value={address.state} onChange={(v) => updateField('state', v)} />
+                <Input label="Pincode" required value={address.pincode} onChange={(v) => updateField('pincode', v)} />
               </div>
               <button type="submit" className="w-full py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>Continue to Payment</button>
             </form>

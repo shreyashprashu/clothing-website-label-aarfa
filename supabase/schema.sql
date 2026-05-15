@@ -94,6 +94,18 @@ create table if not exists public.contact_messages (
   created_at timestamptz not null default now()
 );
 
+-- Wishlist (one row per (user, product). Lets us return saved items across devices.)
+create table if not exists public.wishlist_items (
+  user_id uuid not null references auth.users on delete cascade,
+  product_id int not null,
+  added_at timestamptz not null default now(),
+  primary key (user_id, product_id)
+);
+alter table public.wishlist_items enable row level security;
+drop policy if exists "wishlist_own" on public.wishlist_items;
+create policy "wishlist_own" on public.wishlist_items
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 -- =============================================================
 -- Auto-create a profile row when a new auth.user is created
 -- =============================================================
