@@ -450,7 +450,7 @@ function DiscountBadge({ priceInr, salePriceInr }) {
    HEADER
    ================================================================ */
 function AnnouncementBar() {
-  const msgs = ['Free shipping on orders above ₹2,999', '48-hour exchange window', 'Use WELCOME10 for 10% off your first order'];
+  const msgs = ['Free shipping on orders above ₹2,999', '24-hour size-exchange window', 'Use WELCOME10 for 10% off your first order'];
   const [i, setI] = useState(0);
   useEffect(() => { const t = setInterval(() => setI((x) => (x + 1) % msgs.length), 4000); return () => clearInterval(t); }, []);
   return (
@@ -871,7 +871,7 @@ function SaleStrip({ products }) {
 function ValueProps() {
   const items = [
     { icon: Truck, title: 'Free Shipping', sub: 'On orders above ₹2,999' },
-    { icon: RotateCcw, title: 'Easy Exchanges', sub: '48-hour exchange window' },
+    { icon: RotateCcw, title: 'Size Exchanges', sub: '24-hour exchange window' },
     { icon: ShieldCheck, title: 'Secure Checkout', sub: 'UPI, cards & wallets' },
     { icon: Sparkles, title: 'Made by Hand', sub: 'In our Delhi atelier' },
   ];
@@ -1207,7 +1207,7 @@ function ProductPage({ id }) {
 
           <div className="pt-6 sm:pt-7 space-y-3" style={{ borderTop: '1px solid #E8DDC9' }}>
             <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><Truck className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> Free shipping on orders above ₹2,999</div>
-            <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><RotateCcw className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> 48-hour exchange window</div>
+            <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><RotateCcw className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> 24-hour size exchange</div>
             <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><ShieldCheck className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> Secure online payments</div>
           </div>
         </div>
@@ -1241,7 +1241,7 @@ function ProductPage({ id }) {
           {tab === 'shipping' && (
             <div className="space-y-3">
               <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Shipping:</strong> Dispatched within 2 business days. India: 4–7 days. International: 7–14 days.</p>
-              <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Exchanges:</strong> 48-hour exchange window from delivery. Items must be unworn, unwashed, with tags. We do not offer refunds.</p>
+              <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Exchanges:</strong> 24-hour size-exchange window from delivery. Items must be unused, unworn, unwashed, with tags. Unboxing video is mandatory. ₹350 shipping fee. No returns or refunds.</p>
             </div>
           )}
         </div>
@@ -2235,16 +2235,34 @@ const POLICIES = {
     ],
   },
   returns: {
-    title: 'Exchange Policy',
-    eyebrow: '48-hour Window',
-    intro: 'Exchanges within 48 hours of delivery. We do not offer returns or refunds.',
+    title: 'Return, Exchange & Cancellation Policy',
+    eyebrow: '24-hour Exchange Window',
+    intro: 'Exchanges only for size issues, within 24 hours of delivery. No returns once sold.',
     updated: 'May 2025',
     sections: [
-      { heading: '48-hour exchange window', body: 'Exchanges must be initiated within 48 hours of receiving your order. We do not offer returns or refunds — every piece is handmade in small batches and final on dispatch.' },
-      { heading: 'Condition of items for exchange', body: 'Items must be unworn, unwashed, with all original tags intact and in the original packaging. Every piece is inspected before an exchange is approved.' },
-      { heading: 'How to initiate an exchange', body: 'Email label.arfa@gmail.com with your order ID and the size or piece you would like to exchange for, within the 48-hour window. We arrange pickup within India. International exchanges are at the customer\'s shipping cost.' },
-      { heading: 'What we cannot exchange', body: 'Custom-stitched / made-to-measure pieces, items marked final-sale on their product page, and items showing wear or with missing tags.' },
-      { heading: 'Exchanging for a different value', body: 'If your new selection is more expensive, you will be charged the difference. If it is less, the balance becomes store credit on your account.' },
+      {
+        heading: 'Exchange Policy',
+        body: 'We offer exchanges only in cases of size-related issues. Customers must notify us within 24 hours of delivery if they wish to request a size exchange. Please note the following conditions for exchanges:',
+        bullets: [
+          'The item must be unused, unworn, unwashed, undamaged, and returned with all original tags and packaging intact.',
+          'Customers are requested to clearly mention their name and mobile number while sending the product back.',
+          'Exchange requests are accepted only for size concerns. Exchanges for different products are not permitted.',
+          'A shipping and handling fee of ₹350 for exchanges will be borne by the customer.',
+          'An unboxing/opening video recorded at the time of opening the parcel is mandatory for all exchange requests. Without this video, we will not be able to process the request.',
+        ],
+      },
+      {
+        heading: 'How to initiate an exchange',
+        body: 'Email label.arfa@gmail.com within 24 hours of delivery with your order ID, the size you would like, and your unboxing video.',
+      },
+      {
+        heading: 'Return Policy',
+        body: 'We do not accept returns once a product has been sold.',
+      },
+      {
+        heading: 'Cancellation',
+        body: 'You may cancel an order within 12 hours of placing it, provided it has not yet been packed for dispatch — write to label.arfa@gmail.com. After dispatch, our 24-hour exchange policy applies upon delivery.',
+      },
     ],
   },
   sustainability: {
@@ -2282,7 +2300,7 @@ const POLICIES = {
       { heading: 'Use of this site', body: 'By browsing labelaarfa.com or placing an order, you agree to these terms. You must be 18 or older — or have a parent/guardian\'s consent — to place orders.' },
       { heading: 'Product descriptions and images', body: 'We work hard to represent every piece accurately. Colours may vary slightly with your screen calibration, and handcrafted pieces show natural variations in embroidery, weave, and print — this is a signature of the craft, not a defect.' },
       { heading: 'Pricing and order acceptance', body: 'Prices are in INR for Indian customers; international prices include a flat ₹5,000 shipping/service fee. We reserve the right to refuse or cancel orders in case of stock errors, pricing errors, or suspected fraud — you will be refunded in full in such cases.' },
-      { heading: 'Cancellations', body: 'You may cancel an order within 12 hours of placing it, provided it has not yet been packed for dispatch — write to label.arfa@gmail.com. After dispatch, our 48-hour exchange policy applies after delivery.' },
+      { heading: 'Cancellations', body: 'You may cancel an order within 12 hours of placing it, provided it has not yet been packed for dispatch — write to label.arfa@gmail.com. After dispatch, our 24-hour exchange policy applies upon delivery.' },
       { heading: 'Intellectual property', body: 'All photography, design, and copy on this site are the property of Label Aarfa. You may not reuse them commercially without written permission.' },
       { heading: 'Governing law', body: 'These terms are governed by the laws of India. Any disputes will be subject to the exclusive jurisdiction of the courts in New Delhi.' },
     ],
@@ -2351,9 +2369,21 @@ function InfoPage({ slug }) {
             <h2 className="font-serif text-xl sm:text-2xl mb-3" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>
               {s.heading}
             </h2>
-            <p className="text-sm sm:text-base font-light leading-relaxed" style={{ color: '#6B5F4F' }}>
-              {s.body}
-            </p>
+            {s.body && (
+              <p className="text-sm sm:text-base font-light leading-relaxed" style={{ color: '#6B5F4F' }}>
+                {s.body}
+              </p>
+            )}
+            {s.bullets && (
+              <ul className="mt-3 space-y-2.5 text-sm sm:text-base font-light leading-relaxed" style={{ color: '#6B5F4F' }}>
+                {s.bullets.map((b, j) => (
+                  <li key={j} className="flex gap-3">
+                    <span style={{ color: '#7B1E28' }} className="mt-1.5 shrink-0">·</span>
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </article>
         ))}
       </div>
@@ -2477,7 +2507,7 @@ function Footer() {
           <FooterCol title="Customer Care" links={[
             { label: 'Contact Us', onClick: () => navigate('contact') },
             { label: 'Shipping Policy', onClick: () => navigate('info', 'shipping') },
-            { label: 'Exchange Policy', onClick: () => navigate('info', 'returns') },
+            { label: 'Returns & Exchanges', onClick: () => navigate('info', 'returns') },
             { label: 'Size Guide', onClick: () => navigate('info', 'size-guide') },
             { label: 'Track Order', onClick: () => navigate('orders') },
           ]} />
