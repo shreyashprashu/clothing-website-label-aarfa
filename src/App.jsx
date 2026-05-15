@@ -1142,10 +1142,9 @@ function AuthModal() {
   const [method, setMethod] = useState('email');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState('');   // single string — supports 6–10 digit codes
   const [timer, setTimer] = useState(0);
   const [busy, setBusy] = useState(false);
-  const inputs = useRef([]);
 
   useEffect(() => { if (step === 2 && timer === 0) setTimer(60); }, [step]);
   useEffect(() => { if (timer > 0) { const t = setTimeout(() => setTimer(timer - 1), 1000); return () => clearTimeout(t); } }, [timer]);
@@ -1165,15 +1164,14 @@ function AuthModal() {
     showToast('OTP sent to your email');
   };
 
-  const handleOtpChange = (i, v) => { if (!/^\d?$/.test(v)) return; const n = [...otp]; n[i] = v; setOtp(n); if (v && i < 5) inputs.current[i + 1]?.focus(); };
-  const handleKeyDown = (i, e) => { if (e.key === 'Backspace' && !otp[i] && i > 0) inputs.current[i - 1]?.focus(); };
-
   const verify = async () => {
-    const token = otp.join('');
-    if (token.length !== 6 || busy) return;
+    const token = otp.trim();
+    if (token.length < 6 || busy) return;
     if (!supabase) { showToast('Auth not configured'); return; }
     setBusy(true);
-    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+    // Try 'email' first (works for magic-link OTP); fall back to 'signup' for new-user confirmation tokens.
+    let { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+    if (error) ({ error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' }));
     setBusy(false);
     if (error) { showToast(error.message || 'Invalid OTP'); return; }
     showToast('Signed in successfully');
@@ -1187,7 +1185,7 @@ function AuthModal() {
     setTimer(60); showToast('OTP resent');
   };
 
-  const reset = () => { setStep(1); setPhone(''); setEmail(''); setOtp(['', '', '', '', '', '']); setTimer(0); setAuthOpen(false); setMethod('email'); };
+  const reset = () => { setStep(1); setPhone(''); setEmail(''); setOtp(''); setTimer(0); setAuthOpen(false); setMethod('email'); };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
@@ -1263,15 +1261,17 @@ function AuthModal() {
               OTP sent to {method === 'phone' ? `+91 ${phone}` : email}
             </p>
 
-            <div className="flex justify-center gap-1.5 sm:gap-2 mb-6">
-              {otp.map((d, i) => (
-                <input key={i} ref={(el) => inputs.current[i] = el} type="text" inputMode="numeric" maxLength="1" value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleKeyDown(i, e)}
-                  className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl focus:outline-none shadow-sm"
-                  style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8DDC9', borderRadius: '8px', color: '#1F1A14' }} />
-              ))}
-            </div>
+            <input
+              type="text" inputMode="numeric" autoComplete="one-time-code" autoFocus
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              onKeyDown={(e) => { if (e.key === 'Enter' && otp.length >= 6 && !busy) verify(); }}
+              placeholder="000000"
+              className="w-full px-4 py-4 mb-6 text-center text-2xl sm:text-3xl font-medium focus:outline-none shadow-sm"
+              style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8DDC9', borderRadius: '10px', color: '#1F1A14', letterSpacing: '0.3em', fontVariantNumeric: 'tabular-nums' }}
+            />
 
-            <button onClick={verify} disabled={otp.join('').length !== 6 || busy} className="w-full py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
+            <button onClick={verify} disabled={otp.length < 6 || busy} className="w-full py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
               {busy ? 'Verifying…' : 'Verify & Continue'}
             </button>
 
