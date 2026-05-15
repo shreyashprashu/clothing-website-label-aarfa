@@ -11,7 +11,7 @@ const IMG = `${import.meta.env.BASE_URL}images/products/`;
 const PRODUCTS = [
   { id: 1, name: 'Luxury Wine Rayon Tunic with Printed Palazzo', category: 'stitched', price: 2999, salePrice: 1499, images: [IMG + 'Luxury-Wine-Rayon-Tunic-Printed-Palazzo.jpeg',IMG + 'Luxury-Wine-Rayon-Tunic-with-Printed-Palazzo.jpeg'], fabric: 'Rayon', colors: ['#722F37','#1a1a1a'], sizes: ['S','M','L','XL'], isNew: true, stock: 3, description: 'A regal wine-toned tunic crafted in soft rayon, paired with a printed palazzo. Tailored for fluid drape and evening elegance.' },
   { id: 2, name: 'Brown Kurta with Cream Heart Printed Palazzo', category: 'coords', price: 2499, salePrice: 1499, images: [IMG + 'Brown-Kurta-with-Cream-Heart-Printed-Palazzo-Set-for-Women.jpeg',IMG + 'Brown-Kurta-with-Cream-Heart-Printed-Palazzo.jpeg'], fabric: 'Cotton', colors: ['#6F4E37','#F5E6D3'], sizes: ['XS','S','M','L','XL'], isNew: false, stock: 8, description: 'Earthy brown kurta paired with a whimsical cream heart-printed palazzo. Romantic, refined, and quietly playful.' },
-  { id: 3, name: 'Stitched Red and Black Coord Set', category: 'stitched', price: 2899, salePrice: 1499, images: [IMG + 'stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Red-and-Black-women-clothes.jpeg',IMG + 'Best-stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Premium-stitched-Red-and-Black-women-clothes.jpeg'], fabric: 'Crepe', colors: ['#B91C1C','#1A1A1A'], sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 4, description: 'A striking red and black ensemble — bold contrast, impeccable stitching, designed to make an entrance.' },
+  { id: 3, name: 'Stitched Red and Black Coord Set', category: 'stitched', price: 2899, salePrice: 1499, images: [IMG + 'stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Red-and-Black-women-clothes.jpeg',IMG + 'Best-stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Premium-stitched-Red-and-Black-women-clothes.jpeg'], fabric: 'Crepe', colors: ['#B91C1C','#1A1A1A'], sizes: ['S','M','L','XL'], isNew: true, stock: 4, description: 'A striking red and black ensemble — bold contrast, impeccable stitching, designed to make an entrance.' },
   { id: 4, name: 'Designer Cords Set for Women', category: 'coords', price: 2999, salePrice: 1750, images: [IMG + 'Designer-Cords-Set-For-Women-in-Delhi.jpeg',IMG + 'Best-Designer-Cords-Set-For-Women.jpeg',IMG + 'Label-Aarfa-Designer-Cords-Set-For-Women.jpeg',IMG + 'Designer-Cords-Set-For-Women.jpeg'], fabric: 'Cotton Blend', colors: ['#8B7355','#D4AF37'], sizes: ['S','M','L','XL'], isNew: true, stock: 12, description: 'A modern coord set with timeless silhouette — soft drape, considered details, made for everyday luxury.' },
   { id: 5, name: 'Coffee Shaded Embroidered Cotton Suit', category: 'stitched', price: 2999, salePrice: 1750, images: [IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg',IMG + 'Label-Aarfa-Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg',IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set-Price.jpeg',IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set-for-Women.jpeg'], fabric: 'Cotton', colors: ['#6F4E37','#3E2723'], sizes: ['S','M','L','XL'], isNew: false, stock: 5, description: 'Deep coffee tones meet intricate embroidery. A suit set that whispers craftsmanship in every thread.' },
   { id: 6, name: 'Jaipur Royal Blue Cotton Handloom Kurta', category: 'newarrivals', price: 2499, salePrice: 1499, images: [IMG + 'Label-Aarfa-Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg',IMG + 'Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg'], fabric: 'Handloom Cotton', colors: ['#1E3A8A','#FFFFFF'], sizes: ['XS','S','M','L','XL'], isNew: true, stock: 15, description: 'Hand-woven in Jaipur — royal blue cotton with breathable structure and heritage in every weave.' },
@@ -313,7 +313,7 @@ const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-
 
 const CATEGORY_SEO = {
   newarrivals: { title: 'New Arrivals — Label Aarfa', desc: 'Fresh designs from our Delhi atelier — new kurtas, coord sets, and stitched suits in handloom cotton, soft crepe, and silk.', path: '/collections/new-arrivals' },
-  stitched:    { title: 'Stitched Collection — Ready-to-Wear Ethnic Suits | Label Aarfa', desc: 'Ready-to-wear stitched kurtas and suits, finished by hand in our Delhi atelier. Sizes XS–XXL, free shipping over ₹2,999.', path: '/collections/stitched' },
+  stitched:    { title: 'Stitched Collection — Ready-to-Wear Ethnic Suits | Label Aarfa', desc: 'Ready-to-wear stitched kurtas and suits, finished by hand in our Delhi atelier. Sizes XS–XL, free shipping over ₹2,999.', path: '/collections/stitched' },
   coords:      { title: 'Coord Sets — Matching Kurta & Palazzo Sets | Label Aarfa', desc: 'Matching coord sets in coordinated fabrics and prints — kurta with palazzo or pants. Handcrafted, ready to wear.', path: '/collections/coords' },
   sale:        { title: 'Sale — Ethnic Wear at Gentle Prices | Label Aarfa', desc: 'Selected pieces from the Label Aarfa atelier at gentle prices. Handcrafted stitched suits, coord sets, and kurtas.', path: '/collections/sale' },
   all:         { title: 'All Products — Label Aarfa Couture', desc: 'The complete Label Aarfa collection — 16 handcrafted pieces from our Delhi atelier.', path: '/collections/all' },
@@ -390,7 +390,7 @@ function applySeo(page) {
   } else if (page.name === 'about') {
     cur = { ...home, title: 'About Label Aarfa — Our Story | Founded 2019, Delhi', desc: 'Founded in 2019 by Aarfa, our Delhi atelier works with master artisans across Jaipur, Delhi, and Lucknow to make ethnic wear with intention.', url: SITE_URL + '/about' };
   } else if (page.name === 'contact') {
-    cur = { ...home, title: 'Contact Label Aarfa — Atelier in New Delhi', desc: 'Visit our atelier at 28/132 West Patel Nagar, New Delhi. Email care@labelaarfa.com or call +91 98xxx xxx00.', url: SITE_URL + '/contact' };
+    cur = { ...home, title: 'Contact Label Aarfa — Atelier in New Delhi', desc: 'Our atelier is in New Delhi. Email label.aarfa@gmail.com or call +91 98xxx xxx00.', url: SITE_URL + '/contact' };
   } else if (page.name === 'wishlist') {
     cur = { ...home, title: 'Wishlist — Label Aarfa', desc: 'Pieces you have saved from the Label Aarfa collection.', url: SITE_URL + '/wishlist' };
   } else if (page.name === 'orders') {
@@ -398,7 +398,7 @@ function applySeo(page) {
   } else if (page.name === 'info') {
     const slug = page.data;
     if (slug === 'size-guide') {
-      cur = { ...home, title: 'Size Guide — Label Aarfa', desc: 'Body measurement chart for Label Aarfa kurtas, coord sets, and stitched suits. Sizes XS to XXL with bust, waist, hip ranges.', url: SITE_URL + '/info/size-guide' };
+      cur = { ...home, title: 'Size Guide — Label Aarfa', desc: 'Body measurement chart for Label Aarfa kurtas, coord sets, and stitched suits. Sizes XS to XL with bust, waist, hip ranges.', url: SITE_URL + '/info/size-guide' };
     } else if (POLICIES[slug]) {
       cur = { ...home, title: `${POLICIES[slug].title} — Label Aarfa`, desc: POLICIES[slug].intro, url: SITE_URL + '/info/' + slug };
     }
@@ -450,7 +450,7 @@ function DiscountBadge({ priceInr, salePriceInr }) {
    HEADER
    ================================================================ */
 function AnnouncementBar() {
-  const msgs = ['Free shipping on orders above ₹2,999', 'Cash on delivery available', 'Use WELCOME10 for 10% off your first order'];
+  const msgs = ['Free shipping on orders above ₹2,999', '48-hour exchange window', 'Use WELCOME10 for 10% off your first order'];
   const [i, setI] = useState(0);
   useEffect(() => { const t = setInterval(() => setI((x) => (x + 1) % msgs.length), 4000); return () => clearInterval(t); }, []);
   return (
@@ -871,8 +871,8 @@ function SaleStrip({ products }) {
 function ValueProps() {
   const items = [
     { icon: Truck, title: 'Free Shipping', sub: 'On orders above ₹2,999' },
-    { icon: RotateCcw, title: 'Easy Returns', sub: '48-hour return window' },
-    { icon: ShieldCheck, title: 'Secure Checkout', sub: 'COD & online payments' },
+    { icon: RotateCcw, title: 'Easy Exchanges', sub: '48-hour exchange window' },
+    { icon: ShieldCheck, title: 'Secure Checkout', sub: 'UPI, cards & wallets' },
     { icon: Sparkles, title: 'Made by Hand', sub: 'In our Delhi atelier' },
   ];
   return (
@@ -1051,7 +1051,7 @@ function FilterContent({ sizeFilter, setSizeFilter, priceMax, setPriceMax }) {
       <div>
         <div className="text-[11px] tracking-[0.22em] uppercase font-medium mb-4" style={{ color: '#1F1A14' }}>Size</div>
         <div className="flex flex-wrap gap-2">
-          {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((s) => (
+          {['XS', 'S', 'M', 'L', 'XL'].map((s) => (
             <button key={s} onClick={() => setSizeFilter(sizeFilter === s ? null : s)}
               className="w-10 h-10 text-xs transition-all shadow-sm"
               style={{
@@ -1083,7 +1083,9 @@ function ProductPage({ id }) {
   const product = PRODUCTS.find((p) => p.id === id);
   const [mainImage, setMainImage] = useState(0);
   const [size, setSize] = useState(null);
-  const [color, setColor] = useState(product?.colors[0]);
+  // Color is no longer user-selectable on the page, but we still pass the product's first
+  // color to addToCart so the cart key stays consistent with what's stored in the DB.
+  const color = product?.colors[0];
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState('description');
   const [sizeError, setSizeError] = useState(false);
@@ -1157,20 +1159,6 @@ function ProductPage({ id }) {
           <p className="text-sm leading-relaxed font-light" style={{ color: '#6B5F4F' }}>{product.description}</p>
 
           <div>
-            <div className="text-[11px] tracking-[0.22em] uppercase font-medium mb-3" style={{ color: '#1F1A14' }}>Color</div>
-            <div className="flex gap-3">
-              {product.colors.map((c) => (
-                <button key={c} onClick={() => setColor(c)} className="w-10 h-10 sm:w-11 sm:h-11 transition-all shadow-sm" style={{
-                  backgroundColor: c,
-                  border: color === c ? '2px solid #1F1A14' : '2px solid #E8DDC9',
-                  borderRadius: '50%',
-                  transform: color === c ? 'scale(1.1)' : 'scale(1)',
-                }} aria-label={`Color ${c}`} />
-              ))}
-            </div>
-          </div>
-
-          <div>
             <div className="flex items-center justify-between mb-3">
               <div className="text-[11px] tracking-[0.22em] uppercase font-medium" style={{ color: '#1F1A14' }}>Size</div>
               <button onClick={() => navigate('info', 'size-guide')} className="text-[11px] underline transition-opacity hover:opacity-70" style={{ color: '#6B5F4F' }}>Size guide</button>
@@ -1219,8 +1207,8 @@ function ProductPage({ id }) {
 
           <div className="pt-6 sm:pt-7 space-y-3" style={{ borderTop: '1px solid #E8DDC9' }}>
             <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><Truck className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> Free shipping on orders above ₹2,999</div>
-            <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><RotateCcw className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> 48-hour return window</div>
-            <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><ShieldCheck className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> Cash on delivery available</div>
+            <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><RotateCcw className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> 48-hour exchange window</div>
+            <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><ShieldCheck className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> Secure online payments</div>
           </div>
         </div>
       </div>
@@ -1232,7 +1220,7 @@ function ProductPage({ id }) {
               color: tab === t ? '#7B1E28' : '#6B5F4F',
               borderBottom: tab === t ? '2px solid #7B1E28' : '2px solid transparent',
             }}>
-              {t === 'description' ? 'Description' : t === 'fabric' ? 'Fabric & Care' : 'Shipping & Returns'}
+              {t === 'description' ? 'Description' : t === 'fabric' ? 'Fabric & Care' : 'Shipping & Exchanges'}
             </button>
           ))}
         </div>
@@ -1253,8 +1241,7 @@ function ProductPage({ id }) {
           {tab === 'shipping' && (
             <div className="space-y-3">
               <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Shipping:</strong> Dispatched within 2 business days. India: 4–7 days. International: 7–14 days.</p>
-              <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Returns:</strong> 48-hour return window from delivery. Items must be unworn, unwashed, with tags.</p>
-              <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Refunds:</strong> Processed within 5–7 business days after receipt of return.</p>
+              <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Exchanges:</strong> 48-hour exchange window from delivery. Items must be unworn, unwashed, with tags. We do not offer refunds.</p>
             </div>
           )}
         </div>
@@ -1855,7 +1842,7 @@ function CheckoutPage() {
     setAddressTouched(true);
     setAddress((a) => ({ ...a, [field]: value }));
   };
-  const [payment, setPayment] = useState('cod');
+  const [payment, setPayment] = useState('upi');
   const [processing, setProcessing] = useState(false);
   const [orderId, setOrderId] = useState(null);
   // Synchronous lock — React state updates batch, so a double-tap can sneak through `processing`
@@ -2039,7 +2026,6 @@ function CheckoutPage() {
               <h2 className="font-serif text-xl sm:text-2xl mb-2" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>Payment Method</h2>
               <div className="space-y-3">
                 {[
-                  { id: 'cod', label: 'Cash on Delivery', sub: 'Pay when your order arrives' },
                   { id: 'upi', label: 'UPI', sub: 'Pay via any UPI app' },
                   { id: 'card', label: 'Credit / Debit Card', sub: 'Visa, Mastercard, RuPay' },
                   { id: 'wallet', label: 'Wallets', sub: 'Paytm, PhonePe, GPay' },
@@ -2060,14 +2046,12 @@ function CheckoutPage() {
                 ))}
               </div>
 
-              {payment !== 'cod' && (
-                <div className="p-4 sm:p-5 flex gap-3 items-start" style={{ backgroundColor: '#F6F0E5', border: '1px solid #E8DDC9', borderRadius: '10px' }}>
-                  <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#7B1E28' }} strokeWidth={1.5} />
-                  <div className="text-[12px] sm:text-[13px] font-light leading-relaxed" style={{ color: '#6B5F4F' }}>
-                    You will complete your payment securely on <strong style={{ color: '#1F1A14' }}>Razorpay</strong>. UPI, cards, wallets, and netbanking are all available there.
-                  </div>
+              <div className="p-4 sm:p-5 flex gap-3 items-start" style={{ backgroundColor: '#F6F0E5', border: '1px solid #E8DDC9', borderRadius: '10px' }}>
+                <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#7B1E28' }} strokeWidth={1.5} />
+                <div className="text-[12px] sm:text-[13px] font-light leading-relaxed" style={{ color: '#6B5F4F' }}>
+                  You will complete your payment securely on <strong style={{ color: '#1F1A14' }}>Razorpay</strong>. UPI, cards, wallets, and netbanking are all available there.
                 </div>
-              )}
+              </div>
 
               <div className="flex flex-col sm:flex-row gap-3 pt-3">
                 <button onClick={() => setStep(1)} className="px-6 py-4 text-[11px] sm:text-xs tracking-[0.25em] uppercase font-light transition-colors" style={{ border: '1px solid #1F1A14', color: '#1F1A14', backgroundColor: 'transparent', borderRadius: '4px' }}>Back</button>
@@ -2204,9 +2188,9 @@ function ContactPage() {
 
         <div className="space-y-6 sm:space-y-7 lg:pl-8" style={{ borderLeft: 'none' }}>
           <div className="lg:pl-0 space-y-6 sm:space-y-7">
-            <ContactItem icon={MapPin} title="Atelier" body={<>Label Aarfa<br />28/132 West Patel Nagar<br />New Delhi 110008, India</>} />
+            <ContactItem icon={MapPin} title="Atelier" body={<>Label Aarfa<br />New Delhi, India</>} />
             <ContactItem icon={Phone} title="Phone" body="+91 98xxx xxx00" />
-            <ContactItem icon={Mail} title="Email" body="care@labelaarfa.com" />
+            <ContactItem icon={Mail} title="Email" body="label.aarfa@gmail.com" />
             <ContactItem icon={null} title="Hours" body={<>Monday – Saturday<br />11:00 AM – 8:00 PM IST</>} />
           </div>
           <div className="flex gap-3 pt-2">
@@ -2251,17 +2235,16 @@ const POLICIES = {
     ],
   },
   returns: {
-    title: 'Returns & Refunds',
+    title: 'Exchange Policy',
     eyebrow: '48-hour Window',
-    intro: 'A short, transparent policy designed around handcrafted clothing.',
+    intro: 'Exchanges within 48 hours of delivery. We do not offer returns or refunds.',
     updated: 'May 2025',
     sections: [
-      { heading: '48-hour return window', body: 'Returns must be initiated within 48 hours of receiving your order. Beyond that, we are unable to accept returns — our pieces are made in small batches and we move them quickly to new homes.' },
-      { heading: 'Condition of returned items', body: 'Items must arrive unworn, unwashed, with all original tags intact and in the original packaging. Every returned piece is inspected before a refund is processed.' },
-      { heading: 'How to initiate a return', body: 'Email care@labelaarfa.com or WhatsApp +91 98xxx xxx00 with your order ID and reason within the 48-hour window. We arrange a free reverse pickup within India. International returns are at the customer\'s shipping cost.' },
-      { heading: 'Refund timeline', body: 'Once your return reaches us and clears inspection, refunds are processed within 5–7 business days to your original payment method. UPI refunds typically settle in 1–2 days; card and netbanking refunds in 5–7 days.' },
-      { heading: 'What we cannot accept', body: 'Custom-stitched / made-to-measure pieces, items marked final-sale on their product page, and items showing wear or with missing tags.' },
-      { heading: 'Exchanges', body: 'Rather than exchanges, we recommend initiating a return for a refund and placing a fresh order for the size or piece you want. This keeps inventory honest and lets you secure the new size before it sells out.' },
+      { heading: '48-hour exchange window', body: 'Exchanges must be initiated within 48 hours of receiving your order. We do not offer returns or refunds — every piece is handmade in small batches and final on dispatch.' },
+      { heading: 'Condition of items for exchange', body: 'Items must be unworn, unwashed, with all original tags intact and in the original packaging. Every piece is inspected before an exchange is approved.' },
+      { heading: 'How to initiate an exchange', body: 'Email label.aarfa@gmail.com with your order ID and the size or piece you would like to exchange for, within the 48-hour window. We arrange pickup within India. International exchanges are at the customer\'s shipping cost.' },
+      { heading: 'What we cannot exchange', body: 'Custom-stitched / made-to-measure pieces, items marked final-sale on their product page, and items showing wear or with missing tags.' },
+      { heading: 'Exchanging for a different value', body: 'If your new selection is more expensive, you will be charged the difference. If it is less, the balance becomes store credit on your account.' },
     ],
   },
   sustainability: {
@@ -2286,7 +2269,7 @@ const POLICIES = {
       { heading: 'What we collect', body: 'When you place an order: your name, email, phone, shipping address, and the items you ordered. When you create an account: your email (or phone). Payments are processed by Razorpay — we never see or store raw card numbers.' },
       { heading: 'How we use it', body: 'To process your order, send order updates, respond to your messages, and (only if you explicitly opt in) email you about new collections. We do not sell your data, ever.' },
       { heading: 'Third parties involved', body: 'Razorpay (payment processing), Resend (email delivery), Supabase (database and authentication), our courier partners (delivery), and statutory bodies when legally compelled.' },
-      { heading: 'Your rights', body: 'You can ask us at any time to see, correct, or delete the data we hold about you — write to care@labelaarfa.com. Account deletion takes effect within 30 days. Order records are retained for 7 years for tax compliance, then deleted.' },
+      { heading: 'Your rights', body: 'You can ask us at any time to see, correct, or delete the data we hold about you — write to label.aarfa@gmail.com. Account deletion takes effect within 30 days. Order records are retained for 7 years for tax compliance, then deleted.' },
       { heading: 'Cookies', body: 'Only the cookies needed to keep you signed in, remember your cart, and remember the currency we detected for your country. No third-party advertising or tracking cookies.' },
     ],
   },
@@ -2299,7 +2282,7 @@ const POLICIES = {
       { heading: 'Use of this site', body: 'By browsing labelaarfa.com or placing an order, you agree to these terms. You must be 18 or older — or have a parent/guardian\'s consent — to place orders.' },
       { heading: 'Product descriptions and images', body: 'We work hard to represent every piece accurately. Colours may vary slightly with your screen calibration, and handcrafted pieces show natural variations in embroidery, weave, and print — this is a signature of the craft, not a defect.' },
       { heading: 'Pricing and order acceptance', body: 'Prices are in INR for Indian customers; international prices include a flat ₹5,000 shipping/service fee. We reserve the right to refuse or cancel orders in case of stock errors, pricing errors, or suspected fraud — you will be refunded in full in such cases.' },
-      { heading: 'Cancellations', body: 'You may cancel an order within 12 hours of placing it for a full refund, provided it has not yet been packed. After that, our standard 48-hour return policy applies after delivery.' },
+      { heading: 'Cancellations', body: 'You may cancel an order within 12 hours of placing it, provided it has not yet been packed for dispatch — write to label.aarfa@gmail.com. After dispatch, our 48-hour exchange policy applies after delivery.' },
       { heading: 'Intellectual property', body: 'All photography, design, and copy on this site are the property of Label Aarfa. You may not reuse them commercially without written permission.' },
       { heading: 'Governing law', body: 'These terms are governed by the laws of India. Any disputes will be subject to the exclusive jurisdiction of the courts in New Delhi.' },
     ],
@@ -2316,12 +2299,11 @@ const SIZE_CHART = {
     { size: 'M',   bust: '36–37', waist: '30–31', hip: '39–40' },
     { size: 'L',   bust: '38–39', waist: '32–33', hip: '41–42' },
     { size: 'XL',  bust: '40–42', waist: '34–36', hip: '43–45' },
-    { size: 'XXL', bust: '43–45', waist: '37–39', hip: '46–48' },
   ],
   tips: [
     { heading: 'How to measure', body: 'Use a soft tailor\'s tape over light clothing. Stand relaxed. Measure bust around its fullest part, waist at the natural waistline (typically its narrowest point), and hip around the fullest part of your seat.' },
     { heading: 'Between sizes?', body: 'Choose the larger size — most of our silhouettes can be taken in by your local tailor far more easily than they can be let out.' },
-    { heading: 'Custom stitching', body: 'For made-to-measure, email care@labelaarfa.com with your measurements. Custom orders take 7–10 extra days for dispatch and are non-returnable.' },
+    { heading: 'Custom stitching', body: 'For made-to-measure, email label.aarfa@gmail.com with your measurements. Custom orders take 7–10 extra days for dispatch and are non-exchangeable.' },
     { heading: 'A note on fit', body: 'Handcrafted pieces have a 0.5–1" tolerance — this is part of the character of slow-stitched clothing, not a flaw.' },
   ],
 };
@@ -2494,7 +2476,7 @@ function Footer() {
           <FooterCol title="Customer Care" links={[
             { label: 'Contact Us', onClick: () => navigate('contact') },
             { label: 'Shipping Policy', onClick: () => navigate('info', 'shipping') },
-            { label: 'Returns & Refunds', onClick: () => navigate('info', 'returns') },
+            { label: 'Exchange Policy', onClick: () => navigate('info', 'returns') },
             { label: 'Size Guide', onClick: () => navigate('info', 'size-guide') },
             { label: 'Track Order', onClick: () => navigate('orders') },
           ]} />
@@ -2512,7 +2494,7 @@ function Footer() {
         <div className="max-w-[1440px] mx-auto px-5 sm:px-6 lg:px-10 py-5 sm:py-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 text-[10px] sm:text-[11px] tracking-wider" style={{ color: 'rgba(246, 240, 229, 0.5)' }}>
           <div>© 2019–{new Date().getFullYear()} Label Aarfa. All rights reserved.</div>
           <div className="flex gap-2 sm:gap-3 items-center">
-            {['VISA', 'MC', 'UPI', 'COD'].map((p) => (
+            {['VISA', 'MC', 'UPI'].map((p) => (
               <div key={p} className="px-2.5 py-1 font-medium text-[9px] sm:text-[10px] tracking-wider" style={{ border: '1px solid rgba(246, 240, 229, 0.15)', borderRadius: '4px' }}>{p}</div>
             ))}
           </div>

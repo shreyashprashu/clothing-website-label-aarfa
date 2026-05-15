@@ -60,7 +60,7 @@ export async function sendOrderConfirmation({ to, order, items }) {
       <tr><td>Shipping</td><td style="text-align:right">${order.shipping_paise === 0 ? 'Free' : fmt(order.shipping_paise)}</td></tr>
       <tr><td style="padding-top:8px;border-top:1px solid #E8DDC9;font-weight:600">Total</td><td style="padding-top:8px;border-top:1px solid #E8DDC9;text-align:right;font-weight:600">${fmt(order.total_paise)}</td></tr>
     </table>
-    <p style="color:#6B5F4F;font-size:13px;margin-top:32px">Questions? Reply to this email or write to care@labelaarfa.com.</p>
+    <p style="color:#6B5F4F;font-size:13px;margin-top:32px">Questions? Reply to this email or write to label.aarfa@gmail.com.</p>
   </div>`;
 
   return sendOrLog({
@@ -71,7 +71,7 @@ export async function sendOrderConfirmation({ to, order, items }) {
 }
 
 export async function sendContactMessage({ name, email, message }) {
-  const admin = (process.env.ADMIN_EMAIL || '').trim() || 'care@labelaarfa.com';
+  const admin = (process.env.ADMIN_EMAIL || '').trim() || 'label.aarfa@gmail.com';
   // Subject and replyTo can't include CRLF (header injection); body fields must be escaped
   // so a malicious submitter can't inject HTML or scripts into the admin's inbox.
   const safeName = String(name || '').replace(/[\r\n]+/g, ' ').slice(0, 120);
