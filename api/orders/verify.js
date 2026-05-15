@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { getServiceClient } from '../_lib/supabase.js';
-import { sendOrderConfirmation } from '../_lib/email.js';
+import { sendOrderConfirmation, sendOrderAdminNotification } from '../_lib/email.js';
 
 // Constant-time compare for HMAC hex strings — avoids leaking signature bytes via timing.
 function safeEqHex(a, b) {
@@ -61,6 +61,11 @@ export default async function handler(req, res) {
       try { email = await sendOrderConfirmation({ to, order, items: items || [] }); }
       catch (e) { email = { ok: false, error: e?.message || 'send failed' }; }
     }
+    // Notify the shop owner. We only get here if THIS request flipped status to paid
+    // (atomic .neq above), so this fires exactly once per order even if the webhook
+    // also runs.
+    try { await sendOrderAdminNotification({ order, items: items || [], address: order.shipping_address }); }
+    catch (e) { console.error('admin notify failed (verify)', e?.message); }
 
     return res.status(200).json({ ok: true, orderId: order.id, email });
   } catch (err) {

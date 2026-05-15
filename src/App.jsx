@@ -1463,48 +1463,12 @@ function AuthModal() {
             <h2 className="font-serif text-2xl mb-2 text-center" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>Welcome</h2>
             <p className="text-[13px] sm:text-sm font-light text-center mb-6" style={{ color: '#6B5F4F' }}>Sign in or create an account</p>
 
-            {/* Method toggle */}
-            <div className="flex p-1 mb-5" style={{ backgroundColor: '#F6F0E5', borderRadius: '10px' }}>
-              <button onClick={() => setMethod('phone')}
-                className="flex-1 py-2.5 text-[11px] tracking-[0.18em] uppercase font-light transition-all flex items-center justify-center gap-2"
-                style={{
-                  backgroundColor: method === 'phone' ? '#1F1A14' : 'transparent',
-                  color: method === 'phone' ? 'white' : '#6B5F4F',
-                  borderRadius: '8px',
-                  boxShadow: method === 'phone' ? '0 2px 8px -2px rgba(31, 26, 20, 0.15)' : 'none',
-                }}>
-                <Phone className="w-3.5 h-3.5" strokeWidth={1.5} /> Phone
-              </button>
-              <button onClick={() => setMethod('email')}
-                className="flex-1 py-2.5 text-[11px] tracking-[0.18em] uppercase font-light transition-all flex items-center justify-center gap-2"
-                style={{
-                  backgroundColor: method === 'email' ? '#1F1A14' : 'transparent',
-                  color: method === 'email' ? 'white' : '#6B5F4F',
-                  borderRadius: '8px',
-                  boxShadow: method === 'email' ? '0 2px 8px -2px rgba(31, 26, 20, 0.15)' : 'none',
-                }}>
-                <Mail className="w-3.5 h-3.5" strokeWidth={1.5} /> Email
-              </button>
-            </div>
-
-            {method === 'phone' ? (
-              <>
-                <label className="block text-[11px] tracking-[0.22em] uppercase font-medium mb-2" style={{ color: '#1F1A14' }}>Mobile Number</label>
-                <div className="flex">
-                  <div className="px-4 py-3 text-sm" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8DDC9', borderRight: 'none', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px', color: '#1F1A14' }}>+91</div>
-                  <input type="tel" inputMode="numeric" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit number"
-                    className="flex-1 min-w-0 px-4 py-3 text-sm focus:outline-none"
-                    style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8DDC9', borderTopRightRadius: '8px', borderBottomRightRadius: '8px', color: '#1F1A14' }} />
-                </div>
-              </>
-            ) : (
-              <>
-                <label className="block text-[11px] tracking-[0.22em] uppercase font-medium mb-2" style={{ color: '#1F1A14' }}>Email Address</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
-                  className="w-full px-4 py-3 text-sm focus:outline-none"
-                  style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8DDC9', borderRadius: '8px', color: '#1F1A14' }} />
-              </>
-            )}
+            {/* Phone OTP is hidden until DLT/SMS provider is set up — email-only for now.
+                The phone state + verify branch below remain intact so we can re-enable easily. */}
+            <label className="block text-[11px] tracking-[0.22em] uppercase font-medium mb-2" style={{ color: '#1F1A14' }}>Email Address</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
+              className="w-full px-4 py-3 text-sm focus:outline-none"
+              style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8DDC9', borderRadius: '8px', color: '#1F1A14' }} />
 
             <button onClick={sendOtp} disabled={!isValid || busy} className="w-full mt-6 py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
               {busy ? 'Sending…' : 'Send OTP'}

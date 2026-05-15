@@ -1,7 +1,7 @@
 import Razorpay from 'razorpay';
 import { getServiceClient } from '../_lib/supabase.js';
 import { productById, effectivePriceInr } from '../_lib/products.js';
-import { sendOrderConfirmation } from '../_lib/email.js';
+import { sendOrderConfirmation, sendOrderAdminNotification } from '../_lib/email.js';
 
 // Best-effort: persist the address as the user's default so next time it's prefilled.
 async function saveDefaultAddress(sb, userId, addr) {
@@ -139,6 +139,10 @@ export default async function handler(req, res) {
         try { email = await sendOrderConfirmation({ to, order, items: lineItems }); }
         catch (e) { email = { ok: false, error: e?.message || 'send failed' }; }
       }
+      // Notify the shop owner so they can start fulfilment. COD orders are auto-confirmed
+      // on creation, so we send the admin email here (no separate payment step).
+      try { await sendOrderAdminNotification({ order, items: lineItems, address: shippingAddress }); }
+      catch (e) { console.error('admin notify failed (cod)', e?.message); }
       return res.status(200).json({ paymentMethod: 'cod', order, email });
     }
 

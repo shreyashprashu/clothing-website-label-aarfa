@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { getServiceClient } from '../_lib/supabase.js';
-import { sendOrderConfirmation } from '../_lib/email.js';
+import { sendOrderConfirmation, sendOrderAdminNotification } from '../_lib/email.js';
 
 // Razorpay webhook events: payment.captured, payment.failed, refund.processed, etc.
 // Configure the URL `https://<host>/api/webhooks/razorpay` in Razorpay Dashboard → Webhooks
@@ -53,12 +53,14 @@ export default async function handler(req, res) {
         }).eq('razorpay_order_id', payment.order_id).neq('status', 'paid').select().maybeSingle();
 
         if (order) {
+          const { data: items } = await sb.from('order_items').select('*').eq('order_id', order.id);
           const to = order.shipping_address?.email || order.guest_email;
           if (to) {
-            const { data: items } = await sb.from('order_items').select('*').eq('order_id', order.id);
             try { await sendOrderConfirmation({ to, order, items: items || [] }); }
             catch (e) { console.error('webhook confirmation email failed', e?.message); }
           }
+          try { await sendOrderAdminNotification({ order, items: items || [], address: order.shipping_address }); }
+          catch (e) { console.error('webhook admin notify failed', e?.message); }
         }
       }
     } else if (event.event === 'payment.failed') {
