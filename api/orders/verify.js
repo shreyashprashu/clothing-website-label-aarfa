@@ -60,6 +60,8 @@ export default async function handler(req, res) {
     if (to) {
       try { email = await sendOrderConfirmation({ to, order, items: items || [] }); }
       catch (e) { email = { ok: false, error: e?.message || 'send failed' }; }
+    } else {
+      console.warn('[email] order-confirmation skipped: no recipient', { orderId: order.id, paymentMethod: 'razorpay' });
     }
     // Notify the shop owner. We only get here if THIS request flipped status to paid
     // (atomic .neq above), so this fires exactly once per order even if the webhook

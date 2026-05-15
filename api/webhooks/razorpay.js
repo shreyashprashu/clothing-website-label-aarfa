@@ -58,6 +58,8 @@ export default async function handler(req, res) {
           if (to) {
             try { await sendOrderConfirmation({ to, order, items: items || [] }); }
             catch (e) { console.error('webhook confirmation email failed', e?.message); }
+          } else {
+            console.warn('[email] webhook order-confirmation skipped: no recipient', { orderId: order.id });
           }
           try { await sendOrderAdminNotification({ order, items: items || [], address: order.shipping_address }); }
           catch (e) { console.error('webhook admin notify failed', e?.message); }

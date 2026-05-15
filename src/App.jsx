@@ -1083,7 +1083,7 @@ function Newsletter() {
             </div>
             <div className="text-[10px] sm:text-[11px] tracking-[0.32em] uppercase mb-3 font-light" style={{ color: '#B8924A' }}>You're In</div>
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl mb-4 sm:mb-5" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}>
-              Welcome to <em className="italic" style={{ color: '#B8924A' }}>the atelier</em>
+              Welcome to <em className="italic" style={{ color: '#B8924A' }}>Label Aarfa</em>
             </h2>
             <p className="text-sm sm:text-base font-light leading-relaxed max-w-md mx-auto" style={{ color: 'rgba(246, 240, 229, 0.75)' }}>
               Thank you for joining. Look out for our first letter soon — with new arrivals, private edits, and your <strong className="font-medium" style={{ color: '#F6F0E5' }}>10% welcome code</strong>.

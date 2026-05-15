@@ -162,6 +162,8 @@ export default async function handler(req, res) {
       if (to) {
         try { email = await sendOrderConfirmation({ to, order, items: lineItems }); }
         catch (e) { email = { ok: false, error: e?.message || 'send failed' }; }
+      } else {
+        console.warn('[email] order-confirmation skipped: no recipient', { orderId: order.id, paymentMethod: 'cod' });
       }
       // Notify the shop owner so they can start fulfilment. COD orders are auto-confirmed
       // on creation, so we send the admin email here (no separate payment step).
