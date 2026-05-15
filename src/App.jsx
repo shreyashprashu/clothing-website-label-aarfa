@@ -308,7 +308,7 @@ function AppProvider({ children }) {
 /* ================================================================
    SEO — per-page title, meta description, canonical, JSON-LD
    ================================================================ */
-const SITE_URL = 'https://labelaarfa.com';
+const SITE_URL = 'https://www.labelaarfa.com';
 const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 const CATEGORY_SEO = {
