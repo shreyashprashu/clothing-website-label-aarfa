@@ -58,6 +58,9 @@ export default async function handler(req, res) {
     }
 
     // Server-side price computation — never trust client totals.
+    // Aggregate quantity per product across all (size,color) lines to enforce stock at the
+    // product level, since stock is a single field per product (not per variant).
+    const perProductQty = new Map();
     let subtotalInr = 0;
     const lineItems = [];
     for (const it of items) {
@@ -65,6 +68,7 @@ export default async function handler(req, res) {
       if (!p) return res.status(400).json({ error: `Unknown product ${it.productId}` });
       if (!p.sizes.includes(it.size)) return res.status(400).json({ error: `Invalid size ${it.size} for ${p.name}` });
       const qty = Math.max(1, Math.min(20, Math.floor(Number(it.quantity) || 0)));
+      perProductQty.set(p.id, (perProductQty.get(p.id) || 0) + qty);
       const unit = effectivePriceInr(p);
       const line = unit * qty;
       subtotalInr += line;
@@ -75,6 +79,12 @@ export default async function handler(req, res) {
         unit_price_paise: unit * 100,
         line_total_paise: line * 100,
       });
+    }
+    for (const [pid, qty] of perProductQty) {
+      const p = productById(pid);
+      if (typeof p.stock === 'number' && qty > p.stock) {
+        return res.status(400).json({ error: `Only ${p.stock} of "${p.name}" available — please reduce the quantity` });
+      }
     }
 
     // Pricing rules:

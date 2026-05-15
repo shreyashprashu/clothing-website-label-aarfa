@@ -11,6 +11,13 @@ function client() {
 
 const FROM = (process.env.FROM_EMAIL || 'Label Aarfa <onboarding@resend.dev>').trim();
 
+// Always escape any string we put into an email HTML body. Even fields we think come
+// from our own DB can be user-controlled — names, product names entered by an attacker
+// via the order API, etc. Belt and braces.
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+));
+
 // Resend's shared sender `onboarding@resend.dev` can only deliver to the email
 // address that registered the Resend account. Detect this so we can return a
 // clearer error rather than silently failing.
@@ -34,7 +41,7 @@ async function sendOrLog(payload, label) {
 export async function sendOrderConfirmation({ to, order, items }) {
   const fmt = (paise) => `₹${(paise / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
   const rows = items.map((i) =>
-    `<tr><td style="padding:8px 0">${i.product_name} <span style="color:#A89888">(Size ${i.size}, qty ${i.quantity})</span></td><td style="padding:8px 0;text-align:right">${fmt(i.line_total_paise)}</td></tr>`
+    `<tr><td style="padding:8px 0">${esc(i.product_name)} <span style="color:#A89888">(Size ${esc(i.size)}, qty ${Number(i.quantity) || 0})</span></td><td style="padding:8px 0;text-align:right">${fmt(i.line_total_paise)}</td></tr>`
   ).join('');
 
   const html = `
@@ -65,9 +72,13 @@ export async function sendOrderConfirmation({ to, order, items }) {
 
 export async function sendContactMessage({ name, email, message }) {
   const admin = (process.env.ADMIN_EMAIL || '').trim() || 'care@labelaarfa.com';
+  // Subject and replyTo can't include CRLF (header injection); body fields must be escaped
+  // so a malicious submitter can't inject HTML or scripts into the admin's inbox.
+  const safeName = String(name || '').replace(/[\r\n]+/g, ' ').slice(0, 120);
+  const safeEmail = String(email || '').replace(/[\r\n]+/g, ' ').slice(0, 254);
   return sendOrLog({
-    from: FROM, to: admin, replyTo: email,
-    subject: `New contact-form message — ${name}`,
-    html: `<p><strong>From:</strong> ${name} &lt;${email}&gt;</p><p>${message.replace(/\n/g, '<br>')}</p>`,
+    from: FROM, to: admin, replyTo: safeEmail,
+    subject: `New contact-form message — ${safeName}`,
+    html: `<p><strong>From:</strong> ${esc(safeName)} &lt;${esc(safeEmail)}&gt;</p><p>${esc(message).replace(/\n/g, '<br>')}</p>`,
   }, 'contact-form');
 }

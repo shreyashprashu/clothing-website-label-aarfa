@@ -2,6 +2,14 @@ import crypto from 'node:crypto';
 import { getServiceClient } from '../_lib/supabase.js';
 import { sendOrderConfirmation } from '../_lib/email.js';
 
+// Constant-time compare for HMAC hex strings — avoids leaking signature bytes via timing.
+function safeEqHex(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  const ab = Buffer.from(a, 'hex');
+  const bb = Buffer.from(b, 'hex');
+  return ab.length === bb.length && crypto.timingSafeEqual(ab, bb);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -16,11 +24,14 @@ export default async function handler(req, res) {
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
-    if (expected !== razorpay_signature) {
+    if (!safeEqHex(expected, razorpay_signature)) {
       return res.status(400).json({ error: 'Signature mismatch' });
     }
 
     const sb = getServiceClient();
+    // Atomic transition: only flip to 'paid' if it's not already paid. If the webhook
+    // beat us to it, this returns no row — we then read the existing order and respond
+    // without re-sending the confirmation email.
     const { data: order, error } = await sb
       .from('orders')
       .update({
@@ -30,9 +41,16 @@ export default async function handler(req, res) {
         paid_at: new Date().toISOString(),
       })
       .eq('razorpay_order_id', razorpay_order_id)
+      .neq('status', 'paid')
       .select()
-      .single();
+      .maybeSingle();
     if (error) throw error;
+
+    if (!order) {
+      const { data: already } = await sb.from('orders').select('id').eq('razorpay_order_id', razorpay_order_id).maybeSingle();
+      if (!already) return res.status(404).json({ error: 'Order not found' });
+      return res.status(200).json({ ok: true, orderId: already.id, email: { ok: true, skipped: true, reason: 'already-confirmed' } });
+    }
 
     const { data: items } = await sb.from('order_items').select('*').eq('order_id', order.id);
 

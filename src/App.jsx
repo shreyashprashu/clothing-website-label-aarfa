@@ -102,9 +102,14 @@ const mergeCarts = (local, dbStripped) => {
   }
   return [...map.values()];
 };
+// Wishlist also tracks owner for the same reason as cart — don't leak items across accounts
+// on a shared browser.
+const WISHLIST_KEY = 'la-wishlist-v1';
+const WISHLIST_OWNER_KEY = 'la-wishlist-owner-v1';
 const loadStoredWishlist = () => {
-  try { return JSON.parse(localStorage.getItem('la-wishlist-v1') || '[]'); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]'); } catch { return []; }
 };
+const loadWishlistOwner = () => { try { return localStorage.getItem(WISHLIST_OWNER_KEY) || ''; } catch { return ''; } };
 
 function AppProvider({ children }) {
   const [page, setPage] = useState({ name: 'home', data: null });
@@ -126,6 +131,13 @@ function AppProvider({ children }) {
 
   const addToCart = (product, size, color, quantity = 1) => {
     const key = `${product.id}-${size}-${color}`;
+    // Stock guard — refuses to add beyond what's in stock and tells the user why.
+    const currentQty = cart.find((i) => i.key === key)?.quantity || 0;
+    if (typeof product.stock === 'number' && currentQty + quantity > product.stock) {
+      const room = Math.max(0, product.stock - currentQty);
+      showToast(room === 0 ? 'No more left in this size' : `Only ${room} more available`);
+      return;
+    }
     setCart((prev) => {
       const e = prev.find((i) => i.key === key);
       if (e) return prev.map((i) => i.key === key ? { ...i, quantity: i.quantity + quantity } : i);
@@ -134,7 +146,16 @@ function AppProvider({ children }) {
     showToast('Added to bag');
     setCartOpen(true);
   };
-  const updateQty = (key, d) => setCart((p) => p.map((i) => i.key === key ? { ...i, quantity: Math.max(0, i.quantity + d) } : i).filter((i) => i.quantity > 0));
+  const updateQty = (key, d) => {
+    if (d > 0) {
+      const item = cart.find((i) => i.key === key);
+      if (item && typeof item.product.stock === 'number' && item.quantity + d > item.product.stock) {
+        showToast(`Only ${item.product.stock} available`);
+        return;
+      }
+    }
+    setCart((p) => p.map((i) => i.key === key ? { ...i, quantity: Math.max(0, i.quantity + d) } : i).filter((i) => i.quantity > 0));
+  };
   const removeFromCart = (key) => setCart((p) => p.filter((i) => i.key !== key));
   const toggleWishlist = (id) => setWishlist((p) => {
     const next = p.includes(id) ? p.filter((x) => x !== id) : [...p, id];
@@ -153,7 +174,12 @@ function AppProvider({ children }) {
   // Persist cart + wishlist to localStorage so they survive refresh.
   // Cart is tagged with the current user id (or '' for guests) — see mergeCarts.
   useEffect(() => { persistCart(cart, user?.id || ''); }, [cart, user?.id]);
-  useEffect(() => { try { localStorage.setItem('la-wishlist-v1', JSON.stringify(wishlist)); } catch {} }, [wishlist]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
+      localStorage.setItem(WISHLIST_OWNER_KEY, user?.id || '');
+    } catch {}
+  }, [wishlist, user?.id]);
 
   // Gates the cart-to-DB sync effect: false until the post-sign-in merge completes,
   // so we don't accidentally overwrite the user's DB cart with the local cart before
@@ -195,13 +221,17 @@ function AppProvider({ children }) {
     supabase.from('addresses').select('*').eq('user_id', user.id).eq('is_default', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
       .then(({ data }) => { if (!cancelled && data) setDefaultAddress(data); }, () => {});
 
-    // 2. Wishlist — merge local with DB
+    // 2. Wishlist — merge local with DB. If local was tagged with a different user,
+    //    drop it before merging so we don't leak across accounts.
+    const prevWlOwner = loadWishlistOwner();
+    const wlBelongsToDifferentUser = prevWlOwner && prevWlOwner !== user.id;
     supabase.from('wishlist_items').select('product_id').eq('user_id', user.id)
       .then(({ data, error }) => {
         if (cancelled || error || !data) return;
         const dbIds = data.map((r) => r.product_id);
         setWishlist((local) => {
-          const merged = Array.from(new Set([...local, ...dbIds]));
+          const baseLocal = wlBelongsToDifferentUser ? [] : local;
+          const merged = Array.from(new Set([...baseLocal, ...dbIds]));
           const toAdd = merged.filter((id) => !dbIds.includes(id));
           if (toAdd.length > 0) {
             supabase.from('wishlist_items')
@@ -1695,7 +1725,7 @@ function OrdersPage() {
         setOrders(data || []);
       });
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user?.id]);
 
   if (!user) {
     return (
