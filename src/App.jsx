@@ -31,15 +31,18 @@ function ProductImage({
   if (!src) return null;
   const base = src.replace(/\.(jpe?g|png)$/i, '');
   const srcSet = `${base}.400.webp 400w, ${base}.800.webp 800w, ${base}.1280.webp 1280w`;
+  // `display: contents` removes <picture>'s own box from layout, so the inner
+  // <img> sizes against its grandparent — keeping w-full/h-full/absolute
+  // patterns working exactly as they did when the <img> was bare.
   return (
-    <picture>
+    <picture style={{ display: 'contents' }}>
       <source type="image/webp" srcSet={srcSet} sizes={sizes} />
       <img
         src={src}
         alt={alt}
         loading={loading}
         decoding="async"
-        fetchpriority={fetchPriority}
+        fetchPriority={fetchPriority}
         width={width}
         height={height}
         className={className}
