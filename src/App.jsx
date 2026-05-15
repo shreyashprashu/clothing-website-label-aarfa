@@ -266,6 +266,14 @@ function AnnouncementBar() {
 
 function Header() {
   const { navigate, page, cart, wishlist, setCartOpen, setSearchOpen, setAuthOpen, setMobileMenuOpen, user, signOut } = useApp();
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef(null);
+  useEffect(() => {
+    if (!accountOpen) return;
+    const onDocClick = (e) => { if (!accountRef.current?.contains(e.target)) setAccountOpen(false); };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [accountOpen]);
   const cartCount = cart.reduce((a, b) => a + b.quantity, 0);
 
   const links = [
@@ -322,7 +330,22 @@ function Header() {
               ))}
             </nav>
             <IconBtn onClick={() => setSearchOpen(true)} aria="Search"><Search className="w-[18px] h-[18px]" strokeWidth={1.5} /></IconBtn>
-            <IconBtn onClick={() => user ? signOut() : setAuthOpen(true)} aria={user ? 'Sign out' : 'Sign in'} hide><User className="w-[18px] h-[18px]" strokeWidth={1.5} style={{ color: user ? '#7B1E28' : '#1F1A14' }} /></IconBtn>
+            <div className="relative" ref={accountRef}>
+              <IconBtn onClick={() => user ? setAccountOpen((v) => !v) : setAuthOpen(true)} aria={user ? 'Account menu' : 'Sign in'} hide>
+                <User className="w-[18px] h-[18px]" strokeWidth={1.5} style={{ color: user ? '#7B1E28' : '#1F1A14' }} />
+              </IconBtn>
+              {accountOpen && user && (
+                <div className="absolute right-0 top-full mt-2 w-64 z-50 overflow-hidden animate-fadeIn" style={{ backgroundColor: '#FBF8F3', border: '1px solid #E8DDC9', borderRadius: '10px', boxShadow: '0 12px 28px -10px rgba(31, 26, 20, 0.22)' }}>
+                  <div className="px-4 py-3" style={{ borderBottom: '1px solid #E8DDC9' }}>
+                    <div className="text-[10px] tracking-[0.22em] uppercase font-light mb-1" style={{ color: '#6B5F4F' }}>Signed in as</div>
+                    <div className="text-sm font-light truncate" style={{ color: '#1F1A14' }}>{user.email}</div>
+                  </div>
+                  <button onClick={() => { setAccountOpen(false); signOut(); }} className="w-full px-4 py-3 text-left text-[11px] tracking-[0.22em] uppercase font-light transition-colors hover:bg-[#F6F0E5]" style={{ color: '#1F1A14' }}>
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
             <IconBtn onClick={() => navigate('wishlist')} aria="Wishlist" badge={wishlist.length}><Heart className="w-[18px] h-[18px]" strokeWidth={1.5} /></IconBtn>
             <IconBtn onClick={() => setCartOpen(true)} aria="Cart" badge={cartCount}><ShoppingBag className="w-[18px] h-[18px]" strokeWidth={1.5} /></IconBtn>
           </div>
@@ -349,7 +372,7 @@ function IconBtn({ children, badge, aria, hide = false, ...rest }) {
    MOBILE MENU
    ================================================================ */
 function MobileMenu() {
-  const { mobileMenuOpen, setMobileMenuOpen, navigate, currency, setCurrency, setAuthOpen } = useApp();
+  const { mobileMenuOpen, setMobileMenuOpen, navigate, currency, setCurrency, setAuthOpen, user, signOut } = useApp();
   if (!mobileMenuOpen) return null;
   const links = [
     { key: 'home', label: 'Home' },
@@ -382,13 +405,25 @@ function MobileMenu() {
           ))}
         </nav>
         <div className="p-5 space-y-4" style={{ borderTop: '1px solid #E8DDC9', backgroundColor: '#F6F0E5' }}>
-          <button onClick={() => { setMobileMenuOpen(false); setAuthOpen(true); }}
-            className="w-full py-3 text-xs tracking-[0.22em] uppercase font-light transition-colors flex items-center justify-center gap-2 hover:text-white"
-            style={{ border: '1px solid #1F1A14', color: '#1F1A14', borderRadius: '4px', backgroundColor: 'transparent' }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1F1A14'; e.currentTarget.style.color = 'white'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#1F1A14'; }}>
-            <User className="w-4 h-4" strokeWidth={1.5} /> Sign In
-          </button>
+          {user ? (
+            <div>
+              <div className="text-[10px] tracking-[0.22em] uppercase font-light mb-1" style={{ color: '#6B5F4F' }}>Signed in as</div>
+              <div className="text-sm font-light mb-3 truncate" style={{ color: '#1F1A14' }}>{user.email}</div>
+              <button onClick={() => { setMobileMenuOpen(false); signOut(); }}
+                className="w-full py-3 text-xs tracking-[0.22em] uppercase font-light transition-colors flex items-center justify-center gap-2"
+                style={{ border: '1px solid #1F1A14', color: '#1F1A14', borderRadius: '4px', backgroundColor: 'transparent' }}>
+                <User className="w-4 h-4" strokeWidth={1.5} /> Sign Out
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => { setMobileMenuOpen(false); setAuthOpen(true); }}
+              className="w-full py-3 text-xs tracking-[0.22em] uppercase font-light transition-colors flex items-center justify-center gap-2 hover:text-white"
+              style={{ border: '1px solid #1F1A14', color: '#1F1A14', borderRadius: '4px', backgroundColor: 'transparent' }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1F1A14'; e.currentTarget.style.color = 'white'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#1F1A14'; }}>
+              <User className="w-4 h-4" strokeWidth={1.5} /> Sign In
+            </button>
+          )}
           <div>
             <label className="text-[10px] tracking-[0.2em] uppercase mb-2 flex items-center gap-1.5" style={{ color: '#6B5F4F' }}><Globe className="w-3 h-3" /> Currency</label>
             <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full p-3 text-sm" style={{ border: '1px solid #E8DDC9', backgroundColor: '#FBF8F3', borderRadius: '4px' }}>
