@@ -101,7 +101,9 @@ function AppProvider({ children }) {
   const [toast, setToast] = useState(null);
 
   const showToast = (m) => { setToast(m); setTimeout(() => setToast(null), 2400); };
-  const navigate = (name, data = null) => { setPage({ name, data }); window.scrollTo({ top: 0, behavior: 'smooth' }); setMobileMenuOpen(false); };
+  // Use instant scroll on route change — the page-enter fade does the visual work.
+  // Smooth-scrolling a long page while new content fades in feels like two things competing.
+  const navigate = (name, data = null) => { setPage({ name, data }); window.scrollTo({ top: 0, behavior: 'auto' }); setMobileMenuOpen(false); };
 
   const addToCart = (product, size, color, quantity = 1) => {
     const key = `${product.id}-${size}-${color}`;
@@ -2450,18 +2452,22 @@ function Toast() {
    ================================================================ */
 function Router() {
   const { page } = useApp();
+  let content;
   switch (page.name) {
-    case 'home': return <HomePage />;
-    case 'category': return <CategoryPage slug={page.data || 'all'} />;
-    case 'product': return <ProductPage id={page.data} />;
-    case 'wishlist': return <WishlistPage />;
-    case 'orders': return <OrdersPage />;
-    case 'checkout': return <CheckoutPage />;
-    case 'about': return <AboutPage />;
-    case 'contact': return <ContactPage />;
-    case 'info': return <InfoPage slug={page.data} />;
-    default: return <HomePage />;
+    case 'home': content = <HomePage />; break;
+    case 'category': content = <CategoryPage slug={page.data || 'all'} />; break;
+    case 'product': content = <ProductPage id={page.data} />; break;
+    case 'wishlist': content = <WishlistPage />; break;
+    case 'orders': content = <OrdersPage />; break;
+    case 'checkout': content = <CheckoutPage />; break;
+    case 'about': content = <AboutPage />; break;
+    case 'contact': content = <ContactPage />; break;
+    case 'info': content = <InfoPage slug={page.data} />; break;
+    default: content = <HomePage />;
   }
+  // Keying on the route makes React remount this wrapper on every navigation,
+  // which restarts the `page-enter` CSS animation for a calm fade-in.
+  return <div key={`${page.name}:${page.data ?? ''}`} className="page-enter">{content}</div>;
 }
 
 export default function App() {
@@ -2477,15 +2483,22 @@ export default function App() {
         @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
         @keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pageEnter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
         .animate-fadeIn { animation: fadeIn 500ms ease-out both; }
         .animate-slideUp { animation: slideUp 700ms cubic-bezier(0.22, 1, 0.36, 1) both; }
         .animate-slideInRight { animation: slideInRight 380ms cubic-bezier(0.22, 1, 0.36, 1) both; }
         .animate-slideInLeft { animation: slideInLeft 380ms cubic-bezier(0.22, 1, 0.36, 1) both; }
         .animate-scaleIn { animation: scaleIn 380ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .page-enter { animation: pageEnter 420ms cubic-bezier(0.22, 1, 0.36, 1) both; will-change: opacity, transform; }
 
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+        body { overscroll-behavior-y: none; }
         ::selection { background: #7B1E28; color: #F6F0E5; }
+
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+        }
 
         .line-clamp-2 {
           display: -webkit-box;
