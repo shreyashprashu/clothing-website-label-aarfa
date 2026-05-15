@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, createContext, useContext } from 'react';
 import { ShoppingBag, Heart, Search, User, X, Menu, ChevronRight, ChevronLeft, Plus, Minus, Truck, ShieldCheck, RotateCcw, Hash, Globe2, Video, MapPin, Phone, Mail, Check, ArrowRight, SlidersHorizontal, Sparkles, Globe } from 'lucide-react';
+import { supabase, supabaseConfigured } from './lib/supabase';
+import { api, loadRazorpay } from './lib/api';
 
 const IMG = `${import.meta.env.BASE_URL}images/products/`;
 
@@ -91,10 +93,26 @@ function AppProvider({ children }) {
     showToast('Saved to wishlist'); return [...p, id];
   });
 
+  // Hydrate Supabase session and subscribe to auth changes
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signOut = async () => {
+    if (!supabase) { setUser(null); return; }
+    await supabase.auth.signOut();
+    showToast('Signed out');
+  };
+
   useEffect(() => { applySeo(page); }, [page]);
 
   return (
-    <AppCtx.Provider value={{ page, navigate, cart, addToCart, updateQty, removeFromCart, setCart, wishlist, toggleWishlist, cartOpen, setCartOpen, searchOpen, setSearchOpen, mobileMenuOpen, setMobileMenuOpen, authOpen, setAuthOpen, user, setUser, currency, setCurrency, toast, showToast }}>
+    <AppCtx.Provider value={{ page, navigate, cart, addToCart, updateQty, removeFromCart, setCart, wishlist, toggleWishlist, cartOpen, setCartOpen, searchOpen, setSearchOpen, mobileMenuOpen, setMobileMenuOpen, authOpen, setAuthOpen, user, setUser, signOut, currency, setCurrency, toast, showToast }}>
       {children}
     </AppCtx.Provider>
   );
@@ -247,7 +265,7 @@ function AnnouncementBar() {
 }
 
 function Header() {
-  const { navigate, page, cart, wishlist, setCartOpen, setSearchOpen, setAuthOpen, setMobileMenuOpen } = useApp();
+  const { navigate, page, cart, wishlist, setCartOpen, setSearchOpen, setAuthOpen, setMobileMenuOpen, user, signOut } = useApp();
   const cartCount = cart.reduce((a, b) => a + b.quantity, 0);
 
   const links = [
@@ -304,7 +322,7 @@ function Header() {
               ))}
             </nav>
             <IconBtn onClick={() => setSearchOpen(true)} aria="Search"><Search className="w-[18px] h-[18px]" strokeWidth={1.5} /></IconBtn>
-            <IconBtn onClick={() => setAuthOpen(true)} aria="Account" hide><User className="w-[18px] h-[18px]" strokeWidth={1.5} /></IconBtn>
+            <IconBtn onClick={() => user ? signOut() : setAuthOpen(true)} aria={user ? 'Sign out' : 'Sign in'} hide><User className="w-[18px] h-[18px]" strokeWidth={1.5} style={{ color: user ? '#7B1E28' : '#1F1A14' }} /></IconBtn>
             <IconBtn onClick={() => navigate('wishlist')} aria="Wishlist" badge={wishlist.length}><Heart className="w-[18px] h-[18px]" strokeWidth={1.5} /></IconBtn>
             <IconBtn onClick={() => setCartOpen(true)} aria="Cart" badge={cartCount}><ShoppingBag className="w-[18px] h-[18px]" strokeWidth={1.5} /></IconBtn>
           </div>
@@ -626,7 +644,17 @@ function Newsletter() {
   const [email, setEmail] = useState('');
   const [done, setDone] = useState(false);
   const { showToast } = useApp();
-  const submit = (e) => { e.preventDefault(); if (!email.includes('@')) return; setDone(true); showToast('Welcome to the list'); setTimeout(() => { setDone(false); setEmail(''); }, 3000); };
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!email.includes('@')) return;
+    try {
+      await api.newsletter({ email });
+      setDone(true); showToast('Welcome to the list');
+      setTimeout(() => { setDone(false); setEmail(''); }, 3000);
+    } catch (err) {
+      showToast(err.message || 'Could not subscribe');
+    }
+  };
   return (
     <section className="py-14 sm:py-20 lg:py-24" style={{ backgroundColor: '#1F1A14', color: '#F6F0E5' }}>
       <div className="max-w-2xl mx-auto px-5 sm:px-6 text-center">
@@ -1109,13 +1137,14 @@ function SearchOverlay() {
    AUTH MODAL — EMAIL + PHONE OTP
    ================================================================ */
 function AuthModal() {
-  const { authOpen, setAuthOpen, setUser, showToast } = useApp();
+  const { authOpen, setAuthOpen, showToast } = useApp();
   const [step, setStep] = useState(1);
-  const [method, setMethod] = useState('phone');
+  const [method, setMethod] = useState('email');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(0);
+  const [busy, setBusy] = useState(false);
   const inputs = useRef([]);
 
   useEffect(() => { if (step === 2 && timer === 0) setTimer(60); }, [step]);
@@ -1124,11 +1153,41 @@ function AuthModal() {
   if (!authOpen) return null;
   const isValid = method === 'phone' ? phone.length === 10 : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const sendOtp = () => { if (!isValid) return; setStep(2); showToast(`OTP sent to your ${method === 'phone' ? 'phone' : 'email'}`); };
+  const sendOtp = async () => {
+    if (!isValid || busy) return;
+    if (method === 'phone') { showToast('Phone OTP coming soon — please use email'); return; }
+    if (!supabase) { showToast('Auth not configured (set Supabase env vars)'); return; }
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    setBusy(false);
+    if (error) { showToast(error.message); return; }
+    setStep(2);
+    showToast('OTP sent to your email');
+  };
+
   const handleOtpChange = (i, v) => { if (!/^\d?$/.test(v)) return; const n = [...otp]; n[i] = v; setOtp(n); if (v && i < 5) inputs.current[i + 1]?.focus(); };
   const handleKeyDown = (i, e) => { if (e.key === 'Backspace' && !otp[i] && i > 0) inputs.current[i - 1]?.focus(); };
-  const verify = () => { if (otp.join('').length === 6) { setUser({ identifier: method === 'phone' ? phone : email, method }); showToast('Signed in successfully'); reset(); } };
-  const reset = () => { setStep(1); setPhone(''); setEmail(''); setOtp(['', '', '', '', '', '']); setTimer(0); setAuthOpen(false); setMethod('phone'); };
+
+  const verify = async () => {
+    const token = otp.join('');
+    if (token.length !== 6 || busy) return;
+    if (!supabase) { showToast('Auth not configured'); return; }
+    setBusy(true);
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+    setBusy(false);
+    if (error) { showToast(error.message || 'Invalid OTP'); return; }
+    showToast('Signed in successfully');
+    reset();
+  };
+
+  const resend = async () => {
+    if (!supabase) return;
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    if (error) { showToast(error.message); return; }
+    setTimer(60); showToast('OTP resent');
+  };
+
+  const reset = () => { setStep(1); setPhone(''); setEmail(''); setOtp(['', '', '', '', '', '']); setTimer(0); setAuthOpen(false); setMethod('email'); };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
@@ -1189,8 +1248,8 @@ function AuthModal() {
               </>
             )}
 
-            <button onClick={sendOtp} disabled={!isValid} className="w-full mt-6 py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
-              Send OTP
+            <button onClick={sendOtp} disabled={!isValid || busy} className="w-full mt-6 py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
+              {busy ? 'Sending…' : 'Send OTP'}
             </button>
 
             <div className="text-[10px] sm:text-[11px] text-center mt-5 font-light" style={{ color: '#6B5F4F' }}>
@@ -1200,10 +1259,9 @@ function AuthModal() {
         ) : (
           <>
             <h2 className="font-serif text-2xl mb-2 text-center" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>Verify</h2>
-            <p className="text-[13px] sm:text-sm font-light text-center mb-1" style={{ color: '#6B5F4F' }}>
+            <p className="text-[13px] sm:text-sm font-light text-center mb-6" style={{ color: '#6B5F4F' }}>
               OTP sent to {method === 'phone' ? `+91 ${phone}` : email}
             </p>
-            <p className="text-[11px] text-center mb-6" style={{ color: '#7B1E28' }}>Demo: enter any 6 digits</p>
 
             <div className="flex justify-center gap-1.5 sm:gap-2 mb-6">
               {otp.map((d, i) => (
@@ -1213,15 +1271,15 @@ function AuthModal() {
               ))}
             </div>
 
-            <button onClick={verify} disabled={otp.join('').length !== 6} className="w-full py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
-              Verify & Continue
+            <button onClick={verify} disabled={otp.join('').length !== 6 || busy} className="w-full py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
+              {busy ? 'Verifying…' : 'Verify & Continue'}
             </button>
 
             <div className="text-center mt-5 text-[11px] sm:text-xs font-light">
               {timer > 0 ? (
                 <span style={{ color: '#6B5F4F' }}>Resend in {timer}s</span>
               ) : (
-                <button onClick={() => { setTimer(60); showToast('OTP resent'); }} className="underline" style={{ color: '#7B1E28' }}>Resend OTP</button>
+                <button onClick={resend} className="underline" style={{ color: '#7B1E28' }}>Resend OTP</button>
               )}
             </div>
             <button onClick={() => setStep(1)} className="block mx-auto mt-3 text-[11px] sm:text-xs" style={{ color: '#6B5F4F' }}>
@@ -1285,9 +1343,9 @@ function Row({ label, value, bold = false }) {
 }
 
 function CheckoutPage() {
-  const { cart, currency, navigate, setCart, showToast } = useApp();
+  const { cart, currency, navigate, setCart, showToast, user } = useApp();
   const [step, setStep] = useState(1);
-  const [address, setAddress] = useState({ name: '', phone: '', pincode: '', line1: '', city: '', state: '' });
+  const [address, setAddress] = useState({ name: '', phone: '', pincode: '', line1: '', city: '', state: '', email: '' });
   const [payment, setPayment] = useState('cod');
   const [processing, setProcessing] = useState(false);
   const [orderId, setOrderId] = useState(null);
@@ -1297,16 +1355,74 @@ function CheckoutPage() {
   const total = subtotal + shipping;
 
   const goToPayment = (e) => { e.preventDefault(); setStep(2); };
-  const placeOrder = () => {
+
+  const buildItems = () => cart.map((c) => ({
+    productId: c.product.id, size: c.size, color: c.color, quantity: c.quantity,
+  }));
+
+  const finishOrder = (id) => {
+    setOrderId(id.slice(0, 8).toUpperCase());
+    setCart([]); setStep(3);
+    showToast('Order placed successfully');
+  };
+
+  const placeOrder = async () => {
+    if (processing) return;
     setProcessing(true);
-    setTimeout(() => {
-      const success = Math.random() > 0.1;
-      if (success) {
-        const id = 'TXN' + Math.random().toString(36).substring(2, 10).toUpperCase();
-        setOrderId(id); setCart([]); setStep(3); showToast('Order placed successfully');
-      } else { showToast('Payment failed, please try again'); }
+    try {
+      const shippingAddress = { ...address, email: address.email || user?.email };
+      const payload = {
+        items: buildItems(),
+        shippingAddress,
+        userId: user?.id || null,
+        guestEmail: user ? null : shippingAddress.email,
+        paymentMethod: payment === 'cod' ? 'cod' : 'razorpay',
+      };
+
+      const result = await api.createOrder(payload);
+
+      if (result.paymentMethod === 'cod') {
+        finishOrder(result.order.id);
+        return;
+      }
+
+      const ok = await loadRazorpay();
+      if (!ok || !window.Razorpay) { showToast('Could not load payment gateway'); return; }
+
+      const rzp = new window.Razorpay({
+        key: result.keyId,
+        amount: result.amount,
+        currency: result.currency,
+        order_id: result.razorpayOrderId,
+        name: 'Label Aarfa',
+        description: `Order ${result.orderId.slice(0, 8)}`,
+        prefill: { name: address.name, email: shippingAddress.email || '', contact: address.phone },
+        theme: { color: '#7B1E28' },
+        handler: async (rsp) => {
+          try {
+            await api.verifyOrder({
+              razorpay_order_id: rsp.razorpay_order_id,
+              razorpay_payment_id: rsp.razorpay_payment_id,
+              razorpay_signature: rsp.razorpay_signature,
+            });
+            finishOrder(result.orderId);
+          } catch (e) {
+            showToast(e.message || 'Verification failed');
+          } finally {
+            setProcessing(false);
+          }
+        },
+        modal: { ondismiss: () => setProcessing(false) },
+      });
+      rzp.on('payment.failed', (resp) => {
+        showToast(resp.error?.description || 'Payment failed');
+        setProcessing(false);
+      });
+      rzp.open();
+    } catch (e) {
+      showToast(e.message || 'Could not place order');
       setProcessing(false);
-    }, 1800);
+    }
   };
 
   if (cart.length === 0 && step !== 3) {
@@ -1364,6 +1480,7 @@ function CheckoutPage() {
                 <Input label="Full Name" required value={address.name} onChange={(v) => setAddress({...address, name: v})} />
                 <Input label="Phone" type="tel" required value={address.phone} onChange={(v) => setAddress({...address, phone: v})} />
               </div>
+              <Input label="Email" type="email" required={!user} placeholder={user?.email || 'you@example.com'} value={address.email} onChange={(v) => setAddress({...address, email: v})} />
               <Input label="Address Line" required value={address.line1} onChange={(v) => setAddress({...address, line1: v})} />
               <div className="grid sm:grid-cols-3 gap-4">
                 <Input label="City" required value={address.city} onChange={(v) => setAddress({...address, city: v})} />
@@ -1400,25 +1517,12 @@ function CheckoutPage() {
                 ))}
               </div>
 
-              {payment === 'card' && (
-                <div className="p-4 sm:p-5 space-y-3" style={{ backgroundColor: '#F6F0E5', border: '1px solid #E8DDC9', borderRadius: '10px' }}>
-                  <Input label="Card Number" placeholder="1234 5678 9012 3456" />
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input label="Expiry" placeholder="MM/YY" />
-                    <Input label="CVV" placeholder="123" />
+              {payment !== 'cod' && (
+                <div className="p-4 sm:p-5 flex gap-3 items-start" style={{ backgroundColor: '#F6F0E5', border: '1px solid #E8DDC9', borderRadius: '10px' }}>
+                  <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#7B1E28' }} strokeWidth={1.5} />
+                  <div className="text-[12px] sm:text-[13px] font-light leading-relaxed" style={{ color: '#6B5F4F' }}>
+                    You will complete your payment securely on <strong style={{ color: '#1F1A14' }}>Razorpay</strong>. UPI, cards, wallets, and netbanking are all available there.
                   </div>
-                  <p className="text-[10px] sm:text-[11px] font-light" style={{ color: '#6B5F4F' }}>Demo payment — no real card data collected.</p>
-                </div>
-              )}
-
-              {payment === 'upi' && (
-                <div className="p-4 sm:p-5 text-center" style={{ backgroundColor: '#F6F0E5', border: '1px solid #E8DDC9', borderRadius: '10px' }}>
-                  <div className="w-28 h-28 sm:w-32 sm:h-32 mx-auto grid grid-cols-8 grid-rows-8 gap-px p-2" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8DDC9', borderRadius: '8px' }}>
-                    {Array.from({ length: 64 }).map((_, i) => (
-                      <div key={i} style={{ background: ((i * 7) % 11) > 5 ? '#1F1A14' : 'transparent' }} />
-                    ))}
-                  </div>
-                  <p className="text-xs font-light mt-3" style={{ color: '#6B5F4F' }}>Scan QR or enter UPI ID at checkout</p>
                 </div>
               )}
 
@@ -1514,7 +1618,19 @@ function AboutPage() {
 function ContactPage() {
   const { showToast } = useApp();
   const [form, setForm] = useState({ name: '', email: '', message: '' });
-  const submit = (e) => { e.preventDefault(); showToast("Message sent — we'll be in touch"); setForm({ name: '', email: '', message: '' }); };
+  const [busy, setBusy] = useState(false);
+  const submit = async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    try {
+      await api.contact(form);
+      showToast("Message sent — we'll be in touch");
+      setForm({ name: '', email: '', message: '' });
+    } catch (err) {
+      showToast(err.message || 'Could not send message');
+    } finally { setBusy(false); }
+  };
 
   return (
     <main className="max-w-6xl mx-auto px-5 sm:px-6 py-10 sm:py-14 lg:py-20">
@@ -1534,7 +1650,7 @@ function ContactPage() {
               className="w-full px-4 py-3 text-sm focus:outline-none transition-colors resize-none"
               style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8DDC9', borderRadius: '8px', color: '#1F1A14' }} />
           </div>
-          <button type="submit" className="px-9 py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>Send Message</button>
+          <button type="submit" disabled={busy} className="px-9 py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 disabled:opacity-60 shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>{busy ? 'Sending…' : 'Send Message'}</button>
         </form>
 
         <div className="space-y-6 sm:space-y-7 lg:pl-8" style={{ borderLeft: 'none' }}>

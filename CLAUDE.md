@@ -9,8 +9,12 @@ This is a **relaunch** of the existing labelaarfa.com — the brand is real, pro
 - **React 19** + **Vite 8** (JSX, no TypeScript)
 - **Tailwind CSS v4** via `@tailwindcss/vite` (utility classes + lots of inline `style={{}}` for exact brand colors)
 - **lucide-react** for all icons (always `strokeWidth={1.2 – 1.5}` — thin, never bold)
+- **Supabase** (`@supabase/supabase-js`) — auth + Postgres + RLS
+- **Razorpay** (Razorpay Node SDK on server, Checkout JS on client) — payments
+- **Resend** — transactional email
+- **Vercel Functions** (`api/*.js`) as the backend
 - ESLint flat config (`eslint.config.js`)
-- Deploys to GitHub Pages (`npm run deploy`) at base path `/clothing-website-label-aarfa/` — see [vite.config.js](vite.config.js)
+- Primary host is **Vercel**, base path `/`. The legacy GitHub Pages workflow (`npm run deploy`) is dead — repurpose or delete.
 
 ## Scripts
 
@@ -24,24 +28,54 @@ npm run deploy    # gh-pages -d dist (runs predeploy → build)
 
 ## File layout
 
-The entire React app lives in a **single file**: [src/App.jsx](src/App.jsx) (~1700 lines). This is deliberate — easier to scan and tweak the whole design system in one place. Sections are demarcated by big banner comments:
+```
+src/
+  App.jsx            All React UI (single file by design — see below)
+  lib/
+    supabase.js      Browser Supabase client (anon key, RLS-bound)
+    api.js           fetch wrappers for /api/* + Razorpay Checkout loader
+  main.jsx           Entry
+  index.css          @import "tailwindcss"
+  App.css            Legacy Vite template CSS — unused, safe to delete
+
+api/                 Vercel Serverless Functions (Node.js runtime, ESM)
+  _lib/
+    supabase.js      Server Supabase client (service_role, bypasses RLS)
+    email.js         Resend helpers — sendOrderConfirmation, sendContactMessage
+    products.js      Server-side product price source of truth (mirrors src/App.jsx PRODUCTS)
+  orders/
+    create.js        POST: validate items + Razorpay order create + DB insert
+    verify.js        POST: HMAC verify Razorpay signature → mark order paid → send email
+  webhooks/
+    razorpay.js      POST: async events (payment.captured, payment.failed, refund.processed)
+  contact.js         POST: contact form → DB row + Resend email to ADMIN_EMAIL
+  newsletter.js      POST: upsert newsletter_subscribers row
+
+supabase/
+  schema.sql         Paste-into-SQL-Editor schema with tables, triggers, RLS
+
+public/              Static assets — see table below
+
+SETUP.md             Step-by-step setup for Supabase, Razorpay, Resend, Vercel env vars
+.env.example         All env vars with notes on which are public (VITE_*) vs server-only
+```
+
+The React app lives in a **single file** ([src/App.jsx](src/App.jsx), ~1700 lines) — deliberate. Sections are demarcated by big banner comments:
 
 ```
-PRODUCTS — product catalog data
+PRODUCTS — product catalog (display data + IMG-prefixed paths)
 PALETTE — colors documented inline
-CONTEXT — AppCtx, AppProvider (cart/wishlist/nav state)
+CONTEXT — AppCtx, AppProvider (cart, wishlist, nav, Supabase session sync, signOut)
 SEO — applySeo(page), per-page title/meta/JSON-LD updates
 HEADER, MOBILE MENU, HERO, PRODUCT CARD
 HOMEPAGE SECTIONS (CategoryPreview, EditorialBanner, SaleStrip, ValueProps, Newsletter)
 CATEGORY PAGE, PRODUCT PAGE
-CART DRAWER, SEARCH OVERLAY, AUTH MODAL
-WISHLIST, CHECKOUT, ABOUT, CONTACT
+CART DRAWER, SEARCH OVERLAY, AUTH MODAL (real Supabase OTP)
+WISHLIST, CHECKOUT (Razorpay + COD), ABOUT, CONTACT
 FOOTER, TOAST, ROUTER + APP
 ```
 
-Keep this single-file structure unless a section grows past ~300 lines and there's a real reason to extract.
-
-Other source: [src/main.jsx](src/main.jsx) (entry), [src/index.css](src/index.css) (just `@import "tailwindcss"`), [src/App.css](src/App.css) (legacy Vite template CSS — **not used by the brand UI**; safe to ignore or remove).
+Keep this single-file structure unless a section grows past ~300 lines and there's a real reason to extract. Backend code (`api/*`) and small client libs (`src/lib/*`) are *expected* to live outside `App.jsx`.
 
 ### Static assets in `public/`
 
@@ -131,12 +165,30 @@ Hero crossfades on a 6.5s interval; announcement bar rotates messages every 4s. 
 
 ## App architecture
 
-- **Single Context** (`AppCtx`, `useApp()`) holds everything: current page, cart, wishlist, drawer/modal open states, user, currency, toast. No Redux, no router library.
+- **Single Context** (`AppCtx`, `useApp()`) holds page, cart, wishlist, drawer/modal open states, user (Supabase `Session.user` or null), currency, toast, and `signOut()`. No Redux, no router library.
 - **Routing** is a state-based switch in `Router()` — pages are `home | category | product | wishlist | checkout | about | contact`. `navigate(name, data)` scrolls top + closes mobile menu. URLs do not change on navigation.
-- **SEO updates** are driven imperatively by `applySeo(page)` (right after `AppProvider`), triggered by an effect on `page` change. It sets `document.title`, the description/OG/Twitter/canonical meta tags, and injects/clears JSON-LD `<script>` blocks (`ld-product`, `ld-breadcrumb`) into `<head>`. Base meta and `Organization` / `LocalBusiness` / `WebSite` JSON-LD are baked into [index.html](index.html) and never removed.
-- **Cart line key**: `${product.id}-${size}-${color}` ensures the same product in different sizes/colors lives as separate lines.
-- **Multi-currency** display: `CURRENCIES` map with INR base + rates; `formatPrice(inr, code)` is the single rendering helper. INR uses `en-IN` locale grouping; everything else gets two decimals.
-- **Product data** is hardcoded in the `PRODUCTS` array at the top of [src/App.jsx](src/App.jsx). Images are hot-linked from `labelaarfa.com/wp-content/...` — no local image pipeline.
+- **Auth**: `AppProvider` hydrates the Supabase session on mount and subscribes to `onAuthStateChange`. Header User icon toggles between Sign-In (opens `AuthModal`) and Sign-Out (calls `signOut()`) based on `user`.
+- **SEO updates** are driven imperatively by `applySeo(page)`, triggered by an effect on `page` change. It sets `document.title`, description/OG/Twitter/canonical meta tags, and injects/clears `Product` and `BreadcrumbList` JSON-LD blocks. Base `Organization`, `ClothingStore`, `WebSite` JSON-LD lives in [index.html](index.html).
+- **Cart line key**: `${product.id}-${size}-${color}` ensures the same product in different sizes/colors lives as separate lines. Currently in React state only (no DB sync yet).
+- **Multi-currency display only**: `CURRENCIES` map with INR base + rates; `formatPrice(inr, code)` is the single rendering helper. **Razorpay charges in INR**, regardless of what the user is viewing.
+- **Product data** is hardcoded in the `PRODUCTS` array at the top of [src/App.jsx](src/App.jsx). Server-side pricing source of truth is [api/_lib/products.js](api/_lib/products.js) — keep these two in sync.
+
+## Backend conventions
+
+- **All money in paise** (INR × 100) once it crosses the API boundary. Display-only conversions happen client-side via `formatPrice`. Avoid floats.
+- **Never trust client totals**. `api/orders/create` re-derives subtotal/shipping/total from `productById()` and the items it was sent. Client can be a stale browser or a hostile actor.
+- **Server reads `process.env.*`, browser reads `import.meta.env.VITE_*`**. Only the `VITE_*` ones land in the client bundle.
+  - Public-safe: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_RAZORPAY_KEY_ID`.
+  - Server-only: `SUPABASE_SERVICE_ROLE_KEY`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `RESEND_API_KEY`.
+- **Razorpay flow** (`api/orders/create` → client opens Razorpay → `api/orders/verify`):
+  1. Server creates a Razorpay Order + mirror row in `orders` (status `created`).
+  2. Client opens Razorpay Checkout with the order id + key id from the server response.
+  3. On `handler` callback, client POSTs the three razorpay_* fields to `/api/orders/verify`.
+  4. Server HMAC-verifies signature, flips status to `paid`, fires confirmation email.
+  5. Webhook (`api/webhooks/razorpay`) is a belt-and-braces backstop for `payment.captured` and async events. **Always idempotent.**
+- **Webhooks need raw body** — `api/webhooks/razorpay.js` sets `config.api.bodyParser = false` and reads the raw stream to compute the HMAC. Don't `JSON.parse(req.body)` before verification.
+- **RLS is on** for `profiles`, `addresses`, `orders`, `order_items`. Service role bypasses RLS — only use the service client from `api/_lib/supabase.js` server-side. Anon-key reads from the browser are limited to a user's own rows.
+- **Errors**: API routes return `{ error: '...' }` with a non-2xx status. `src/lib/api.js` `post()` throws on non-OK, so callers can `try/catch` and `showToast(err.message)`.
 
 ## SEO conventions
 
