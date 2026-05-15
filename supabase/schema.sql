@@ -166,9 +166,15 @@ alter table public.addresses enable row level security;
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
 
--- Profiles: a user reads/updates only their own row
+-- Profiles: a user reads/inserts/updates only their own row. The INSERT
+-- policy matters because the client `upsert(profilePatch, {onConflict:'id'})`
+-- on sign-in does INSERT when the row doesn't exist yet (e.g. for users who
+-- signed up before the handle_new_user trigger existed). Without it, the
+-- upsert returns 403.
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own" on public.profiles for select using (auth.uid() = id);
+drop policy if exists "profiles_insert_own" on public.profiles;
+create policy "profiles_insert_own" on public.profiles for insert with check (auth.uid() = id);
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_update_own" on public.profiles for update using (auth.uid() = id);
 
