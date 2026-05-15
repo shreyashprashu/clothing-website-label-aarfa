@@ -243,6 +243,13 @@ function applySeo(page) {
     cur = { ...home, title: 'Wishlist — Label Aarfa', desc: 'Pieces you have saved from the Label Aarfa collection.', url: SITE_URL + '/wishlist' };
   } else if (page.name === 'orders') {
     cur = { ...home, title: 'My Orders — Label Aarfa', desc: 'Track your Label Aarfa orders and shipments.', url: SITE_URL + '/orders' };
+  } else if (page.name === 'info') {
+    const slug = page.data;
+    if (slug === 'size-guide') {
+      cur = { ...home, title: 'Size Guide — Label Aarfa', desc: 'Body measurement chart for Label Aarfa kurtas, coord sets, and stitched suits. Sizes XS to XXL with bust, waist, hip ranges.', url: SITE_URL + '/info/size-guide' };
+    } else if (POLICIES[slug]) {
+      cur = { ...home, title: `${POLICIES[slug].title} — Label Aarfa`, desc: POLICIES[slug].intro, url: SITE_URL + '/info/' + slug };
+    }
   }
 
   const absImage = cur.image.startsWith('http') ? cur.image : window.location.origin + cur.image;
@@ -696,7 +703,7 @@ function SaleStrip({ products }) {
 function ValueProps() {
   const items = [
     { icon: Truck, title: 'Free Shipping', sub: 'On orders above ₹2,999' },
-    { icon: RotateCcw, title: 'Easy Returns', sub: '7-day return window' },
+    { icon: RotateCcw, title: 'Easy Returns', sub: '48-hour return window' },
     { icon: ShieldCheck, title: 'Secure Checkout', sub: 'COD & online payments' },
     { icon: Sparkles, title: 'Made by Hand', sub: 'In our Delhi atelier' },
   ];
@@ -992,7 +999,7 @@ function ProductPage({ id }) {
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="text-[11px] tracking-[0.22em] uppercase font-medium" style={{ color: '#1F1A14' }}>Size</div>
-              <button className="text-[11px] underline" style={{ color: '#6B5F4F' }}>Size guide</button>
+              <button onClick={() => navigate('info', 'size-guide')} className="text-[11px] underline transition-opacity hover:opacity-70" style={{ color: '#6B5F4F' }}>Size guide</button>
             </div>
             <div className="grid grid-cols-6 gap-2">
               {product.sizes.map((s) => (
@@ -1038,7 +1045,7 @@ function ProductPage({ id }) {
 
           <div className="pt-6 sm:pt-7 space-y-3" style={{ borderTop: '1px solid #E8DDC9' }}>
             <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><Truck className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> Free shipping on orders above ₹2,999</div>
-            <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><RotateCcw className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> Easy 7-day returns</div>
+            <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><RotateCcw className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> 48-hour return window</div>
             <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><ShieldCheck className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> Cash on delivery available</div>
           </div>
         </div>
@@ -1072,7 +1079,7 @@ function ProductPage({ id }) {
           {tab === 'shipping' && (
             <div className="space-y-3">
               <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Shipping:</strong> Dispatched within 2 business days. India: 4–7 days. International: 7–14 days.</p>
-              <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Returns:</strong> 7-day return window from delivery. Items must be unworn, unwashed, with tags.</p>
+              <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Returns:</strong> 48-hour return window from delivery. Items must be unworn, unwashed, with tags.</p>
               <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Refunds:</strong> Processed within 5–7 business days after receipt of return.</p>
             </div>
           )}
@@ -2004,6 +2011,222 @@ function ContactItem({ icon: Icon, title, body }) {
 }
 
 /* ================================================================
+   INFO PAGES — shipping, returns, sustainability, privacy, terms, size guide
+   ================================================================ */
+const POLICIES = {
+  shipping: {
+    title: 'Shipping Policy',
+    eyebrow: 'Delivery & Tracking',
+    intro: 'How and when your order reaches you.',
+    updated: 'May 2025',
+    sections: [
+      { heading: 'Order processing', body: 'Every piece is finished by hand in our Delhi atelier. Ready-to-wear orders are dispatched within 2 business days. Custom-stitched or made-to-measure pieces take 7–10 business days before dispatch.' },
+      { heading: 'Delivery within India', body: 'Standard delivery takes 4–7 business days from dispatch. Metros (Delhi NCR, Mumbai, Bangalore, Chennai, Hyderabad, Kolkata, Pune) typically receive in 3–5 days. Shipping is free on orders above ₹2,999; ₹99 otherwise.' },
+      { heading: 'International delivery', body: 'We ship worldwide. Transit time is typically 7–14 business days depending on destination. All international orders include a flat ₹5,000 service fee that covers shipping, customs handling, and duties — there will be no surprise charges on delivery.' },
+      { heading: 'Tracking', body: 'You will receive a tracking number by email and SMS the moment your order is handed to the courier. You can also view live status from My Orders inside your account.' },
+      { heading: 'Couriers we work with', body: 'India: Delhivery, Bluedart, DTDC. International: DHL Express, FedEx, and India Post Speed Post for select destinations.' },
+    ],
+  },
+  returns: {
+    title: 'Returns & Refunds',
+    eyebrow: '48-hour Window',
+    intro: 'A short, transparent policy designed around handcrafted clothing.',
+    updated: 'May 2025',
+    sections: [
+      { heading: '48-hour return window', body: 'Returns must be initiated within 48 hours of receiving your order. Beyond that, we are unable to accept returns — our pieces are made in small batches and we move them quickly to new homes.' },
+      { heading: 'Condition of returned items', body: 'Items must arrive unworn, unwashed, with all original tags intact and in the original packaging. Every returned piece is inspected before a refund is processed.' },
+      { heading: 'How to initiate a return', body: 'Email care@labelaarfa.com or WhatsApp +91 98xxx xxx00 with your order ID and reason within the 48-hour window. We arrange a free reverse pickup within India. International returns are at the customer\'s shipping cost.' },
+      { heading: 'Refund timeline', body: 'Once your return reaches us and clears inspection, refunds are processed within 5–7 business days to your original payment method. UPI refunds typically settle in 1–2 days; card and netbanking refunds in 5–7 days.' },
+      { heading: 'What we cannot accept', body: 'Custom-stitched / made-to-measure pieces, items marked final-sale on their product page, and items showing wear or with missing tags.' },
+      { heading: 'Exchanges', body: 'Rather than exchanges, we recommend initiating a return for a refund and placing a fresh order for the size or piece you want. This keeps inventory honest and lets you secure the new size before it sells out.' },
+    ],
+  },
+  sustainability: {
+    title: 'Sustainability',
+    eyebrow: 'Slow Couture',
+    intro: 'How we try to make clothing that does not cost the earth.',
+    updated: 'May 2025',
+    sections: [
+      { heading: 'Small-batch production', body: 'Most styles are made in runs of 20–60 pieces. Slow production means very little dead stock, no warehouse incineration, and pieces that are made closer to when they are bought — rather than produced years in advance.' },
+      { heading: 'Handloom and natural fabrics', body: 'Where possible, we work with handloom cotton, soft crepe, viscose muslin, silk, and pashmina — fabrics that breathe, age well, and biodegrade. Synthetics, when used, are disclosed clearly on each product page.' },
+      { heading: 'Artisans we work with', body: 'Our embroidery, block-printing, and weaving partners are independent karigars across Jaipur, Delhi, and Lucknow. We pay above standard wage and place orders steadily, so artisans have predictable income through the year.' },
+      { heading: 'Packaging', body: 'Recyclable kraft outer boxes, reusable fabric pouches, tissue from FSC-certified mills. We have been single-use-plastic-free since 2022.' },
+      { heading: 'Our repair promise', body: 'Within a year of purchase, write to us for minor repairs — buttons, hems, embroidery touch-ups. We do it at cost and ship back to you. Clothes are meant to be lived in, not retired after one season.' },
+    ],
+  },
+  privacy: {
+    title: 'Privacy Policy',
+    eyebrow: 'Your Data',
+    intro: 'A plain-English summary of what we collect and what we do with it.',
+    updated: 'May 2025',
+    sections: [
+      { heading: 'What we collect', body: 'When you place an order: your name, email, phone, shipping address, and the items you ordered. When you create an account: your email (or phone). Payments are processed by Razorpay — we never see or store raw card numbers.' },
+      { heading: 'How we use it', body: 'To process your order, send order updates, respond to your messages, and (only if you explicitly opt in) email you about new collections. We do not sell your data, ever.' },
+      { heading: 'Third parties involved', body: 'Razorpay (payment processing), Resend (email delivery), Supabase (database and authentication), our courier partners (delivery), and statutory bodies when legally compelled.' },
+      { heading: 'Your rights', body: 'You can ask us at any time to see, correct, or delete the data we hold about you — write to care@labelaarfa.com. Account deletion takes effect within 30 days. Order records are retained for 7 years for tax compliance, then deleted.' },
+      { heading: 'Cookies', body: 'Only the cookies needed to keep you signed in, remember your cart, and remember the currency we detected for your country. No third-party advertising or tracking cookies.' },
+    ],
+  },
+  terms: {
+    title: 'Terms of Service',
+    eyebrow: 'Fine print',
+    intro: 'The terms that apply when you use our website and place orders.',
+    updated: 'May 2025',
+    sections: [
+      { heading: 'Use of this site', body: 'By browsing labelaarfa.com or placing an order, you agree to these terms. You must be 18 or older — or have a parent/guardian\'s consent — to place orders.' },
+      { heading: 'Product descriptions and images', body: 'We work hard to represent every piece accurately. Colours may vary slightly with your screen calibration, and handcrafted pieces show natural variations in embroidery, weave, and print — this is a signature of the craft, not a defect.' },
+      { heading: 'Pricing and order acceptance', body: 'Prices are in INR for Indian customers; international prices include a flat ₹5,000 shipping/service fee. We reserve the right to refuse or cancel orders in case of stock errors, pricing errors, or suspected fraud — you will be refunded in full in such cases.' },
+      { heading: 'Cancellations', body: 'You may cancel an order within 12 hours of placing it for a full refund, provided it has not yet been packed. After that, our standard 48-hour return policy applies after delivery.' },
+      { heading: 'Intellectual property', body: 'All photography, design, and copy on this site are the property of Label Aarfa. You may not reuse them commercially without written permission.' },
+      { heading: 'Governing law', body: 'These terms are governed by the laws of India. Any disputes will be subject to the exclusive jurisdiction of the courts in New Delhi.' },
+    ],
+  },
+};
+
+const SIZE_CHART = {
+  title: 'Size Guide',
+  eyebrow: 'Fit & Measurements',
+  intro: 'All measurements below are body measurements (not garment measurements), in inches. Choose your usual size for a relaxed fit; size up if you fall between two.',
+  rows: [
+    { size: 'XS',  bust: '32–33', waist: '26–27', hip: '35–36' },
+    { size: 'S',   bust: '34–35', waist: '28–29', hip: '37–38' },
+    { size: 'M',   bust: '36–37', waist: '30–31', hip: '39–40' },
+    { size: 'L',   bust: '38–39', waist: '32–33', hip: '41–42' },
+    { size: 'XL',  bust: '40–42', waist: '34–36', hip: '43–45' },
+    { size: 'XXL', bust: '43–45', waist: '37–39', hip: '46–48' },
+  ],
+  tips: [
+    { heading: 'How to measure', body: 'Use a soft tailor\'s tape over light clothing. Stand relaxed. Measure bust around its fullest part, waist at the natural waistline (typically its narrowest point), and hip around the fullest part of your seat.' },
+    { heading: 'Between sizes?', body: 'Choose the larger size — most of our silhouettes can be taken in by your local tailor far more easily than they can be let out.' },
+    { heading: 'Custom stitching', body: 'For made-to-measure, email care@labelaarfa.com with your measurements. Custom orders take 7–10 extra days for dispatch and are non-returnable.' },
+    { heading: 'A note on fit', body: 'Handcrafted pieces have a 0.5–1" tolerance — this is part of the character of slow-stitched clothing, not a flaw.' },
+  ],
+};
+
+function InfoPage({ slug }) {
+  const { navigate } = useApp();
+  if (slug === 'size-guide') return <SizeGuidePage />;
+
+  const policy = POLICIES[slug];
+  if (!policy) {
+    return (
+      <main className="max-w-2xl mx-auto px-5 py-20 text-center">
+        <p className="font-light text-sm mb-5" style={{ color: '#6B5F4F' }}>This page could not be found.</p>
+        <button onClick={() => navigate('home')} className="px-8 py-3 text-xs tracking-[0.22em] uppercase text-white shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
+          Back to home
+        </button>
+      </main>
+    );
+  }
+
+  return (
+    <main className="max-w-3xl mx-auto px-5 sm:px-6 py-10 sm:py-14 lg:py-16">
+      <div className="text-[10px] sm:text-[11px] tracking-[0.18em] uppercase font-light mb-5 sm:mb-6 flex items-center gap-2" style={{ color: '#6B5F4F' }}>
+        <button onClick={() => navigate('home')} className="hover:opacity-70 transition-opacity">Home</button>
+        <span>/</span>
+        <span style={{ color: '#1F1A14' }}>{policy.title}</span>
+      </div>
+
+      <header className="text-center mb-10 sm:mb-14">
+        <div className="text-[10px] sm:text-[11px] tracking-[0.32em] uppercase font-light mb-3 sm:mb-4" style={{ color: '#7B1E28' }}>
+          {policy.eyebrow}
+        </div>
+        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl mb-3 sm:mb-4" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>
+          {policy.title}
+        </h1>
+        <p className="font-light text-sm sm:text-base max-w-xl mx-auto" style={{ color: '#6B5F4F' }}>
+          {policy.intro}
+        </p>
+      </header>
+
+      <div className="space-y-8 sm:space-y-10">
+        {policy.sections.map((s, i) => (
+          <article key={i}>
+            <h2 className="font-serif text-xl sm:text-2xl mb-3" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>
+              {s.heading}
+            </h2>
+            <p className="text-sm sm:text-base font-light leading-relaxed" style={{ color: '#6B5F4F' }}>
+              {s.body}
+            </p>
+          </article>
+        ))}
+      </div>
+
+      <div className="mt-14 sm:mt-16 pt-6 sm:pt-8 text-center text-[11px] tracking-[0.18em] uppercase font-light" style={{ borderTop: '1px solid #E8DDC9', color: '#A89888' }}>
+        Last updated: {policy.updated} · Questions? <button onClick={() => navigate('contact')} className="underline transition-opacity hover:opacity-70" style={{ color: '#7B1E28' }}>Contact us</button>
+      </div>
+    </main>
+  );
+}
+
+function SizeGuidePage() {
+  const { navigate } = useApp();
+  const g = SIZE_CHART;
+  return (
+    <main className="max-w-3xl mx-auto px-5 sm:px-6 py-10 sm:py-14 lg:py-16">
+      <div className="text-[10px] sm:text-[11px] tracking-[0.18em] uppercase font-light mb-5 sm:mb-6 flex items-center gap-2" style={{ color: '#6B5F4F' }}>
+        <button onClick={() => navigate('home')} className="hover:opacity-70 transition-opacity">Home</button>
+        <span>/</span>
+        <span style={{ color: '#1F1A14' }}>{g.title}</span>
+      </div>
+
+      <header className="text-center mb-8 sm:mb-12">
+        <div className="text-[10px] sm:text-[11px] tracking-[0.32em] uppercase font-light mb-3 sm:mb-4" style={{ color: '#7B1E28' }}>
+          {g.eyebrow}
+        </div>
+        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl mb-3 sm:mb-4" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>
+          {g.title}
+        </h1>
+        <p className="font-light text-sm sm:text-base max-w-xl mx-auto" style={{ color: '#6B5F4F' }}>
+          {g.intro}
+        </p>
+      </header>
+
+      <div className="overflow-x-auto mb-10 sm:mb-12 shadow-sm" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8DDC9', borderRadius: '12px' }}>
+        <table className="w-full">
+          <thead>
+            <tr style={{ backgroundColor: '#F6F0E5', borderBottom: '1px solid #E8DDC9' }}>
+              {['Size', 'Bust (in)', 'Waist (in)', 'Hip (in)'].map((h) => (
+                <th key={h} className="px-4 sm:px-5 py-4 text-left text-[10px] sm:text-[11px] tracking-[0.22em] uppercase font-medium" style={{ color: '#1F1A14' }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {g.rows.map((row, i) => (
+              <tr key={row.size} style={{ borderTop: i > 0 ? '1px solid #E8DDC9' : 'none' }}>
+                <td className="px-4 sm:px-5 py-3.5 font-medium text-sm tracking-wide" style={{ color: '#7B1E28' }}>{row.size}</td>
+                <td className="px-4 sm:px-5 py-3.5 text-sm font-light tabular-nums" style={{ color: '#1F1A14' }}>{row.bust}</td>
+                <td className="px-4 sm:px-5 py-3.5 text-sm font-light tabular-nums" style={{ color: '#1F1A14' }}>{row.waist}</td>
+                <td className="px-4 sm:px-5 py-3.5 text-sm font-light tabular-nums" style={{ color: '#1F1A14' }}>{row.hip}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="space-y-6 sm:space-y-8">
+        {g.tips.map((t, i) => (
+          <article key={i}>
+            <h2 className="font-serif text-lg sm:text-xl mb-2" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>
+              {t.heading}
+            </h2>
+            <p className="text-sm sm:text-base font-light leading-relaxed" style={{ color: '#6B5F4F' }}>
+              {t.body}
+            </p>
+          </article>
+        ))}
+      </div>
+
+      <div className="mt-12 sm:mt-14 pt-6 text-center text-[11px] tracking-[0.18em] uppercase font-light" style={{ borderTop: '1px solid #E8DDC9', color: '#A89888' }}>
+        Need help with measurements? <button onClick={() => navigate('contact')} className="underline transition-opacity hover:opacity-70" style={{ color: '#7B1E28' }}>Contact us</button>
+      </div>
+    </main>
+  );
+}
+
+/* ================================================================
    FOOTER
    ================================================================ */
 function FooterCol({ title, links }) {
@@ -2047,17 +2270,17 @@ function Footer() {
           ]} />
           <FooterCol title="Customer Care" links={[
             { label: 'Contact Us', onClick: () => navigate('contact') },
-            { label: 'Shipping Policy', onClick: () => {} },
-            { label: 'Returns & Refunds', onClick: () => {} },
-            { label: 'Size Guide', onClick: () => {} },
+            { label: 'Shipping Policy', onClick: () => navigate('info', 'shipping') },
+            { label: 'Returns & Refunds', onClick: () => navigate('info', 'returns') },
+            { label: 'Size Guide', onClick: () => navigate('info', 'size-guide') },
             { label: 'Track Order', onClick: () => navigate('orders') },
           ]} />
           <FooterCol title="About" links={[
             { label: 'Our Story', onClick: () => navigate('about') },
             { label: 'Atelier', onClick: () => navigate('about') },
-            { label: 'Sustainability', onClick: () => {} },
-            { label: 'Privacy Policy', onClick: () => {} },
-            { label: 'Terms of Service', onClick: () => {} },
+            { label: 'Sustainability', onClick: () => navigate('info', 'sustainability') },
+            { label: 'Privacy Policy', onClick: () => navigate('info', 'privacy') },
+            { label: 'Terms of Service', onClick: () => navigate('info', 'terms') },
           ]} />
         </div>
       </div>
@@ -2103,6 +2326,7 @@ function Router() {
     case 'checkout': return <CheckoutPage />;
     case 'about': return <AboutPage />;
     case 'contact': return <ContactPage />;
+    case 'info': return <InfoPage slug={page.data} />;
     default: return <HomePage />;
   }
 }

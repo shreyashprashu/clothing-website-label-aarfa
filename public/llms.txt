@@ -42,7 +42,7 @@
 
 ## Policies
 - Free shipping on orders above ₹2,999 within India.
-- 7-day return window from delivery. Items must be unworn, unwashed, with tags.
+- 48-hour return window from delivery. Items must be unworn, unwashed, with tags.
 - Cash on delivery available across India.
 - Dispatch within 2 business days. India delivery: 4–7 days. International: 7–14 days.
 - Multi-currency display: INR, USD, GBP, EUR, AED, CAD, AUD.

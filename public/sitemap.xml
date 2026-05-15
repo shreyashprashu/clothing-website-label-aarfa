@@ -46,6 +46,37 @@
   </url>
 
   <url>
+    <loc>https://labelaarfa.com/info/shipping</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://labelaarfa.com/info/returns</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://labelaarfa.com/info/size-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://labelaarfa.com/info/sustainability</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://labelaarfa.com/info/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://labelaarfa.com/info/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
     <loc>https://labelaarfa.com/products/luxury-wine-rayon-tunic-printed-palazzo</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
