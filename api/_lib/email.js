@@ -3,13 +3,33 @@ import { Resend } from 'resend';
 let _resend;
 function client() {
   if (_resend) return _resend;
-  const key = process.env.RESEND_API_KEY;
+  const key = (process.env.RESEND_API_KEY || '').trim();
   if (!key) throw new Error('RESEND_API_KEY not set');
   _resend = new Resend(key);
   return _resend;
 }
 
-const FROM = process.env.FROM_EMAIL || 'Label Aarfa <onboarding@resend.dev>';
+const FROM = (process.env.FROM_EMAIL || 'Label Aarfa <onboarding@resend.dev>').trim();
+
+// Resend's shared sender `onboarding@resend.dev` can only deliver to the email
+// address that registered the Resend account. Detect this so we can return a
+// clearer error rather than silently failing.
+const IS_SHARED_SENDER = /onboarding@resend\.dev/i.test(FROM);
+
+async function sendOrLog(payload, label) {
+  try {
+    const { data, error } = await client().emails.send(payload);
+    if (error) {
+      console.error(`[email] ${label} rejected by Resend`, { to: payload.to, error });
+      return { ok: false, error: error.message || error.name || 'Resend rejected the message', shared: IS_SHARED_SENDER };
+    }
+    console.log(`[email] ${label} sent`, { to: payload.to, id: data?.id, shared: IS_SHARED_SENDER });
+    return { ok: true, id: data?.id, shared: IS_SHARED_SENDER };
+  } catch (err) {
+    console.error(`[email] ${label} threw`, { to: payload.to, message: err?.message });
+    return { ok: false, error: err?.message || 'Email send failed', shared: IS_SHARED_SENDER };
+  }
+}
 
 export async function sendOrderConfirmation({ to, order, items }) {
   const fmt = (paise) => `₹${(paise / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
@@ -36,18 +56,18 @@ export async function sendOrderConfirmation({ to, order, items }) {
     <p style="color:#6B5F4F;font-size:13px;margin-top:32px">Questions? Reply to this email or write to care@labelaarfa.com.</p>
   </div>`;
 
-  return client().emails.send({
+  return sendOrLog({
     from: FROM, to,
     subject: `Order confirmed — Label Aarfa #${order.id.slice(0, 8)}`,
     html,
-  });
+  }, 'order-confirmation');
 }
 
 export async function sendContactMessage({ name, email, message }) {
-  const admin = process.env.ADMIN_EMAIL || 'care@labelaarfa.com';
-  return client().emails.send({
+  const admin = (process.env.ADMIN_EMAIL || '').trim() || 'care@labelaarfa.com';
+  return sendOrLog({
     from: FROM, to: admin, replyTo: email,
     subject: `New contact-form message — ${name}`,
     html: `<p><strong>From:</strong> ${name} &lt;${email}&gt;</p><p>${message.replace(/\n/g, '<br>')}</p>`,
-  });
+  }, 'contact-form');
 }

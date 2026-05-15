@@ -64,11 +64,12 @@ export default async function handler(req, res) {
       if (liErr) throw liErr;
 
       const to = shippingAddress?.email || guestEmail;
+      let email = { ok: false, skipped: true };
       if (to) {
-        try { await sendOrderConfirmation({ to, order, items: lineItems }); }
-        catch (e) { console.error('COD confirmation email failed', e); }
+        try { email = await sendOrderConfirmation({ to, order, items: lineItems }); }
+        catch (e) { email = { ok: false, error: e?.message || 'send failed' }; }
       }
-      return res.status(200).json({ paymentMethod: 'cod', order });
+      return res.status(200).json({ paymentMethod: 'cod', order, email });
     }
 
     // Razorpay: create an Order with them, then mirror it in our DB with status=created

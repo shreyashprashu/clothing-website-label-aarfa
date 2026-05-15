@@ -38,12 +38,13 @@ export default async function handler(req, res) {
 
     // Send confirmation — failures should not break the API response.
     const to = order.shipping_address?.email || order.guest_email;
+    let email = { ok: false, skipped: true };
     if (to) {
-      try { await sendOrderConfirmation({ to, order, items: items || [] }); }
-      catch (e) { console.error('confirmation email failed', e); }
+      try { email = await sendOrderConfirmation({ to, order, items: items || [] }); }
+      catch (e) { email = { ok: false, error: e?.message || 'send failed' }; }
     }
 
-    return res.status(200).json({ ok: true, orderId: order.id });
+    return res.status(200).json({ ok: true, orderId: order.id, email });
   } catch (err) {
     console.error('orders/verify error', err);
     return res.status(500).json({ error: err.message || 'Verification failed' });

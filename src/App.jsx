@@ -9,22 +9,22 @@ const IMG = `${import.meta.env.BASE_URL}images/products/`;
    PRODUCTS — every image from labelaarfa.com/all-products
    ================================================================ */
 const PRODUCTS = [
-  { id: 1, name: 'Luxury Wine Rayon Tunic with Printed Palazzo', category: 'stitched', price: 2999, salePrice: 1499, images: [IMG + 'Luxury-Wine-Rayon-Tunic-Printed-Palazzo.jpeg',IMG + 'Luxury-Wine-Rayon-Tunic-with-Printed-Palazzo.jpeg'], fabric: 'Rayon', colors: ['#722F37','#1a1a1a'], sizes: ['S','M','L','XL'], isNew: true, description: 'A regal wine-toned tunic crafted in soft rayon, paired with a printed palazzo. Tailored for fluid drape and evening elegance.' },
-  { id: 2, name: 'Brown Kurta with Cream Heart Printed Palazzo', category: 'coords', price: 2499, salePrice: 1499, images: [IMG + 'Brown-Kurta-with-Cream-Heart-Printed-Palazzo-Set-for-Women.jpeg',IMG + 'Brown-Kurta-with-Cream-Heart-Printed-Palazzo.jpeg'], fabric: 'Cotton', colors: ['#6F4E37','#F5E6D3'], sizes: ['XS','S','M','L','XL'], isNew: false, description: 'Earthy brown kurta paired with a whimsical cream heart-printed palazzo. Romantic, refined, and quietly playful.' },
-  { id: 3, name: 'Stitched Red and Black Coord Set', category: 'stitched', price: 2899, salePrice: 1499, images: [IMG + 'stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Red-and-Black-women-clothes.jpeg',IMG + 'Best-stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Premium-stitched-Red-and-Black-women-clothes.jpeg'], fabric: 'Crepe', colors: ['#B91C1C','#1A1A1A'], sizes: ['S','M','L','XL','XXL'], isNew: true, description: 'A striking red and black ensemble — bold contrast, impeccable stitching, designed to make an entrance.' },
-  { id: 4, name: 'Designer Cords Set for Women', category: 'coords', price: 2999, salePrice: 1750, images: [IMG + 'Designer-Cords-Set-For-Women-in-Delhi.jpeg',IMG + 'Best-Designer-Cords-Set-For-Women.jpeg',IMG + 'Label-Aarfa-Designer-Cords-Set-For-Women.jpeg',IMG + 'Designer-Cords-Set-For-Women.jpeg'], fabric: 'Cotton Blend', colors: ['#8B7355','#D4AF37'], sizes: ['S','M','L','XL'], isNew: true, description: 'A modern coord set with timeless silhouette — soft drape, considered details, made for everyday luxury.' },
-  { id: 5, name: 'Coffee Shaded Embroidered Cotton Suit', category: 'stitched', price: 2999, salePrice: 1750, images: [IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg',IMG + 'Label-Aarfa-Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg',IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set-Price.jpeg',IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set-for-Women.jpeg'], fabric: 'Cotton', colors: ['#6F4E37','#3E2723'], sizes: ['S','M','L','XL'], isNew: false, description: 'Deep coffee tones meet intricate embroidery. A suit set that whispers craftsmanship in every thread.' },
-  { id: 6, name: 'Jaipur Royal Blue Cotton Handloom Kurta', category: 'newarrivals', price: 2499, salePrice: 1499, images: [IMG + 'Label-Aarfa-Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg',IMG + 'Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg'], fabric: 'Handloom Cotton', colors: ['#1E3A8A','#FFFFFF'], sizes: ['XS','S','M','L','XL'], isNew: true, description: 'Hand-woven in Jaipur — royal blue cotton with breathable structure and heritage in every weave.' },
-  { id: 7, name: 'Yellow Pashmina A-line Kurta with Salwar', category: 'newarrivals', price: 2999, salePrice: 1750, images: [IMG + 'Label-Aarfa-Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg',IMG + 'Yellow-Pashmina-A-line-Kurta.jpeg',IMG + 'Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg'], fabric: 'Pashmina', colors: ['#EAB308','#FCD34D'], sizes: ['S','M','L','XL'], isNew: true, description: 'Sunlit yellow pashmina with a graceful A-line silhouette. Includes coordinated salwar and shawl.' },
-  { id: 8, name: 'Stitched Soft Crepe Kurta with Tissue Silk Dupatta', category: 'stitched', price: 3499, salePrice: 1999, images: [IMG + 'Premium-soft-crepe-fabric.jpeg',IMG + 'Stiched-soft-crepe-fabric-with-Tissue-Silk-Dupatta.jpeg',IMG + 'women-Premium-soft-crepe-fabric-with-Tissue-Silk-Dupatta.jpeg',IMG + 'Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg'], fabric: 'Soft Crepe', colors: ['#B8860B','#F5DEB3'], sizes: ['S','M','L','XL'], isNew: false, description: 'A premium soft crepe kurta finished with a luminous tissue silk dupatta. Drape that flows like poetry.' },
-  { id: 9, name: 'Elegant Viscose Muslin Embroidered Suit', category: 'stitched', price: 3499, salePrice: 1999, images: [IMG + 'Elegant-Viscose-Muslin-Embroidered-Suit-Set.jpeg',IMG + 'Elegant-Viscose-Muslin-Embroidered-Suit.jpeg',IMG + 'Viscose-Muslin-Embroidered-Suit-Set.jpeg'], fabric: 'Viscose Muslin', colors: ['#A78BFA','#E9D5FF'], sizes: ['S','M','L','XL'], isNew: false, description: 'Cloud-soft viscose muslin embroidered with restraint and intention. Light to wear, lasting to remember.' },
-  { id: 10, name: 'Office Wear Baby Pink Cotton Kurta Set', category: 'newarrivals', price: 3299, salePrice: 1999, images: [IMG + 'Office-Wear-Kurta-Sets-for-Women-Affordable-Cotton.jpeg',IMG + 'Office-Wear-Kurta-Sets-for-Women-Baby-pink.jpeg',IMG + 'Kurta-Sets-for-Women-Affordable-Cotton.jpeg',IMG + 'Office-Wear-Kurta-Sets-for-Women.jpeg'], fabric: 'Cotton', colors: ['#FCE7F3','#F9A8D4'], sizes: ['XS','S','M','L','XL'], isNew: false, description: 'A workwear kurta set in tender baby pink — composed, breathable, and quietly powerful.' },
-  { id: 11, name: 'Floral Cotton Kurti Set with Dupatta', category: 'newarrivals', price: 3499, salePrice: 1999, images: [IMG + 'Floral-Cotton-Kurti-Set-with-Dupatta-for-women.jpeg',IMG + 'Best-Floral-Cotton-Kurti-Set-with-Dupatta.jpeg',IMG + 'Label-Aarfa-Floral-Cotton-Kurti-Set-with-Dupatta.jpeg',IMG + 'Floral-Cotton-Kurti-Set-with-Dupatta.jpeg'], fabric: 'Cotton', colors: ['#FBBF24','#10B981'], sizes: ['S','M','L','XL'], isNew: false, description: 'A garden in motion — floral prints on breathable cotton, finished with a flowing dupatta.' },
-  { id: 12, name: 'Designer Shirt & Dupatta Casual Set', category: 'coords', price: 3299, salePrice: 1999, images: [IMG + 'Best-Designer-Shirt-Dupatta-Casual-Collection.jpeg',IMG + 'Designer-Shirt-Dupatta-Casual-Muslim-Collection.jpeg',IMG + 'Designer-Shirt-Dupatta-Casual-Collection.jpeg',IMG + 'Shirt-Dupatta-Casual-Collection.jpeg'], fabric: 'Cotton Blend', colors: ['#374151','#9CA3AF'], sizes: ['S','M','L','XL'], isNew: false, description: 'A relaxed shirt paired with a soft dupatta — fluid, modern, effortlessly put-together.' },
-  { id: 13, name: 'Floral Silk Suit for Women', category: 'sale', price: 3499, salePrice: 1999, images: [IMG + 'silk-suits-for-women-sale-Online-at-Best-Price.jpeg',IMG + 'Buy-silk-suits-for-women-sale-Online-at-Best-Price.jpeg'], fabric: 'Silk', colors: ['#7C3AED','#EDE9FE'], sizes: ['S','M','L','XL'], isNew: false, description: 'Silk suit blooming with floral motifs — luminous, ceremonial, and worth keeping forever.' },
-  { id: 14, name: 'Ivory Kurta Set with Blue Floral Embroidery', category: 'newarrivals', price: 3499, salePrice: 1999, images: [IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg',IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery.jpeg',IMG + 'Ivory-Kurta-Set-with-Blue-Floral.jpeg',IMG + 'Label-AarfaIvory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg'], fabric: 'Cotton', colors: ['#FAF7F2','#1E40AF'], sizes: ['XS','S','M','L','XL'], isNew: true, description: 'Ivory canvas with cobalt embroidery — a study in restraint and contrast.' },
-  { id: 15, name: 'Original Long Pakistani Cordset', category: 'coords', price: 3499, salePrice: 1999, images: [IMG + 'orignal-long-pakistani-Cordset.jpeg',IMG + 'Premium-orignal-long-pakistani-Cordset-in-Delhi.jpeg',IMG + 'Premium-orignal-long-pakistani-Cordset.jpeg'], fabric: 'Lawn', colors: ['#065F46','#A7F3D0'], sizes: ['S','M','L','XL'], isNew: false, description: 'Long Pakistani coordset with authentic detailing — a long-line silhouette for graceful presence.' },
-  { id: 16, name: 'Lavender 3-Piece Stitched Dress', category: 'stitched', price: 3299, salePrice: 1999, images: [IMG + 'Lavender-3-Piece-Dress-Stitched.jpeg',IMG + 'Label-Aarfa-Lavender-3-Piece-Dress.jpeg'], fabric: 'Georgette', colors: ['#C4B5FD','#EDE9FE'], sizes: ['S','M','L','XL'], isNew: true, description: 'A three-piece in soft lavender — modern proportions, romantic palette, ready-to-wear.' },
+  { id: 1, name: 'Luxury Wine Rayon Tunic with Printed Palazzo', category: 'stitched', price: 2999, salePrice: 1499, images: [IMG + 'Luxury-Wine-Rayon-Tunic-Printed-Palazzo.jpeg',IMG + 'Luxury-Wine-Rayon-Tunic-with-Printed-Palazzo.jpeg'], fabric: 'Rayon', colors: ['#722F37','#1a1a1a'], sizes: ['S','M','L','XL'], isNew: true, stock: 3, description: 'A regal wine-toned tunic crafted in soft rayon, paired with a printed palazzo. Tailored for fluid drape and evening elegance.' },
+  { id: 2, name: 'Brown Kurta with Cream Heart Printed Palazzo', category: 'coords', price: 2499, salePrice: 1499, images: [IMG + 'Brown-Kurta-with-Cream-Heart-Printed-Palazzo-Set-for-Women.jpeg',IMG + 'Brown-Kurta-with-Cream-Heart-Printed-Palazzo.jpeg'], fabric: 'Cotton', colors: ['#6F4E37','#F5E6D3'], sizes: ['XS','S','M','L','XL'], isNew: false, stock: 8, description: 'Earthy brown kurta paired with a whimsical cream heart-printed palazzo. Romantic, refined, and quietly playful.' },
+  { id: 3, name: 'Stitched Red and Black Coord Set', category: 'stitched', price: 2899, salePrice: 1499, images: [IMG + 'stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Red-and-Black-women-clothes.jpeg',IMG + 'Best-stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Premium-stitched-Red-and-Black-women-clothes.jpeg'], fabric: 'Crepe', colors: ['#B91C1C','#1A1A1A'], sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 4, description: 'A striking red and black ensemble — bold contrast, impeccable stitching, designed to make an entrance.' },
+  { id: 4, name: 'Designer Cords Set for Women', category: 'coords', price: 2999, salePrice: 1750, images: [IMG + 'Designer-Cords-Set-For-Women-in-Delhi.jpeg',IMG + 'Best-Designer-Cords-Set-For-Women.jpeg',IMG + 'Label-Aarfa-Designer-Cords-Set-For-Women.jpeg',IMG + 'Designer-Cords-Set-For-Women.jpeg'], fabric: 'Cotton Blend', colors: ['#8B7355','#D4AF37'], sizes: ['S','M','L','XL'], isNew: true, stock: 12, description: 'A modern coord set with timeless silhouette — soft drape, considered details, made for everyday luxury.' },
+  { id: 5, name: 'Coffee Shaded Embroidered Cotton Suit', category: 'stitched', price: 2999, salePrice: 1750, images: [IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg',IMG + 'Label-Aarfa-Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg',IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set-Price.jpeg',IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set-for-Women.jpeg'], fabric: 'Cotton', colors: ['#6F4E37','#3E2723'], sizes: ['S','M','L','XL'], isNew: false, stock: 5, description: 'Deep coffee tones meet intricate embroidery. A suit set that whispers craftsmanship in every thread.' },
+  { id: 6, name: 'Jaipur Royal Blue Cotton Handloom Kurta', category: 'newarrivals', price: 2499, salePrice: 1499, images: [IMG + 'Label-Aarfa-Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg',IMG + 'Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg'], fabric: 'Handloom Cotton', colors: ['#1E3A8A','#FFFFFF'], sizes: ['XS','S','M','L','XL'], isNew: true, stock: 15, description: 'Hand-woven in Jaipur — royal blue cotton with breathable structure and heritage in every weave.' },
+  { id: 7, name: 'Yellow Pashmina A-line Kurta with Salwar', category: 'newarrivals', price: 2999, salePrice: 1750, images: [IMG + 'Label-Aarfa-Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg',IMG + 'Yellow-Pashmina-A-line-Kurta.jpeg',IMG + 'Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg'], fabric: 'Pashmina', colors: ['#EAB308','#FCD34D'], sizes: ['S','M','L','XL'], isNew: true, stock: 2, description: 'Sunlit yellow pashmina with a graceful A-line silhouette. Includes coordinated salwar and shawl.' },
+  { id: 8, name: 'Stitched Soft Crepe Kurta with Tissue Silk Dupatta', category: 'stitched', price: 3499, salePrice: 1999, images: [IMG + 'Premium-soft-crepe-fabric.jpeg',IMG + 'Stiched-soft-crepe-fabric-with-Tissue-Silk-Dupatta.jpeg',IMG + 'women-Premium-soft-crepe-fabric-with-Tissue-Silk-Dupatta.jpeg',IMG + 'Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg'], fabric: 'Soft Crepe', colors: ['#B8860B','#F5DEB3'], sizes: ['S','M','L','XL'], isNew: false, stock: 7, description: 'A premium soft crepe kurta finished with a luminous tissue silk dupatta. Drape that flows like poetry.' },
+  { id: 9, name: 'Elegant Viscose Muslin Embroidered Suit', category: 'stitched', price: 3499, salePrice: 1999, images: [IMG + 'Elegant-Viscose-Muslin-Embroidered-Suit-Set.jpeg',IMG + 'Elegant-Viscose-Muslin-Embroidered-Suit.jpeg',IMG + 'Viscose-Muslin-Embroidered-Suit-Set.jpeg'], fabric: 'Viscose Muslin', colors: ['#A78BFA','#E9D5FF'], sizes: ['S','M','L','XL'], isNew: false, stock: 18, description: 'Cloud-soft viscose muslin embroidered with restraint and intention. Light to wear, lasting to remember.' },
+  { id: 10, name: 'Office Wear Baby Pink Cotton Kurta Set', category: 'newarrivals', price: 3299, salePrice: 1999, images: [IMG + 'Office-Wear-Kurta-Sets-for-Women-Affordable-Cotton.jpeg',IMG + 'Office-Wear-Kurta-Sets-for-Women-Baby-pink.jpeg',IMG + 'Kurta-Sets-for-Women-Affordable-Cotton.jpeg',IMG + 'Office-Wear-Kurta-Sets-for-Women.jpeg'], fabric: 'Cotton', colors: ['#FCE7F3','#F9A8D4'], sizes: ['XS','S','M','L','XL'], isNew: false, stock: 25, description: 'A workwear kurta set in tender baby pink — composed, breathable, and quietly powerful.' },
+  { id: 11, name: 'Floral Cotton Kurti Set with Dupatta', category: 'newarrivals', price: 3499, salePrice: 1999, images: [IMG + 'Floral-Cotton-Kurti-Set-with-Dupatta-for-women.jpeg',IMG + 'Best-Floral-Cotton-Kurti-Set-with-Dupatta.jpeg',IMG + 'Label-Aarfa-Floral-Cotton-Kurti-Set-with-Dupatta.jpeg',IMG + 'Floral-Cotton-Kurti-Set-with-Dupatta.jpeg'], fabric: 'Cotton', colors: ['#FBBF24','#10B981'], sizes: ['S','M','L','XL'], isNew: false, stock: 6, description: 'A garden in motion — floral prints on breathable cotton, finished with a flowing dupatta.' },
+  { id: 12, name: 'Designer Shirt & Dupatta Casual Set', category: 'coords', price: 3299, salePrice: 1999, images: [IMG + 'Best-Designer-Shirt-Dupatta-Casual-Collection.jpeg',IMG + 'Designer-Shirt-Dupatta-Casual-Muslim-Collection.jpeg',IMG + 'Designer-Shirt-Dupatta-Casual-Collection.jpeg',IMG + 'Shirt-Dupatta-Casual-Collection.jpeg'], fabric: 'Cotton Blend', colors: ['#374151','#9CA3AF'], sizes: ['S','M','L','XL'], isNew: false, stock: 4, description: 'A relaxed shirt paired with a soft dupatta — fluid, modern, effortlessly put-together.' },
+  { id: 13, name: 'Floral Silk Suit for Women', category: 'sale', price: 3499, salePrice: 1999, images: [IMG + 'silk-suits-for-women-sale-Online-at-Best-Price.jpeg',IMG + 'Buy-silk-suits-for-women-sale-Online-at-Best-Price.jpeg'], fabric: 'Silk', colors: ['#7C3AED','#EDE9FE'], sizes: ['S','M','L','XL'], isNew: false, stock: 14, description: 'Silk suit blooming with floral motifs — luminous, ceremonial, and worth keeping forever.' },
+  { id: 14, name: 'Ivory Kurta Set with Blue Floral Embroidery', category: 'newarrivals', price: 3499, salePrice: 1999, images: [IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg',IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery.jpeg',IMG + 'Ivory-Kurta-Set-with-Blue-Floral.jpeg',IMG + 'Label-AarfaIvory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg'], fabric: 'Cotton', colors: ['#FAF7F2','#1E40AF'], sizes: ['XS','S','M','L','XL'], isNew: true, stock: 9, description: 'Ivory canvas with cobalt embroidery — a study in restraint and contrast.' },
+  { id: 15, name: 'Original Long Pakistani Cordset', category: 'coords', price: 3499, salePrice: 1999, images: [IMG + 'orignal-long-pakistani-Cordset.jpeg',IMG + 'Premium-orignal-long-pakistani-Cordset-in-Delhi.jpeg',IMG + 'Premium-orignal-long-pakistani-Cordset.jpeg'], fabric: 'Lawn', colors: ['#065F46','#A7F3D0'], sizes: ['S','M','L','XL'], isNew: false, stock: 11, description: 'Long Pakistani coordset with authentic detailing — a long-line silhouette for graceful presence.' },
+  { id: 16, name: 'Lavender 3-Piece Stitched Dress', category: 'stitched', price: 3299, salePrice: 1999, images: [IMG + 'Lavender-3-Piece-Dress-Stitched.jpeg',IMG + 'Label-Aarfa-Lavender-3-Piece-Dress.jpeg'], fabric: 'Georgette', colors: ['#C4B5FD','#EDE9FE'], sizes: ['S','M','L','XL'], isNew: true, stock: 3, description: 'A three-piece in soft lavender — modern proportions, romantic palette, ready-to-wear.' },
 ];
 
 /* ================================================================
@@ -570,6 +570,11 @@ function ProductCard({ product }) {
               New
             </div>
           )}
+          {typeof product.stock === 'number' && product.stock > 0 && product.stock <= 5 && (
+            <div className="absolute top-3 left-3 z-10 px-2.5 py-1 text-[10px] tracking-[0.18em] uppercase font-medium shadow-sm" style={{ backgroundColor: '#FBF8F3', color: '#7B1E28', borderRadius: '4px', marginTop: (hasSale || product.isNew) ? '34px' : '0' }}>
+              Only {product.stock} left
+            </div>
+          )}
           <img
             src={product.images[0]}
             alt={product.name}
@@ -598,13 +603,24 @@ function ProductCard({ product }) {
             <Heart className="w-4 h-4" style={{ fill: isWished ? '#7B1E28' : 'none', stroke: isWished ? '#7B1E28' : '#1F1A14' }} strokeWidth={1.5} />
           </button>
 
-          {/* Quick add — desktop only */}
+          {/* Quick add — desktop only, one tap per size */}
           <div className="absolute bottom-3 inset-x-3 transition-all duration-500 hidden sm:block" style={{ transform: hover ? 'translateY(0)' : 'translateY(calc(100% + 16px))', opacity: hover ? 1 : 0 }}>
-            <button onClick={(e) => { e.stopPropagation(); addToCart(product, product.sizes[1] || product.sizes[0], product.colors[0]); }}
-              className="w-full py-3 text-white text-[11px] tracking-[0.22em] uppercase font-medium transition-colors hover:opacity-90"
-              style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
-              Quick Add
-            </button>
+            <div className="flex items-center gap-1 p-1.5" style={{ backgroundColor: 'rgba(31, 26, 20, 0.92)', borderRadius: '6px', backdropFilter: 'blur(6px)' }}>
+              <span className="text-[9px] tracking-[0.22em] uppercase font-light pl-2 pr-1 shrink-0" style={{ color: 'rgba(246, 240, 229, 0.65)' }}>Add</span>
+              {product.sizes.map((size) => (
+                <button
+                  key={size}
+                  onClick={(e) => { e.stopPropagation(); addToCart(product, size, product.colors[0]); }}
+                  className="flex-1 py-1.5 text-[11px] font-medium tracking-wider text-white transition-colors"
+                  style={{ borderRadius: '4px', backgroundColor: 'transparent' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.16)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                  aria-label={`Add size ${size} to bag`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -978,6 +994,12 @@ function ProductPage({ id }) {
           <div className="py-4 sm:py-5" style={{ borderTop: '1px solid #E8DDC9', borderBottom: '1px solid #E8DDC9' }}>
             <Price priceInr={product.price} salePriceInr={product.salePrice} size="xl" showSaved />
             <div className="text-[10px] sm:text-[11px] mt-2 font-light" style={{ color: '#6B5F4F' }}>Inclusive of all taxes</div>
+            {typeof product.stock === 'number' && product.stock > 0 && product.stock <= 5 && (
+              <div className="text-[11px] sm:text-xs mt-2 font-medium tracking-wide flex items-center gap-1.5" style={{ color: '#7B1E28' }}>
+                <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#7B1E28' }} />
+                Only {product.stock} {product.stock === 1 ? 'piece' : 'pieces'} left
+              </div>
+            )}
           </div>
 
           <p className="text-sm leading-relaxed font-light" style={{ color: '#6B5F4F' }}>{product.description}</p>
@@ -1657,6 +1679,9 @@ function CheckoutPage() {
   const [payment, setPayment] = useState('cod');
   const [processing, setProcessing] = useState(false);
   const [orderId, setOrderId] = useState(null);
+  // Synchronous lock — React state updates batch, so a double-tap can sneak through `processing`
+  // before it flips. The ref is the actual single-fire guard.
+  const lockRef = useRef(false);
 
   const subtotal = cart.reduce((a, b) => a + (b.product.salePrice || b.product.price) * b.quantity, 0);
   const isIntl = currency !== 'INR';
@@ -1670,14 +1695,20 @@ function CheckoutPage() {
     productId: c.product.id, size: c.size, color: c.color, quantity: c.quantity,
   }));
 
-  const finishOrder = (id) => {
+  const [emailStatus, setEmailStatus] = useState(null);
+
+  const finishOrder = (id, email) => {
     setOrderId(id.slice(0, 8).toUpperCase());
+    setEmailStatus(email || null);
     setCart([]); setStep(3);
     showToast('Order placed successfully');
   };
 
+  const releaseLock = () => { lockRef.current = false; setProcessing(false); };
+
   const placeOrder = async () => {
-    if (processing) return;
+    if (lockRef.current) return;
+    lockRef.current = true;
     setProcessing(true);
     try {
       const shippingAddress = { ...address, email: address.email || user?.email };
@@ -1693,7 +1724,7 @@ function CheckoutPage() {
       const result = await api.createOrder(payload);
 
       if (result.paymentMethod === 'cod') {
-        finishOrder(result.order.id);
+        finishOrder(result.order.id, result.email);
         return;
       }
 
@@ -1711,28 +1742,28 @@ function CheckoutPage() {
         theme: { color: '#7B1E28' },
         handler: async (rsp) => {
           try {
-            await api.verifyOrder({
+            const v = await api.verifyOrder({
               razorpay_order_id: rsp.razorpay_order_id,
               razorpay_payment_id: rsp.razorpay_payment_id,
               razorpay_signature: rsp.razorpay_signature,
             });
-            finishOrder(result.orderId);
+            finishOrder(result.orderId, v?.email);
           } catch (e) {
             showToast(e.message || 'Verification failed');
           } finally {
-            setProcessing(false);
+            releaseLock();
           }
         },
-        modal: { ondismiss: () => setProcessing(false) },
+        modal: { ondismiss: () => releaseLock() },
       });
       rzp.on('payment.failed', (resp) => {
         showToast(resp.error?.description || 'Payment failed');
-        setProcessing(false);
+        releaseLock();
       });
       rzp.open();
     } catch (e) {
       showToast(e.message || 'Could not place order');
-      setProcessing(false);
+      releaseLock();
     }
   };
 
@@ -1758,9 +1789,18 @@ function CheckoutPage() {
         <div className="p-6 sm:p-8 text-left mb-7 sm:mb-8 shadow-sm" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8DDC9', borderRadius: '12px' }}>
           <div className="text-[11px] tracking-[0.22em] uppercase font-medium mb-4" style={{ color: '#1F1A14' }}>What's next</div>
           <div className="space-y-3 text-[13px] sm:text-sm font-light" style={{ color: '#6B5F4F' }}>
-            <div className="flex gap-3"><span style={{ color: '#7B1E28' }}>●</span> Confirmation sent to your registered contact</div>
-            <div className="flex gap-3"><span style={{ color: '#7B1E28' }}>●</span> Your order will be dispatched within 2 business days</div>
-            <div className="flex gap-3"><span style={{ color: '#7B1E28' }}>●</span> Track your order from your account</div>
+            <div className="flex gap-3">
+              <span style={{ color: '#7B1E28' }}>●</span>
+              {emailStatus?.ok
+                ? <span>Confirmation email is on its way to your inbox.</span>
+                : emailStatus?.shared
+                  ? <span>Order saved — confirmation email could not be delivered. (Resend test sender only delivers to the email used to create the Resend account; verify a domain to send to anyone.)</span>
+                  : emailStatus
+                    ? <span>Order saved — confirmation email could not be sent. Please note your order ID above.</span>
+                    : <span>Confirmation sent to your registered contact.</span>}
+            </div>
+            <div className="flex gap-3"><span style={{ color: '#7B1E28' }}>●</span> Your order will be dispatched within 2 business days.</div>
+            <div className="flex gap-3"><span style={{ color: '#7B1E28' }}>●</span> Track your order from My Orders in your account.</div>
           </div>
         </div>
 
