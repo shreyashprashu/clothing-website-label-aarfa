@@ -106,6 +106,19 @@ drop policy if exists "wishlist_own" on public.wishlist_items;
 create policy "wishlist_own" on public.wishlist_items
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- Persistent cart for logged-in users. Stored as a single JSONB blob keyed on user_id
+-- so writes are atomic (no fighting with composite-key inserts on quantity changes).
+-- Shape mirrors the localStorage cart: [{ key, productId, size, color, quantity }].
+create table if not exists public.user_carts (
+  user_id uuid primary key references auth.users on delete cascade,
+  cart jsonb not null default '[]'::jsonb,
+  updated_at timestamptz not null default now()
+);
+alter table public.user_carts enable row level security;
+drop policy if exists "user_cart_own" on public.user_carts;
+create policy "user_cart_own" on public.user_carts
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 -- =============================================================
 -- Auto-create a profile row when a new auth.user is created
 -- =============================================================

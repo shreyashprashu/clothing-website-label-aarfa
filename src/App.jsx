@@ -69,19 +69,38 @@ const useApp = () => useContext(AppCtx);
 
 // Cart is stored in localStorage as { key, productId, size, color, quantity } — products
 // are rehydrated from the in-memory PRODUCTS array so we don't bloat storage with images.
+// `la-cart-owner-v1` tracks which user the local cart belongs to ('' for guest) so we
+// don't accidentally hand one user's cart to a different user who signs in on the same browser.
+const CART_KEY = 'la-cart-v1';
+const CART_OWNER_KEY = 'la-cart-owner-v1';
+const stripCart = (cart) => cart.map(({ key, size, color, quantity, product }) => ({
+  key, productId: product.id, size, color, quantity,
+}));
+const hydrateCart = (stripped) => stripped
+  .map((c) => ({ ...c, product: PRODUCTS.find((p) => p.id === c.productId), key: c.key || `${c.productId}-${c.size}-${c.color}` }))
+  .filter((c) => c.product);
 const loadStoredCart = () => {
-  try {
-    const raw = JSON.parse(localStorage.getItem('la-cart-v1') || '[]');
-    return raw
-      .map((c) => ({ ...c, product: PRODUCTS.find((p) => p.id === c.productId) }))
-      .filter((c) => c.product);
-  } catch { return []; }
+  try { return hydrateCart(JSON.parse(localStorage.getItem(CART_KEY) || '[]')); } catch { return []; }
 };
-const persistCart = (cart) => {
-  const stripped = cart.map(({ key, size, color, quantity, product }) => ({
-    key, productId: product.id, size, color, quantity,
-  }));
-  try { localStorage.setItem('la-cart-v1', JSON.stringify(stripped)); } catch {}
+const persistCart = (cart, owner) => {
+  try {
+    localStorage.setItem(CART_KEY, JSON.stringify(stripCart(cart)));
+    localStorage.setItem(CART_OWNER_KEY, owner || '');
+  } catch {}
+};
+const loadCartOwner = () => { try { return localStorage.getItem(CART_OWNER_KEY) || ''; } catch { return ''; } };
+// Merge two cart lists keyed by (productId,size,color). For shared keys take MAX
+// quantity, not sum — prevents doubling on the common case of "re-signin on same browser
+// where local already mirrors DB". Adds items unique to either side.
+const mergeCarts = (local, dbStripped) => {
+  const map = new Map();
+  for (const item of hydrateCart(dbStripped)) map.set(item.key, item);
+  for (const item of local) {
+    const existing = map.get(item.key);
+    if (existing) map.set(item.key, { ...existing, quantity: Math.max(existing.quantity, item.quantity) });
+    else map.set(item.key, item);
+  }
+  return [...map.values()];
 };
 const loadStoredWishlist = () => {
   try { return JSON.parse(localStorage.getItem('la-wishlist-v1') || '[]'); } catch { return []; }
@@ -131,9 +150,15 @@ function AppProvider({ children }) {
     return next;
   });
 
-  // Persist cart + wishlist to localStorage so they survive refresh
-  useEffect(() => { persistCart(cart); }, [cart]);
+  // Persist cart + wishlist to localStorage so they survive refresh.
+  // Cart is tagged with the current user id (or '' for guests) — see mergeCarts.
+  useEffect(() => { persistCart(cart, user?.id || ''); }, [cart, user?.id]);
   useEffect(() => { try { localStorage.setItem('la-wishlist-v1', JSON.stringify(wishlist)); } catch {} }, [wishlist]);
+
+  // Gates the cart-to-DB sync effect: false until the post-sign-in merge completes,
+  // so we don't accidentally overwrite the user's DB cart with the local cart before
+  // we've had a chance to read what was already there.
+  const cartSyncReadyRef = useRef(false);
 
   // Hydrate Supabase session and subscribe to auth changes
   useEffect(() => {
@@ -155,8 +180,15 @@ function AppProvider({ children }) {
   // When a user signs in, hydrate their saved profile data:
   //   1) default shipping address (used as initial form values on checkout)
   //   2) wishlist — merge local with DB, persist union back to both
+  //   3) cart — merge local with DB by key, MAX-quantity for shared rows.
+  //      If a different user's cart was sitting in localStorage, discard it (don't leak across accounts).
   useEffect(() => {
-    if (!user || !supabase) return;
+    cartSyncReadyRef.current = false;
+    if (!user || !supabase) {
+      // Logged out: leave local cart alone; the sync effect short-circuits on !user.
+      cartSyncReadyRef.current = true;
+      return;
+    }
     let cancelled = false;
 
     // 1. Default address
@@ -180,8 +212,30 @@ function AppProvider({ children }) {
         });
       }, () => {});
 
+    // 3. Cart — fetch DB cart, then merge with local. If the local cart was owned by a
+    // different signed-in user, drop it and take DB only.
+    const prevOwner = loadCartOwner();
+    const localBelongsToDifferentUser = prevOwner && prevOwner !== user.id;
+    supabase.from('user_carts').select('cart').eq('user_id', user.id).maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        const dbCart = (!error && data?.cart) ? data.cart : [];
+        setCart((local) => localBelongsToDifferentUser ? hydrateCart(dbCart) : mergeCarts(local, dbCart));
+        cartSyncReadyRef.current = true;
+      }, () => { if (!cancelled) cartSyncReadyRef.current = true; });
+
     return () => { cancelled = true; };
   }, [user?.id]);
+
+  // Mirror cart to DB on every change while signed in. Gated on cartSyncReadyRef so the
+  // post-sign-in merge runs first.
+  useEffect(() => {
+    if (!user || !supabase) return;
+    if (!cartSyncReadyRef.current) return;
+    supabase.from('user_carts').upsert({
+      user_id: user.id, cart: stripCart(cart), updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' }).then(() => {}, () => {});
+  }, [cart, user?.id]);
 
   // Geo-detect currency + fetch live FX rates. Cached in localStorage for 6h.
   const [ratesVersion, setRatesVersion] = useState(0);
