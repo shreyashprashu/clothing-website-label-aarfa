@@ -193,7 +193,14 @@ function AppProvider({ children }) {
   const [currency, setCurrency] = useState('INR');
   const [toast, setToast] = useState(null);
 
-  const showToast = (m) => { setToast(m); setTimeout(() => setToast(null), 2400); };
+  // Dedupe rapid toasts — each call clears the previous timer instead of stacking,
+  // so 10 quick add-to-bag taps don't leave 10 pending timers in memory.
+  const toastTimerRef = useRef(null);
+  const showToast = (m) => {
+    setToast(m);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => { setToast(null); toastTimerRef.current = null; }, 2400);
+  };
   // Use instant scroll on route change — the page-enter fade does the visual work.
   // Smooth-scrolling a long page while new content fades in feels like two things competing.
   const navigate = (name, data = null) => { setPage({ name, data }); window.scrollTo({ top: 0, behavior: 'auto' }); setMobileMenuOpen(false); };
@@ -472,7 +479,7 @@ function applySeo(page) {
   } else if (page.name === 'about') {
     cur = { ...home, title: 'About Label Aarfa — Our Story | Founded 2019, Delhi', desc: 'Founded in 2019 by Aarfa, our Delhi atelier works with master artisans across Jaipur, Delhi, and Lucknow to make ethnic wear with intention.', url: SITE_URL + '/about' };
   } else if (page.name === 'contact') {
-    cur = { ...home, title: 'Contact Label Aarfa — Atelier in New Delhi', desc: 'Our atelier is in New Delhi. Email care@labelaarfa.com or call +91 98xxx xxx00.', url: SITE_URL + '/contact' };
+    cur = { ...home, title: 'Contact Label Aarfa — Atelier in New Delhi', desc: 'Our atelier is in New Delhi. Email care@labelaarfa.com or call +91 83699 07626.', url: SITE_URL + '/contact' };
   } else if (page.name === 'wishlist') {
     cur = { ...home, title: 'Wishlist — Label Aarfa', desc: 'Pieces you have saved from the Label Aarfa collection.', url: SITE_URL + '/wishlist' };
   } else if (page.name === 'orders') {
@@ -534,7 +541,10 @@ function DiscountBadge({ priceInr, salePriceInr }) {
 function AnnouncementBar() {
   const msgs = ['Free shipping on orders above ₹2,999', '24-hour size-exchange window', 'Use WELCOME10 for 10% off your first order'];
   const [i, setI] = useState(0);
-  useEffect(() => { const t = setInterval(() => setI((x) => (x + 1) % msgs.length), 4000); return () => clearInterval(t); }, []);
+  // Skip the tick when the tab is hidden — mobile browsers throttle setInterval in
+  // backgrounded tabs and fire a burst when you return, which restarts the fade
+  // animation N times back-to-back and causes the "everything lags" feel.
+  useEffect(() => { const t = setInterval(() => { if (document.hidden) return; setI((x) => (x + 1) % msgs.length); }, 4000); return () => clearInterval(t); }, []);
   return (
     <div className="text-[10px] sm:text-[11px] tracking-[0.2em] uppercase font-light overflow-hidden h-9 flex items-center justify-center px-4" style={{ backgroundColor: '#1F1A14', color: '#F6F0E5' }}>
       <div key={i} className="animate-fadeIn truncate">{msgs[i]}</div>
@@ -732,7 +742,8 @@ function Hero() {
     { image: IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg', eyebrow: 'Festive 2026', title: 'Quietly', accent: 'Regal', sub: 'Pieces meant for moments you want to remember.' },
   ];
   const [active, setActive] = useState(0);
-  useEffect(() => { const t = setInterval(() => setActive((a) => (a + 1) % slides.length), 6500); return () => clearInterval(t); }, []);
+  // Same pause-when-hidden treatment as AnnouncementBar.
+  useEffect(() => { const t = setInterval(() => { if (document.hidden) return; setActive((a) => (a + 1) % slides.length); }, 6500); return () => clearInterval(t); }, []);
 
   return (
     <section className="relative" style={{ backgroundColor: '#FBF8F3' }}>
@@ -2348,7 +2359,7 @@ function ContactPage() {
         <div className="space-y-6 sm:space-y-7 lg:pl-8" style={{ borderLeft: 'none' }}>
           <div className="lg:pl-0 space-y-6 sm:space-y-7">
             <ContactItem icon={MapPin} title="Atelier" body={<>Label Aarfa<br />New Delhi, India</>} />
-            <ContactItem icon={Phone} title="Phone" body="+91 98xxx xxx00" />
+            <ContactItem icon={Phone} title="Phone" body={<a href="tel:+918369907626" style={{ color: 'inherit', textDecoration: 'none' }}>+91 83699 07626</a>} />
             <ContactItem icon={Mail} title="Email" body="care@labelaarfa.com" />
             <ContactItem icon={null} title="Hours" body={<>Monday – Saturday<br />11:00 AM – 8:00 PM IST</>} />
           </div>
