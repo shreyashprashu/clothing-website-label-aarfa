@@ -106,6 +106,24 @@ const CURRENCIES = {
 // when the customer's currency is non-INR. Server enforces it independently.
 const INTL_MARKUP_INR = 5000;
 
+// Mirror of api/_lib/promos.js for instant preview while the customer types.
+// Server is the source of truth — it re-validates on order creation, including
+// `firstOrderOnly` (which the client can't reliably check for guests).
+const PROMOS = {
+  WELCOME10: { type: 'percent', value: 10, minSubtotalInr: 0, intlAllowed: false, firstOrderOnly: true, description: '10% off your first order' },
+};
+function validatePromoClient({ code, subtotalInr, isIntl }) {
+  if (!code) return { discountInr: 0 };
+  const key = String(code).trim().toUpperCase();
+  if (!key) return { discountInr: 0 };
+  const promo = PROMOS[key];
+  if (!promo) return { error: 'Invalid promo code' };
+  if (isIntl && !promo.intlAllowed) return { error: 'This code is for India orders only' };
+  if (subtotalInr < promo.minSubtotalInr) return { error: `Minimum order ₹${promo.minSubtotalInr.toLocaleString('en-IN')}` };
+  const discountInr = promo.type === 'percent' ? Math.floor((subtotalInr * promo.value) / 100) : Math.min(promo.value, subtotalInr);
+  return { code: key, discountInr, description: promo.description };
+}
+
 const formatPrice = (inr, c) => {
   const cfg = CURRENCIES[c] || CURRENCIES.INR;
   const x = inr * cfg.rate;
@@ -1736,6 +1754,10 @@ function OrderCard({ order }) {
         <span className="text-right font-light tabular-nums" style={{ color: '#1F1A14' }}>{formatPaise(order.subtotal_paise)}</span>
         <span className="font-light" style={{ color: '#6B5F4F' }}>Shipping</span>
         <span className="text-right font-light tabular-nums" style={{ color: '#1F1A14' }}>{order.shipping_paise === 0 ? 'Free' : formatPaise(order.shipping_paise)}</span>
+        {order.discount_paise > 0 && (<>
+          <span className="font-light" style={{ color: '#7B1E28' }}>Discount{order.promo_code ? ` (${order.promo_code})` : ''}</span>
+          <span className="text-right font-light tabular-nums" style={{ color: '#7B1E28' }}>−{formatPaise(order.discount_paise)}</span>
+        </>)}
         <span className="font-medium uppercase tracking-[0.18em] text-[10px] sm:text-[11px] pt-2 mt-1" style={{ color: '#1F1A14', borderTop: '1px solid #E8DDC9' }}>Total</span>
         <span className="text-right font-semibold tabular-nums pt-2 mt-1" style={{ color: '#1F1A14', borderTop: '1px solid #E8DDC9' }}>{formatPaise(order.total_paise)}</span>
       </div>
@@ -1931,7 +1953,28 @@ function CheckoutPage() {
   const isIntl = currency !== 'INR';
   const shipping = isIntl ? 0 : (subtotal >= 2999 ? 0 : 99);
   const intlFee = isIntl && cart.length > 0 ? INTL_MARKUP_INR : 0;
-  const total = subtotal + shipping + intlFee;
+
+  // Promo state — client preview only; the server re-validates and is final.
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [promoError, setPromoError] = useState('');
+  // If the cart changes (subtotal/intl) after applying, re-check and clear if no longer valid.
+  useEffect(() => {
+    if (!appliedPromo) return;
+    const r = validatePromoClient({ code: appliedPromo.code, subtotalInr: subtotal, isIntl });
+    if (r.error || !r.discountInr) { setAppliedPromo(null); setPromoError(r.error || ''); }
+    else if (r.discountInr !== appliedPromo.discountInr) setAppliedPromo(r);
+  }, [subtotal, isIntl]);
+  const tryApplyPromo = () => {
+    const r = validatePromoClient({ code: promoInput, subtotalInr: subtotal, isIntl });
+    if (r.error) { setPromoError(r.error); setAppliedPromo(null); return; }
+    if (!r.discountInr) { setPromoError('Enter a promo code'); return; }
+    setAppliedPromo(r); setPromoError(''); showToast('Promo applied');
+  };
+  const clearPromo = () => { setAppliedPromo(null); setPromoInput(''); setPromoError(''); };
+  const discount = appliedPromo?.discountInr || 0;
+
+  const total = Math.max(0, subtotal + shipping + intlFee - discount);
 
   const goToPayment = (e) => { e.preventDefault(); setStep(2); };
 
@@ -1967,6 +2010,7 @@ function CheckoutPage() {
         guestEmail: user ? null : shippingAddress.email,
         paymentMethod: payment === 'cod' ? 'cod' : 'razorpay',
         currency,
+        promoCode: appliedPromo?.code || null,
       };
 
       const result = await api.createOrder(payload, token);
@@ -2161,6 +2205,43 @@ function CheckoutPage() {
             <Row label="Subtotal" value={formatPrice(subtotal, currency)} />
             <Row label="Shipping" value={shipping === 0 ? 'Free' : formatPrice(shipping, currency)} />
             {intlFee > 0 && <Row label="International service" value={formatPrice(intlFee, currency)} />}
+            {appliedPromo && (
+              <div className="flex items-baseline justify-between gap-3 text-xs sm:text-[13px]">
+                <span className="font-light" style={{ color: '#7B1E28' }}>
+                  Discount <span className="tracking-[0.18em] uppercase text-[10px] ml-1">({appliedPromo.code})</span>
+                  <button onClick={clearPromo} className="ml-2 text-[10px] underline opacity-70 hover:opacity-100" type="button" aria-label="Remove promo code">remove</button>
+                </span>
+                <span className="font-medium tabular-nums" style={{ color: '#7B1E28' }}>−{formatPrice(discount, currency)}</span>
+              </div>
+            )}
+          </div>
+          {/* Promo code input */}
+          <div className="mt-3 pt-3" style={{ borderTop: '1px solid #E8DDC9' }}>
+            {!appliedPromo ? (
+              <div>
+                <label className="text-[10px] tracking-[0.22em] uppercase font-light block mb-1.5" style={{ color: '#6B5F4F' }}>Promo code</label>
+                <div className="flex gap-2">
+                  <input
+                    value={promoInput}
+                    onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); tryApplyPromo(); } }}
+                    placeholder="e.g. WELCOME10"
+                    className="flex-1 px-3 py-2.5 text-xs tracking-[0.14em] uppercase font-light focus:outline-none"
+                    style={{ border: '1px solid #E8DDC9', borderRadius: '4px', backgroundColor: '#FBF8F3', color: '#1F1A14' }}
+                  />
+                  <button type="button" onClick={tryApplyPromo} disabled={!promoInput.trim()} className="px-4 py-2.5 text-[11px] tracking-[0.22em] uppercase font-medium transition-opacity hover:opacity-90 disabled:opacity-40"
+                    style={{ backgroundColor: '#1F1A14', color: '#F6F0E5', borderRadius: '4px' }}>
+                    Apply
+                  </button>
+                </div>
+                {promoError && <div className="mt-1.5 text-[11px] font-light" style={{ color: '#7B1E28' }}>{promoError}</div>}
+              </div>
+            ) : (
+              <div className="text-[11px] font-light" style={{ color: '#2F6B3E' }}>
+                <Check className="inline w-3.5 h-3.5 mr-1 -mt-0.5" strokeWidth={1.8} />
+                {appliedPromo.description || 'Promo applied'}
+              </div>
+            )}
           </div>
           <div className="mt-3 pt-3 space-y-1" style={{ borderTop: '1px solid #E8DDC9' }}>
             <Row label="Total" value={formatPrice(total, currency)} bold />

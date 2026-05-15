@@ -58,6 +58,7 @@ export async function sendOrderConfirmation({ to, order, items }) {
     <table style="width:100%;margin-top:16px;font-size:14px">
       <tr><td>Subtotal</td><td style="text-align:right">${fmt(order.subtotal_paise)}</td></tr>
       <tr><td>Shipping</td><td style="text-align:right">${order.shipping_paise === 0 ? 'Free' : fmt(order.shipping_paise)}</td></tr>
+      ${order.discount_paise > 0 ? `<tr><td style="color:#7B1E28">Discount${order.promo_code ? ` (${order.promo_code})` : ''}</td><td style="text-align:right;color:#7B1E28">−${fmt(order.discount_paise)}</td></tr>` : ''}
       <tr><td style="padding-top:8px;border-top:1px solid #E8DDC9;font-weight:600">Total</td><td style="padding-top:8px;border-top:1px solid #E8DDC9;text-align:right;font-weight:600">${fmt(order.total_paise)}</td></tr>
     </table>
     <p style="color:#6B5F4F;font-size:13px;margin-top:32px">Questions? Reply to this email or write to label.arfa@gmail.com.</p>
@@ -122,6 +123,7 @@ export async function sendOrderAdminNotification({ order, items, address }) {
     <table style="width:100%;font-size:13px;border-collapse:collapse">
       <tr><td style="padding:3px 12px;color:#6B5F4F">Subtotal</td><td style="padding:3px 12px;text-align:right">${fmt(order.subtotal_paise)}</td></tr>
       <tr><td style="padding:3px 12px;color:#6B5F4F">Shipping / fees</td><td style="padding:3px 12px;text-align:right">${order.shipping_paise === 0 ? 'Free' : fmt(order.shipping_paise)}</td></tr>
+      ${order.discount_paise > 0 ? `<tr><td style="padding:3px 12px;color:#7B1E28">Discount${order.promo_code ? ` (${esc(order.promo_code)})` : ''}</td><td style="padding:3px 12px;text-align:right;color:#7B1E28">−${fmt(order.discount_paise)}</td></tr>` : ''}
       <tr><td style="padding:10px 12px 4px;border-top:1px solid #E8DDC9;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;font-size:12px">Total</td><td style="padding:10px 12px 4px;border-top:1px solid #E8DDC9;text-align:right;font-weight:600;font-size:16px">${fmt(order.total_paise)}</td></tr>
     </table>
 

@@ -2,6 +2,7 @@ import Razorpay from 'razorpay';
 import { getServiceClient } from '../_lib/supabase.js';
 import { productById, effectivePriceInr } from '../_lib/products.js';
 import { sendOrderConfirmation, sendOrderAdminNotification } from '../_lib/email.js';
+import { validatePromo } from '../_lib/promos.js';
 
 // Best-effort: persist the address as the user's default so next time it's prefilled.
 async function saveDefaultAddress(sb, userId, addr) {
@@ -48,7 +49,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { items, shippingAddress, userId: clientUserId, guestEmail, paymentMethod = 'razorpay', currency = 'INR' } = req.body || {};
+    const { items, shippingAddress, userId: clientUserId, guestEmail, paymentMethod = 'razorpay', currency = 'INR', promoCode } = req.body || {};
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'No items in order' });
@@ -115,7 +116,26 @@ export default async function handler(req, res) {
     const isIntl = headerForcesIntl || (String(currency).toUpperCase() !== 'INR');
     const shippingInr = isIntl ? 0 : (subtotalInr >= 2999 ? 0 : 99);
     const markupInr = isIntl ? 5000 : 0;
-    const totalInr = subtotalInr + shippingInr + markupInr;
+
+    // Promo code — server-authoritative. firstOrderOnly is enforced via a
+    // count of the user's prior successful orders. Guests can use a
+    // firstOrderOnly code (we have no stable identity to count against).
+    let priorOrderCount = 0;
+    if (promoCode && userId) {
+      const { count } = await sb.from('orders')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .in('status', ['paid', 'cod_confirmed', 'shipped', 'delivered']);
+      priorOrderCount = count || 0;
+    }
+    const promoResult = validatePromo({ code: promoCode, subtotalInr, isIntl, priorOrderCount });
+    if (promoCode && promoResult.error) {
+      return res.status(400).json({ error: promoResult.error });
+    }
+    const discountInr = promoResult.discountInr || 0;
+    const appliedPromoCode = promoResult.code || null;
+
+    const totalInr = Math.max(0, subtotalInr + shippingInr + markupInr - discountInr);
 
     // ----- COD -----
     if (paymentMethod === 'cod') {
@@ -126,6 +146,8 @@ export default async function handler(req, res) {
         payment_method: 'cod',
         subtotal_paise: subtotalInr * 100,
         shipping_paise: (shippingInr + markupInr) * 100,
+        discount_paise: discountInr * 100,
+        promo_code: appliedPromoCode,
         total_paise: totalInr * 100,
         currency: 'INR',
         shipping_address: shippingAddress,
@@ -168,6 +190,8 @@ export default async function handler(req, res) {
         payment_method: 'razorpay',
         subtotal_paise: subtotalInr * 100,
         shipping_paise: (shippingInr + markupInr) * 100,
+        discount_paise: discountInr * 100,
+        promo_code: appliedPromoCode,
         total_paise: totalInr * 100,
         currency: 'INR',
         razorpay_order_id: rzpOrder.id,

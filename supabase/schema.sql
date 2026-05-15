@@ -66,6 +66,10 @@ create index if not exists orders_user_id_idx on public.orders (user_id);
 create index if not exists orders_status_idx on public.orders (status);
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
 
+-- Promo code applied at checkout (idempotent for older schemas)
+alter table public.orders add column if not exists promo_code text;
+alter table public.orders add column if not exists discount_paise int not null default 0;
+
 -- Line items for each order. product_id mirrors the IDs in data/products.js / src/App.jsx
 create table if not exists public.order_items (
   id uuid primary key default gen_random_uuid(),
