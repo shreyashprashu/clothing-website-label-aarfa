@@ -2,11 +2,125 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>vite-app</title>
+    <meta name="theme-color" content="#FBF8F3" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="canonical" href="https://labelaarfa.com/" />
+
+    <title>Label Aarfa — Handcrafted Ethnic Wear from Delhi | Est. 2019</title>
+    <meta name="description" content="Label Aarfa is a Delhi atelier crafting handmade kurtas, coord sets, and stitched suits since 2019. Slow couture in handloom cotton, soft crepe, silk, and pashmina. Free shipping over ₹2,999." />
+    <meta name="keywords" content="Label Aarfa, ethnic wear, kurta sets, coord sets, stitched suits, designer kurtas, Pakistani cordsets, handloom cotton, Delhi designer, Indian women's clothing, festive wear" />
+    <meta name="author" content="Label Aarfa" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Label Aarfa" />
+    <meta property="og:title" content="Label Aarfa — Handcrafted Ethnic Wear from Delhi | Est. 2019" />
+    <meta property="og:description" content="A Delhi atelier crafting handmade kurtas, coord sets, and stitched suits since 2019. Slow couture, made by hand." />
+    <meta property="og:url" content="https://labelaarfa.com/" />
+    <meta property="og:image" content="https://shreyashprashu.github.io/clothing-website-label-aarfa/images/products/Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg" />
+    <meta property="og:image:alt" content="Label Aarfa premium soft crepe ensemble" />
+    <meta property="og:locale" content="en_IN" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Label Aarfa — Handcrafted Ethnic Wear from Delhi | Est. 2019" />
+    <meta name="twitter:description" content="A Delhi atelier crafting handmade kurtas, coord sets, and stitched suits since 2019." />
+    <meta name="twitter:image" content="https://shreyashprashu.github.io/clothing-website-label-aarfa/images/products/Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg" />
+
+    <!-- Preconnect to font + image CDNs -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Organization schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Label Aarfa",
+      "alternateName": "Label Aarfa Couture",
+      "url": "https://labelaarfa.com/",
+      "logo": "https://shreyashprashu.github.io/clothing-website-label-aarfa/logo.svg",
+      "image": "https://shreyashprashu.github.io/clothing-website-label-aarfa/logo.svg",
+      "description": "Handcrafted ethnic wear from a Delhi atelier, established 2019. Stitched kurtas, coord sets, and Pakistani-inspired suits.",
+      "foundingDate": "2019",
+      "founder": { "@type": "Person", "name": "Aarfa" },
+      "slogan": "Fashion Redefined",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "28/132 West Patel Nagar",
+        "addressLocality": "New Delhi",
+        "postalCode": "110008",
+        "addressCountry": "IN"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "care@labelaarfa.com",
+        "contactType": "customer service",
+        "areaServed": ["IN", "US", "GB", "AE", "CA", "AU"],
+        "availableLanguage": ["English", "Hindi"]
+      },
+      "sameAs": [
+        "https://www.instagram.com/labelaarfa",
+        "https://www.facebook.com/labelaarfa"
+      ]
+    }
+    </script>
+
+    <!-- LocalBusiness schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ClothingStore",
+      "name": "Label Aarfa",
+      "image": "https://shreyashprashu.github.io/clothing-website-label-aarfa/logo.svg",
+      "@id": "https://labelaarfa.com/",
+      "url": "https://labelaarfa.com/",
+      "telephone": "+91-98000-00000",
+      "email": "care@labelaarfa.com",
+      "priceRange": "₹₹",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "28/132 West Patel Nagar",
+        "addressLocality": "New Delhi",
+        "postalCode": "110008",
+        "addressCountry": "IN"
+      },
+      "openingHoursSpecification": [{
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+        "opens": "11:00",
+        "closes": "20:00"
+      }]
+    }
+    </script>
+
+    <!-- WebSite + SearchAction -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Label Aarfa",
+      "url": "https://labelaarfa.com/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://labelaarfa.com/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
   </head>
   <body>
+    <noscript>
+      <div style="padding:40px;font-family:Georgia,serif;color:#1F1A14;background:#FBF8F3;text-align:center;">
+        <h1 style="font-size:28px;margin-bottom:12px;">Label Aarfa</h1>
+        <p>Handcrafted ethnic wear from a Delhi atelier, established 2019.</p>
+        <p>Please enable JavaScript to browse the collection.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

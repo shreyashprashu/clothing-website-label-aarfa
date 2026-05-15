@@ -1,26 +1,28 @@
 import React, { useState, useEffect, useMemo, useRef, createContext, useContext } from 'react';
 import { ShoppingBag, Heart, Search, User, X, Menu, ChevronRight, ChevronLeft, Plus, Minus, Truck, ShieldCheck, RotateCcw, Hash, Globe2, Video, MapPin, Phone, Mail, Check, ArrowRight, SlidersHorizontal, Sparkles, Globe } from 'lucide-react';
 
+const IMG = `${import.meta.env.BASE_URL}images/products/`;
+
 /* ================================================================
    PRODUCTS — every image from labelaarfa.com/all-products
    ================================================================ */
 const PRODUCTS = [
-  { id: 1, name: 'Luxury Wine Rayon Tunic with Printed Palazzo', category: 'stitched', price: 2999, salePrice: 1499, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Luxury-Wine-Rayon-Tunic-Printed-Palazzo.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Luxury-Wine-Rayon-Tunic-with-Printed-Palazzo.jpeg'], fabric: 'Rayon', colors: ['#722F37','#1a1a1a'], sizes: ['S','M','L','XL'], isNew: true, description: 'A regal wine-toned tunic crafted in soft rayon, paired with a printed palazzo. Tailored for fluid drape and evening elegance.' },
-  { id: 2, name: 'Brown Kurta with Cream Heart Printed Palazzo', category: 'coords', price: 2499, salePrice: 1499, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Brown-Kurta-with-Cream-Heart-Printed-Palazzo-Set-for-Women.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Brown-Kurta-with-Cream-Heart-Printed-Palazzo.jpeg'], fabric: 'Cotton', colors: ['#6F4E37','#F5E6D3'], sizes: ['XS','S','M','L','XL'], isNew: false, description: 'Earthy brown kurta paired with a whimsical cream heart-printed palazzo. Romantic, refined, and quietly playful.' },
-  { id: 3, name: 'Stitched Red and Black Coord Set', category: 'stitched', price: 2899, salePrice: 1499, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/stitched-Red-and-Black-women-clothes.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Red-and-Black-women-clothes.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Best-stitched-Red-and-Black-women-clothes.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Premium-stitched-Red-and-Black-women-clothes.jpeg'], fabric: 'Crepe', colors: ['#B91C1C','#1A1A1A'], sizes: ['S','M','L','XL','XXL'], isNew: true, description: 'A striking red and black ensemble — bold contrast, impeccable stitching, designed to make an entrance.' },
-  { id: 4, name: 'Designer Cords Set for Women', category: 'coords', price: 2999, salePrice: 1750, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Designer-Cords-Set-For-Women-in-Delhi.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Best-Designer-Cords-Set-For-Women.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Label-Aarfa-Designer-Cords-Set-For-Women.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Designer-Cords-Set-For-Women.jpeg'], fabric: 'Cotton Blend', colors: ['#8B7355','#D4AF37'], sizes: ['S','M','L','XL'], isNew: true, description: 'A modern coord set with timeless silhouette — soft drape, considered details, made for everyday luxury.' },
-  { id: 5, name: 'Coffee Shaded Embroidered Cotton Suit', category: 'stitched', price: 2999, salePrice: 1750, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Label-Aarfa-Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Coffee-Shaded-Embroidered-Cotton-Suit-Set-Price.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Coffee-Shaded-Embroidered-Cotton-Suit-Set-for-Women.jpeg'], fabric: 'Cotton', colors: ['#6F4E37','#3E2723'], sizes: ['S','M','L','XL'], isNew: false, description: 'Deep coffee tones meet intricate embroidery. A suit set that whispers craftsmanship in every thread.' },
-  { id: 6, name: 'Jaipur Royal Blue Cotton Handloom Kurta', category: 'newarrivals', price: 2499, salePrice: 1499, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Label-Aarfa-Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg'], fabric: 'Handloom Cotton', colors: ['#1E3A8A','#FFFFFF'], sizes: ['XS','S','M','L','XL'], isNew: true, description: 'Hand-woven in Jaipur — royal blue cotton with breathable structure and heritage in every weave.' },
-  { id: 7, name: 'Yellow Pashmina A-line Kurta with Salwar', category: 'newarrivals', price: 2999, salePrice: 1750, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Label-Aarfa-Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Yellow-Pashmina-A-line-Kurta.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg'], fabric: 'Pashmina', colors: ['#EAB308','#FCD34D'], sizes: ['S','M','L','XL'], isNew: true, description: 'Sunlit yellow pashmina with a graceful A-line silhouette. Includes coordinated salwar and shawl.' },
-  { id: 8, name: 'Stitched Soft Crepe Kurta with Tissue Silk Dupatta', category: 'stitched', price: 3499, salePrice: 1999, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Premium-soft-crepe-fabric.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Stiched-soft-crepe-fabric-with-Tissue-Silk-Dupatta.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/women-Premium-soft-crepe-fabric-with-Tissue-Silk-Dupatta.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg'], fabric: 'Soft Crepe', colors: ['#B8860B','#F5DEB3'], sizes: ['S','M','L','XL'], isNew: false, description: 'A premium soft crepe kurta finished with a luminous tissue silk dupatta. Drape that flows like poetry.' },
-  { id: 9, name: 'Elegant Viscose Muslin Embroidered Suit', category: 'stitched', price: 3499, salePrice: 1999, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Elegant-Viscose-Muslin-Embroidered-Suit-Set.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Elegant-Viscose-Muslin-Embroidered-Suit.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Viscose-Muslin-Embroidered-Suit-Set.jpeg'], fabric: 'Viscose Muslin', colors: ['#A78BFA','#E9D5FF'], sizes: ['S','M','L','XL'], isNew: false, description: 'Cloud-soft viscose muslin embroidered with restraint and intention. Light to wear, lasting to remember.' },
-  { id: 10, name: 'Office Wear Baby Pink Cotton Kurta Set', category: 'newarrivals', price: 3299, salePrice: 1999, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Office-Wear-Kurta-Sets-for-Women-Affordable-Cotton.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Office-Wear-Kurta-Sets-for-Women-Baby-pink.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Kurta-Sets-for-Women-Affordable-Cotton.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Office-Wear-Kurta-Sets-for-Women.jpeg'], fabric: 'Cotton', colors: ['#FCE7F3','#F9A8D4'], sizes: ['XS','S','M','L','XL'], isNew: false, description: 'A workwear kurta set in tender baby pink — composed, breathable, and quietly powerful.' },
-  { id: 11, name: 'Floral Cotton Kurti Set with Dupatta', category: 'newarrivals', price: 3499, salePrice: 1999, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Floral-Cotton-Kurti-Set-with-Dupatta-for-women.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Best-Floral-Cotton-Kurti-Set-with-Dupatta.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Label-Aarfa-Floral-Cotton-Kurti-Set-with-Dupatta.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Floral-Cotton-Kurti-Set-with-Dupatta.jpeg'], fabric: 'Cotton', colors: ['#FBBF24','#10B981'], sizes: ['S','M','L','XL'], isNew: false, description: 'A garden in motion — floral prints on breathable cotton, finished with a flowing dupatta.' },
-  { id: 12, name: 'Designer Shirt & Dupatta Casual Set', category: 'coords', price: 3299, salePrice: 1999, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Best-Designer-Shirt-Dupatta-Casual-Collection.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Designer-Shirt-Dupatta-Casual-Muslim-Collection.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Designer-Shirt-Dupatta-Casual-Collection.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Shirt-Dupatta-Casual-Collection.jpeg'], fabric: 'Cotton Blend', colors: ['#374151','#9CA3AF'], sizes: ['S','M','L','XL'], isNew: false, description: 'A relaxed shirt paired with a soft dupatta — fluid, modern, effortlessly put-together.' },
-  { id: 13, name: 'Floral Silk Suit for Women', category: 'sale', price: 3499, salePrice: 1999, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/silk-suits-for-women-sale-Online-at-Best-Price.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Buy-silk-suits-for-women-sale-Online-at-Best-Price.jpeg'], fabric: 'Silk', colors: ['#7C3AED','#EDE9FE'], sizes: ['S','M','L','XL'], isNew: false, description: 'Silk suit blooming with floral motifs — luminous, ceremonial, and worth keeping forever.' },
-  { id: 14, name: 'Ivory Kurta Set with Blue Floral Embroidery', category: 'newarrivals', price: 3499, salePrice: 1999, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Ivory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Ivory-Kurta-Set-with-Blue-Floral-Embroidery.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Ivory-Kurta-Set-with-Blue-Floral.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Label-AarfaIvory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg'], fabric: 'Cotton', colors: ['#FAF7F2','#1E40AF'], sizes: ['XS','S','M','L','XL'], isNew: true, description: 'Ivory canvas with cobalt embroidery — a study in restraint and contrast.' },
-  { id: 15, name: 'Original Long Pakistani Cordset', category: 'coords', price: 3499, salePrice: 1999, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/orignal-long-pakistani-Cordset.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Premium-orignal-long-pakistani-Cordset-in-Delhi.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Premium-orignal-long-pakistani-Cordset.jpeg'], fabric: 'Lawn', colors: ['#065F46','#A7F3D0'], sizes: ['S','M','L','XL'], isNew: false, description: 'Long Pakistani coordset with authentic detailing — a long-line silhouette for graceful presence.' },
-  { id: 16, name: 'Lavender 3-Piece Stitched Dress', category: 'stitched', price: 3299, salePrice: 1999, images: ['https://labelaarfa.com/wp-content/uploads/2026/03/Lavender-3-Piece-Dress-Stitched.jpeg','https://labelaarfa.com/wp-content/uploads/2026/03/Label-Aarfa-%E2%80%93-Lavender-3-Piece-Dress.jpeg'], fabric: 'Georgette', colors: ['#C4B5FD','#EDE9FE'], sizes: ['S','M','L','XL'], isNew: true, description: 'A three-piece in soft lavender — modern proportions, romantic palette, ready-to-wear.' },
+  { id: 1, name: 'Luxury Wine Rayon Tunic with Printed Palazzo', category: 'stitched', price: 2999, salePrice: 1499, images: [IMG + 'Luxury-Wine-Rayon-Tunic-Printed-Palazzo.jpeg',IMG + 'Luxury-Wine-Rayon-Tunic-with-Printed-Palazzo.jpeg'], fabric: 'Rayon', colors: ['#722F37','#1a1a1a'], sizes: ['S','M','L','XL'], isNew: true, description: 'A regal wine-toned tunic crafted in soft rayon, paired with a printed palazzo. Tailored for fluid drape and evening elegance.' },
+  { id: 2, name: 'Brown Kurta with Cream Heart Printed Palazzo', category: 'coords', price: 2499, salePrice: 1499, images: [IMG + 'Brown-Kurta-with-Cream-Heart-Printed-Palazzo-Set-for-Women.jpeg',IMG + 'Brown-Kurta-with-Cream-Heart-Printed-Palazzo.jpeg'], fabric: 'Cotton', colors: ['#6F4E37','#F5E6D3'], sizes: ['XS','S','M','L','XL'], isNew: false, description: 'Earthy brown kurta paired with a whimsical cream heart-printed palazzo. Romantic, refined, and quietly playful.' },
+  { id: 3, name: 'Stitched Red and Black Coord Set', category: 'stitched', price: 2899, salePrice: 1499, images: [IMG + 'stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Red-and-Black-women-clothes.jpeg',IMG + 'Best-stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Premium-stitched-Red-and-Black-women-clothes.jpeg'], fabric: 'Crepe', colors: ['#B91C1C','#1A1A1A'], sizes: ['S','M','L','XL','XXL'], isNew: true, description: 'A striking red and black ensemble — bold contrast, impeccable stitching, designed to make an entrance.' },
+  { id: 4, name: 'Designer Cords Set for Women', category: 'coords', price: 2999, salePrice: 1750, images: [IMG + 'Designer-Cords-Set-For-Women-in-Delhi.jpeg',IMG + 'Best-Designer-Cords-Set-For-Women.jpeg',IMG + 'Label-Aarfa-Designer-Cords-Set-For-Women.jpeg',IMG + 'Designer-Cords-Set-For-Women.jpeg'], fabric: 'Cotton Blend', colors: ['#8B7355','#D4AF37'], sizes: ['S','M','L','XL'], isNew: true, description: 'A modern coord set with timeless silhouette — soft drape, considered details, made for everyday luxury.' },
+  { id: 5, name: 'Coffee Shaded Embroidered Cotton Suit', category: 'stitched', price: 2999, salePrice: 1750, images: [IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg',IMG + 'Label-Aarfa-Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg',IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set-Price.jpeg',IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set-for-Women.jpeg'], fabric: 'Cotton', colors: ['#6F4E37','#3E2723'], sizes: ['S','M','L','XL'], isNew: false, description: 'Deep coffee tones meet intricate embroidery. A suit set that whispers craftsmanship in every thread.' },
+  { id: 6, name: 'Jaipur Royal Blue Cotton Handloom Kurta', category: 'newarrivals', price: 2499, salePrice: 1499, images: [IMG + 'Label-Aarfa-Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg',IMG + 'Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg'], fabric: 'Handloom Cotton', colors: ['#1E3A8A','#FFFFFF'], sizes: ['XS','S','M','L','XL'], isNew: true, description: 'Hand-woven in Jaipur — royal blue cotton with breathable structure and heritage in every weave.' },
+  { id: 7, name: 'Yellow Pashmina A-line Kurta with Salwar', category: 'newarrivals', price: 2999, salePrice: 1750, images: [IMG + 'Label-Aarfa-Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg',IMG + 'Yellow-Pashmina-A-line-Kurta.jpeg',IMG + 'Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg'], fabric: 'Pashmina', colors: ['#EAB308','#FCD34D'], sizes: ['S','M','L','XL'], isNew: true, description: 'Sunlit yellow pashmina with a graceful A-line silhouette. Includes coordinated salwar and shawl.' },
+  { id: 8, name: 'Stitched Soft Crepe Kurta with Tissue Silk Dupatta', category: 'stitched', price: 3499, salePrice: 1999, images: [IMG + 'Premium-soft-crepe-fabric.jpeg',IMG + 'Stiched-soft-crepe-fabric-with-Tissue-Silk-Dupatta.jpeg',IMG + 'women-Premium-soft-crepe-fabric-with-Tissue-Silk-Dupatta.jpeg',IMG + 'Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg'], fabric: 'Soft Crepe', colors: ['#B8860B','#F5DEB3'], sizes: ['S','M','L','XL'], isNew: false, description: 'A premium soft crepe kurta finished with a luminous tissue silk dupatta. Drape that flows like poetry.' },
+  { id: 9, name: 'Elegant Viscose Muslin Embroidered Suit', category: 'stitched', price: 3499, salePrice: 1999, images: [IMG + 'Elegant-Viscose-Muslin-Embroidered-Suit-Set.jpeg',IMG + 'Elegant-Viscose-Muslin-Embroidered-Suit.jpeg',IMG + 'Viscose-Muslin-Embroidered-Suit-Set.jpeg'], fabric: 'Viscose Muslin', colors: ['#A78BFA','#E9D5FF'], sizes: ['S','M','L','XL'], isNew: false, description: 'Cloud-soft viscose muslin embroidered with restraint and intention. Light to wear, lasting to remember.' },
+  { id: 10, name: 'Office Wear Baby Pink Cotton Kurta Set', category: 'newarrivals', price: 3299, salePrice: 1999, images: [IMG + 'Office-Wear-Kurta-Sets-for-Women-Affordable-Cotton.jpeg',IMG + 'Office-Wear-Kurta-Sets-for-Women-Baby-pink.jpeg',IMG + 'Kurta-Sets-for-Women-Affordable-Cotton.jpeg',IMG + 'Office-Wear-Kurta-Sets-for-Women.jpeg'], fabric: 'Cotton', colors: ['#FCE7F3','#F9A8D4'], sizes: ['XS','S','M','L','XL'], isNew: false, description: 'A workwear kurta set in tender baby pink — composed, breathable, and quietly powerful.' },
+  { id: 11, name: 'Floral Cotton Kurti Set with Dupatta', category: 'newarrivals', price: 3499, salePrice: 1999, images: [IMG + 'Floral-Cotton-Kurti-Set-with-Dupatta-for-women.jpeg',IMG + 'Best-Floral-Cotton-Kurti-Set-with-Dupatta.jpeg',IMG + 'Label-Aarfa-Floral-Cotton-Kurti-Set-with-Dupatta.jpeg',IMG + 'Floral-Cotton-Kurti-Set-with-Dupatta.jpeg'], fabric: 'Cotton', colors: ['#FBBF24','#10B981'], sizes: ['S','M','L','XL'], isNew: false, description: 'A garden in motion — floral prints on breathable cotton, finished with a flowing dupatta.' },
+  { id: 12, name: 'Designer Shirt & Dupatta Casual Set', category: 'coords', price: 3299, salePrice: 1999, images: [IMG + 'Best-Designer-Shirt-Dupatta-Casual-Collection.jpeg',IMG + 'Designer-Shirt-Dupatta-Casual-Muslim-Collection.jpeg',IMG + 'Designer-Shirt-Dupatta-Casual-Collection.jpeg',IMG + 'Shirt-Dupatta-Casual-Collection.jpeg'], fabric: 'Cotton Blend', colors: ['#374151','#9CA3AF'], sizes: ['S','M','L','XL'], isNew: false, description: 'A relaxed shirt paired with a soft dupatta — fluid, modern, effortlessly put-together.' },
+  { id: 13, name: 'Floral Silk Suit for Women', category: 'sale', price: 3499, salePrice: 1999, images: [IMG + 'silk-suits-for-women-sale-Online-at-Best-Price.jpeg',IMG + 'Buy-silk-suits-for-women-sale-Online-at-Best-Price.jpeg'], fabric: 'Silk', colors: ['#7C3AED','#EDE9FE'], sizes: ['S','M','L','XL'], isNew: false, description: 'Silk suit blooming with floral motifs — luminous, ceremonial, and worth keeping forever.' },
+  { id: 14, name: 'Ivory Kurta Set with Blue Floral Embroidery', category: 'newarrivals', price: 3499, salePrice: 1999, images: [IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg',IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery.jpeg',IMG + 'Ivory-Kurta-Set-with-Blue-Floral.jpeg',IMG + 'Label-AarfaIvory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg'], fabric: 'Cotton', colors: ['#FAF7F2','#1E40AF'], sizes: ['XS','S','M','L','XL'], isNew: true, description: 'Ivory canvas with cobalt embroidery — a study in restraint and contrast.' },
+  { id: 15, name: 'Original Long Pakistani Cordset', category: 'coords', price: 3499, salePrice: 1999, images: [IMG + 'orignal-long-pakistani-Cordset.jpeg',IMG + 'Premium-orignal-long-pakistani-Cordset-in-Delhi.jpeg',IMG + 'Premium-orignal-long-pakistani-Cordset.jpeg'], fabric: 'Lawn', colors: ['#065F46','#A7F3D0'], sizes: ['S','M','L','XL'], isNew: false, description: 'Long Pakistani coordset with authentic detailing — a long-line silhouette for graceful presence.' },
+  { id: 16, name: 'Lavender 3-Piece Stitched Dress', category: 'stitched', price: 3299, salePrice: 1999, images: [IMG + 'Lavender-3-Piece-Dress-Stitched.jpeg',IMG + 'Label-Aarfa-Lavender-3-Piece-Dress.jpeg'], fabric: 'Georgette', colors: ['#C4B5FD','#EDE9FE'], sizes: ['S','M','L','XL'], isNew: true, description: 'A three-piece in soft lavender — modern proportions, romantic palette, ready-to-wear.' },
 ];
 
 /* ================================================================
@@ -89,11 +91,117 @@ function AppProvider({ children }) {
     showToast('Saved to wishlist'); return [...p, id];
   });
 
+  useEffect(() => { applySeo(page); }, [page]);
+
   return (
     <AppCtx.Provider value={{ page, navigate, cart, addToCart, updateQty, removeFromCart, setCart, wishlist, toggleWishlist, cartOpen, setCartOpen, searchOpen, setSearchOpen, mobileMenuOpen, setMobileMenuOpen, authOpen, setAuthOpen, user, setUser, currency, setCurrency, toast, showToast }}>
       {children}
     </AppCtx.Provider>
   );
+}
+
+/* ================================================================
+   SEO — per-page title, meta description, canonical, JSON-LD
+   ================================================================ */
+const SITE_URL = 'https://labelaarfa.com';
+const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+const CATEGORY_SEO = {
+  newarrivals: { title: 'New Arrivals — Label Aarfa', desc: 'Fresh designs from our Delhi atelier — new kurtas, coord sets, and stitched suits in handloom cotton, soft crepe, and silk.', path: '/collections/new-arrivals' },
+  stitched:    { title: 'Stitched Collection — Ready-to-Wear Ethnic Suits | Label Aarfa', desc: 'Ready-to-wear stitched kurtas and suits, finished by hand in our Delhi atelier. Sizes XS–XXL, free shipping over ₹2,999.', path: '/collections/stitched' },
+  coords:      { title: 'Coord Sets — Matching Kurta & Palazzo Sets | Label Aarfa', desc: 'Matching coord sets in coordinated fabrics and prints — kurta with palazzo or pants. Handcrafted, ready to wear.', path: '/collections/coords' },
+  sale:        { title: 'Sale — Ethnic Wear at Gentle Prices | Label Aarfa', desc: 'Selected pieces from the Label Aarfa atelier at gentle prices. Handcrafted stitched suits, coord sets, and kurtas.', path: '/collections/sale' },
+  all:         { title: 'All Products — Label Aarfa Couture', desc: 'The complete Label Aarfa collection — 16 handcrafted pieces from our Delhi atelier.', path: '/collections/all' },
+};
+
+function setMeta(name, content, attr = 'name') {
+  let el = document.querySelector(`meta[${attr}="${name}"]`);
+  if (!el) { el = document.createElement('meta'); el.setAttribute(attr, name); document.head.appendChild(el); }
+  el.setAttribute('content', content);
+}
+function setCanonical(href) {
+  let el = document.querySelector('link[rel="canonical"]');
+  if (!el) { el = document.createElement('link'); el.setAttribute('rel', 'canonical'); document.head.appendChild(el); }
+  el.setAttribute('href', href);
+}
+function setJsonLd(id, data) {
+  let el = document.getElementById(id);
+  if (!el) { el = document.createElement('script'); el.id = id; el.type = 'application/ld+json'; document.head.appendChild(el); }
+  el.textContent = JSON.stringify(data);
+}
+function clearJsonLd(id) { document.getElementById(id)?.remove(); }
+
+function applySeo(page) {
+  const home = { title: 'Label Aarfa — Handcrafted Ethnic Wear from Delhi | Est. 2019', desc: 'Label Aarfa is a Delhi atelier crafting handmade kurtas, coord sets, and stitched suits since 2019. Slow couture in handloom cotton, soft crepe, silk, and pashmina.', url: SITE_URL + '/', image: IMG + 'Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg' };
+  let cur = { ...home };
+
+  clearJsonLd('ld-product');
+  clearJsonLd('ld-breadcrumb');
+  clearJsonLd('ld-itemlist');
+
+  if (page.name === 'category') {
+    const c = CATEGORY_SEO[page.data] || CATEGORY_SEO.all;
+    cur = { title: c.title, desc: c.desc, url: SITE_URL + c.path, image: home.image };
+    setJsonLd('ld-breadcrumb', {
+      '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
+        { '@type': 'ListItem', position: 2, name: c.title.split(' — ')[0], item: cur.url },
+      ],
+    });
+  } else if (page.name === 'product') {
+    const p = (typeof PRODUCTS !== 'undefined') ? PRODUCTS.find((x) => x.id === page.data) : null;
+    if (p) {
+      const url = `${SITE_URL}/products/${slugify(p.name)}`;
+      cur = {
+        title: `${p.name} — Label Aarfa`,
+        desc: p.description.length > 155 ? p.description.slice(0, 152) + '…' : p.description,
+        url, image: p.images[0],
+      };
+      const onSale = p.salePrice && p.salePrice < p.price;
+      setJsonLd('ld-product', {
+        '@context': 'https://schema.org', '@type': 'Product',
+        name: p.name, image: p.images, description: p.description,
+        sku: `LA-${p.id}`,
+        brand: { '@type': 'Brand', name: 'Label Aarfa' },
+        material: p.fabric,
+        offers: {
+          '@type': 'Offer', url, priceCurrency: 'INR',
+          price: (onSale ? p.salePrice : p.price).toString(),
+          availability: 'https://schema.org/InStock',
+          itemCondition: 'https://schema.org/NewCondition',
+          ...(onSale && { priceValidUntil: '2025-12-31' }),
+        },
+      });
+      setJsonLd('ld-breadcrumb', {
+        '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL + '/' },
+          { '@type': 'ListItem', position: 2, name: p.category, item: `${SITE_URL}/collections/${p.category}` },
+          { '@type': 'ListItem', position: 3, name: p.name, item: url },
+        ],
+      });
+    }
+  } else if (page.name === 'about') {
+    cur = { ...home, title: 'About Label Aarfa — Our Story | Founded 2019, Delhi', desc: 'Founded in 2019 by Aarfa, our Delhi atelier works with master artisans across Jaipur, Delhi, and Lucknow to make ethnic wear with intention.', url: SITE_URL + '/about' };
+  } else if (page.name === 'contact') {
+    cur = { ...home, title: 'Contact Label Aarfa — Atelier in New Delhi', desc: 'Visit our atelier at 28/132 West Patel Nagar, New Delhi. Email care@labelaarfa.com or call +91 98xxx xxx00.', url: SITE_URL + '/contact' };
+  } else if (page.name === 'wishlist') {
+    cur = { ...home, title: 'Wishlist — Label Aarfa', desc: 'Pieces you have saved from the Label Aarfa collection.', url: SITE_URL + '/wishlist' };
+  }
+
+  const absImage = cur.image.startsWith('http') ? cur.image : window.location.origin + cur.image;
+
+  document.title = cur.title;
+  setMeta('description', cur.desc);
+  setCanonical(cur.url);
+  setMeta('og:title', cur.title, 'property');
+  setMeta('og:description', cur.desc, 'property');
+  setMeta('og:url', cur.url, 'property');
+  setMeta('og:image', absImage, 'property');
+  setMeta('twitter:title', cur.title);
+  setMeta('twitter:description', cur.desc);
+  setMeta('twitter:image', absImage);
 }
 
 /* ================================================================
@@ -174,11 +282,14 @@ function Header() {
           </div>
 
           {/* Logo center */}
-          <button onClick={() => navigate('home')} className="justify-self-center text-center">
-            <div className="font-serif text-xl sm:text-2xl lg:text-[28px] tracking-[0.18em] leading-none" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, color: '#1F1A14' }}>
-              LABEL AARFA
+          <button onClick={() => navigate('home')} className="justify-self-center text-center flex items-center gap-2 sm:gap-3" aria-label="Label Aarfa — Home">
+            <img src={`${import.meta.env.BASE_URL}logo-mark.svg`} alt="" aria-hidden="true" className="h-7 sm:h-9 lg:h-10 w-auto" />
+            <div>
+              <div className="font-serif text-xl sm:text-2xl lg:text-[28px] tracking-[0.18em] leading-none" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, color: '#1F1A14' }}>
+                LABEL AARFA
+              </div>
+              <div className="hidden sm:block text-[8px] sm:text-[9px] tracking-[0.42em] uppercase font-light mt-1" style={{ color: '#7B1E28' }}>Fashion Redefined · Est. 2019</div>
             </div>
-            <div className="hidden sm:block text-[8px] sm:text-[9px] tracking-[0.42em] uppercase font-light mt-1" style={{ color: '#7B1E28' }}>Couture · Est. 2026</div>
           </button>
 
           {/* Right */}
@@ -237,8 +348,11 @@ function MobileMenu() {
       <div className="absolute inset-0" style={{ backgroundColor: 'rgba(31, 26, 20, 0.55)' }} onClick={() => setMobileMenuOpen(false)} />
       <div className="absolute left-0 top-0 bottom-0 w-[88%] max-w-sm flex flex-col animate-slideInLeft" style={{ backgroundColor: '#FBF8F3' }}>
         <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid #E8DDC9' }}>
-          <div className="font-serif text-lg tracking-[0.18em]" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#1F1A14' }}>LABEL AARFA</div>
-          <button onClick={() => setMobileMenuOpen(false)} className="p-2 -mr-2"><X className="w-5 h-5" /></button>
+          <div className="flex items-center gap-2">
+            <img src={`${import.meta.env.BASE_URL}logo-mark.svg`} alt="" aria-hidden="true" className="h-6 w-auto" />
+            <div className="font-serif text-lg tracking-[0.18em]" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#1F1A14' }}>LABEL AARFA</div>
+          </div>
+          <button onClick={() => setMobileMenuOpen(false)} className="p-2 -mr-2" aria-label="Close menu"><X className="w-5 h-5" /></button>
         </div>
         <nav className="flex-1 overflow-y-auto py-2">
           {links.map((l, i) => (
@@ -275,9 +389,9 @@ function MobileMenu() {
 function Hero() {
   const { navigate } = useApp();
   const slides = [
-    { image: 'https://labelaarfa.com/wp-content/uploads/2026/03/Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg', eyebrow: 'New Edit · 2026', title: 'Crafted', accent: 'Elegance', sub: 'A collection composed in silk, breath, and stillness.' },
-    { image: 'https://labelaarfa.com/wp-content/uploads/2026/03/Label-Aarfa-Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg', eyebrow: 'Heritage Weaves', title: 'Hand-loomed', accent: 'Stories', sub: 'Each thread carries the memory of the loom that made it.' },
-    { image: 'https://labelaarfa.com/wp-content/uploads/2026/03/Ivory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg', eyebrow: 'Festive 2026', title: 'Quietly', accent: 'Regal', sub: 'Pieces meant for moments you want to remember.' },
+    { image: IMG + 'Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg', eyebrow: 'New Edit · 2025', title: 'Crafted', accent: 'Elegance', sub: 'A collection composed in silk, breath, and stillness.' },
+    { image: IMG + 'Label-Aarfa-Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg', eyebrow: 'Heritage Weaves', title: 'Hand-loomed', accent: 'Stories', sub: 'Each thread carries the memory of the loom that made it.' },
+    { image: IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg', eyebrow: 'Festive 2025', title: 'Quietly', accent: 'Regal', sub: 'Pieces meant for moments you want to remember.' },
   ];
   const [active, setActive] = useState(0);
   useEffect(() => { const t = setInterval(() => setActive((a) => (a + 1) % slides.length), 6500); return () => clearInterval(t); }, []);
@@ -433,7 +547,7 @@ function EditorialBanner() {
     <section style={{ backgroundColor: '#1F1A14' }}>
       <div className="max-w-[1440px] mx-auto grid lg:grid-cols-2 min-h-[440px] sm:min-h-[500px] lg:min-h-[560px]">
         <div className="relative h-[320px] sm:h-[400px] lg:h-auto order-1 lg:order-none overflow-hidden">
-          <img src="https://labelaarfa.com/wp-content/uploads/2026/03/Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg" alt="Editorial" loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+          <img src={IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg'} alt="Editorial" loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
         </div>
         <div className="flex items-center justify-center px-6 py-12 sm:p-12 lg:p-20 order-2" style={{ color: '#F6F0E5' }}>
           <div className="max-w-md">
@@ -1354,7 +1468,7 @@ function AboutPage() {
   return (
     <main>
       <div className="relative h-[50vh] sm:h-[60vh] min-h-[340px] sm:min-h-[400px] overflow-hidden" style={{ backgroundColor: '#1F1A14' }}>
-        <img src="https://labelaarfa.com/wp-content/uploads/2026/03/Premium-orignal-long-pakistani-Cordset.jpeg" alt="" className="w-full h-full object-cover" />
+        <img src={IMG + 'Premium-orignal-long-pakistani-Cordset.jpeg'} alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(31,26,20,0.35) 0%, rgba(31,26,20,0.6) 100%)' }} />
         <div className="absolute inset-0 flex items-center justify-center text-center px-5">
           <div className="max-w-2xl" style={{ color: '#F6F0E5' }}>
@@ -1370,20 +1484,26 @@ function AboutPage() {
         <p className="font-serif text-xl sm:text-2xl lg:text-3xl leading-relaxed font-light italic" style={{ fontFamily: "'Cormorant Garamond', serif", color: '#1F1A14' }}>
           "We believe clothing should arrive thoughtfully — chosen, not collected. Every piece in our atelier is made for the woman who knows the difference."
         </p>
-        <div className="text-[10px] sm:text-[11px] tracking-[0.28em] uppercase font-light mt-5 sm:mt-6" style={{ color: '#6B5F4F' }}>— Aarfa, Founder</div>
+        <div className="text-[10px] sm:text-[11px] tracking-[0.28em] uppercase font-light mt-5 sm:mt-6" style={{ color: '#6B5F4F' }}>— Aarfa, Founder · Est. 2019</div>
+      </section>
+
+      <section className="max-w-3xl mx-auto px-5 sm:px-6 pb-10 sm:pb-14 text-left space-y-5 font-light leading-relaxed text-base sm:text-lg" style={{ color: '#6B5F4F' }}>
+        <p>Label Aarfa was founded in <strong style={{ color: '#1F1A14', fontWeight: 500 }}>2019</strong> in New Delhi, born from a quiet conviction: that ethnic wear could feel personal again — that a kurta, a coord set, a stitched suit could be made the way it used to be, slowly and by hand, while still belonging to a modern wardrobe.</p>
+        <p>Aarfa, our founder, started the house with a small team of pattern-makers and embroiderers working out of a single room in West Patel Nagar. Six years on, the atelier has grown — but the philosophy has not. Every garment is still cut, stitched, and finished by hand. Fabrics are sourced from handloom clusters in Jaipur and weaving cooperatives in Lucknow. Embroidery is done in small batches, not in factories.</p>
+        <p>We make ethnic wear for women who want to wear something that was actually made for them — not pressed out of a mould of a thousand identical pieces. Our coord sets, kurtas, palazzos, and Pakistani-inspired cordsets are designed to be worn often, kept for years, and remembered fondly when they are.</p>
       </section>
 
       <section className="py-14 sm:py-20" style={{ backgroundColor: '#F6F0E5' }}>
         <div className="max-w-5xl mx-auto px-5 sm:px-6 grid sm:grid-cols-3 gap-10 sm:gap-12 text-center">
           {[
-            { title: 'Heritage', body: 'Working with master artisans across Jaipur, Delhi, and Lucknow — keeping handloom and embroidery traditions alive.' },
+            { title: 'Heritage', body: 'Working with master artisans across Jaipur, Delhi, and Lucknow — keeping handloom and embroidery traditions alive since 2019.' },
             { title: 'Craft', body: 'Every garment is finished by hand. Slight irregularities are signatures of the maker, not flaws.' },
             { title: 'Care', body: 'Small batches. Considered fabrics. Designed to be worn often and kept for years.' },
           ].map((v) => (
-            <div key={v.title}>
-              <h3 className="font-serif text-xl sm:text-2xl mb-3 sm:mb-4" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>{v.title}</h3>
+            <article key={v.title}>
+              <h2 className="font-serif text-xl sm:text-2xl mb-3 sm:mb-4" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>{v.title}</h2>
               <p className="font-light leading-relaxed text-sm" style={{ color: '#6B5F4F' }}>{v.body}</p>
-            </div>
+            </article>
           ))}
         </div>
       </section>
@@ -1472,8 +1592,8 @@ function Footer() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-16">
           <div>
             <div className="font-serif text-xl sm:text-2xl tracking-[0.18em] mb-1" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500 }}>LABEL AARFA</div>
-            <div className="text-[10px] tracking-[0.4em] uppercase font-light mb-5" style={{ color: '#B8924A' }}>Couture</div>
-            <p className="text-sm font-light leading-relaxed mb-6" style={{ color: 'rgba(246, 240, 229, 0.65)' }}>Handcrafted ethnic wear from our Delhi atelier. Made slowly, made with care.</p>
+            <div className="text-[10px] tracking-[0.4em] uppercase font-light mb-5" style={{ color: '#B8924A' }}>Fashion Redefined · Est. 2019</div>
+            <p className="text-sm font-light leading-relaxed mb-6" style={{ color: 'rgba(246, 240, 229, 0.65)' }}>Handcrafted ethnic wear from our Delhi atelier since 2019. Made slowly, made with care.</p>
             <div className="flex gap-3">
               {[Hash, Globe2, Video].map((Icon, i) => (
                 <a key={i} href="#" className="w-10 h-10 flex items-center justify-center transition-colors" style={{ border: '1px solid rgba(246, 240, 229, 0.2)', borderRadius: '50%' }}>
@@ -1509,7 +1629,7 @@ function Footer() {
 
       <div style={{ borderTop: '1px solid rgba(246, 240, 229, 0.1)' }}>
         <div className="max-w-[1440px] mx-auto px-5 sm:px-6 lg:px-10 py-5 sm:py-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 text-[10px] sm:text-[11px] tracking-wider" style={{ color: 'rgba(246, 240, 229, 0.5)' }}>
-          <div>© 2026 Label Aarfa. All rights reserved.</div>
+          <div>© 2019–{new Date().getFullYear()} Label Aarfa. All rights reserved.</div>
           <div className="flex gap-2 sm:gap-3 items-center">
             {['VISA', 'MC', 'UPI', 'COD'].map((p) => (
               <div key={p} className="px-2.5 py-1 font-medium text-[9px] sm:text-[10px] tracking-wider" style={{ border: '1px solid rgba(246, 240, 229, 0.15)', borderRadius: '4px' }}>{p}</div>
