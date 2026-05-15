@@ -564,6 +564,21 @@ function AnnouncementBar() {
   );
 }
 
+// Persistent strip for non-INR visitors so they know the international service
+// fee exists before they reach the cart drawer / checkout. Sits in the sticky
+// header so it stays in view while scrolling.
+function IntlPricingNotice() {
+  const { currency } = useApp();
+  if (currency === 'INR') return null;
+  return (
+    <div className="text-[10px] sm:text-[11px] tracking-[0.18em] uppercase font-light flex items-center justify-center gap-2 px-4 py-2 text-center"
+      style={{ backgroundColor: '#F6F0E5', color: '#7B1E28', borderTop: '1px solid #E8DDC9' }}>
+      <Globe className="w-3 h-3 shrink-0" strokeWidth={1.5} />
+      <span className="leading-tight">International orders include a {formatPrice(INTL_MARKUP_INR, currency)} service fee</span>
+    </div>
+  );
+}
+
 function Header() {
   const { navigate, page, cart, wishlist, setCartOpen, setSearchOpen, setAuthOpen, setMobileMenuOpen, user, signOut } = useApp();
   const [accountOpen, setAccountOpen] = useState(false);
@@ -589,6 +604,7 @@ function Header() {
   return (
     <header className="sticky top-0 z-40" style={{ backgroundColor: '#FBF8F3', borderBottom: '1px solid #E8DDC9' }}>
       <AnnouncementBar />
+      <IntlPricingNotice />
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
         <div className="grid grid-cols-3 items-center h-16 sm:h-20 gap-2">
           {/* Left */}
@@ -1231,7 +1247,7 @@ function FilterContent({ sizeFilter, setSizeFilter, priceMax, setPriceMax }) {
    PRODUCT PAGE
    ================================================================ */
 function ProductPage({ id }) {
-  const { navigate, addToCart, toggleWishlist, wishlist, setCartOpen } = useApp();
+  const { navigate, addToCart, toggleWishlist, wishlist, setCartOpen, currency } = useApp();
   const product = PRODUCTS.find((p) => p.id === id);
   const [mainImage, setMainImage] = useState(0);
   const [size, setSize] = useState(null);
@@ -1297,6 +1313,12 @@ function ProductPage({ id }) {
           <div className="py-4 sm:py-5" style={{ borderTop: '1px solid #E8DDC9', borderBottom: '1px solid #E8DDC9' }}>
             <Price priceInr={product.price} salePriceInr={product.salePrice} size="xl" showSaved />
             <div className="text-[10px] sm:text-[11px] mt-2 font-light" style={{ color: '#6B5F4F' }}>Inclusive of all taxes</div>
+            {currency !== 'INR' && (
+              <div className="text-[11px] sm:text-xs mt-2 font-light flex items-start gap-1.5" style={{ color: '#7B1E28' }}>
+                <Globe className="w-3 h-3 mt-0.5 shrink-0" strokeWidth={1.5} />
+                <span>International orders: a flat {formatPrice(INTL_MARKUP_INR, currency)} service fee is added at checkout.</span>
+              </div>
+            )}
             {typeof product.stock === 'number' && product.stock > 0 && product.stock <= 5 && (
               <div className="text-[11px] sm:text-xs mt-2 font-medium tracking-wide flex items-center gap-1.5" style={{ color: '#7B1E28' }}>
                 <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#7B1E28' }} />
