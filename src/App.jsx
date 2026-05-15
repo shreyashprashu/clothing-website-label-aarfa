@@ -2568,19 +2568,17 @@ export default function App() {
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-100%); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-        @keyframes pageEnter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pageEnter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Slightly longer durations + a softer ease-out curve so things settle into place
-           rather than snapping. Drawers stay responsive (~480ms) so they don't feel sluggish. */
-        .animate-fadeIn { animation: fadeIn 650ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .animate-slideUp { animation: slideUp 900ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .animate-slideInRight { animation: slideInRight 480ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .animate-slideInLeft { animation: slideInLeft 480ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .animate-scaleIn { animation: scaleIn 520ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .page-enter { animation: pageEnter 600ms cubic-bezier(0.16, 1, 0.3, 1) both; will-change: opacity, transform; }
+        .animate-fadeIn { animation: fadeIn 500ms ease-out both; }
+        .animate-slideUp { animation: slideUp 700ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .animate-slideInRight { animation: slideInRight 380ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .animate-slideInLeft { animation: slideInLeft 380ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .animate-scaleIn { animation: scaleIn 380ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .page-enter { animation: pageEnter 420ms cubic-bezier(0.22, 1, 0.36, 1) both; will-change: opacity, transform; }
 
         html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
         body { overscroll-behavior-y: none; }
