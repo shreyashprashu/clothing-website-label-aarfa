@@ -1,4 +1,5 @@
 import { getServiceClient } from './_lib/supabase.js';
+import { sendNewsletterWelcome } from './_lib/email.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -11,11 +12,26 @@ export default async function handler(req, res) {
     }
 
     const sb = getServiceClient();
-    // upsert so re-subscribing flips status back to active
+    const normalised = email.toLowerCase().trim();
+
+    // Only send the welcome email if this is a fresh signup (or a re-activation
+    // from an unsubscribed state). Returning subscribers don't get re-spammed.
+    const { data: existing } = await sb
+      .from('newsletter_subscribers')
+      .select('status')
+      .eq('email', normalised)
+      .maybeSingle();
+    const isFresh = !existing || existing.status !== 'active';
+
     const { error } = await sb
       .from('newsletter_subscribers')
-      .upsert({ email: email.toLowerCase().trim(), status: 'active' }, { onConflict: 'email' });
+      .upsert({ email: normalised, status: 'active' }, { onConflict: 'email' });
     if (error) throw error;
+
+    if (isFresh) {
+      try { await sendNewsletterWelcome({ to: normalised }); }
+      catch (e) { console.error('newsletter welcome email failed', e?.message); }
+    }
 
     return res.status(200).json({ ok: true });
   } catch (err) {

@@ -140,6 +140,47 @@ export async function sendOrderAdminNotification({ order, items, address }) {
   }, 'order-admin-notification');
 }
 
+// Welcome email sent when a visitor subscribes via the home-page newsletter form.
+// Includes the WELCOME10 promo code so the on-screen "look out for your welcome
+// code" promise actually gets fulfilled.
+export async function sendNewsletterWelcome({ to }) {
+  const safeTo = String(to || '').replace(/[\r\n]+/g, ' ').slice(0, 254);
+  const html = `
+  <div style="font-family:Georgia,'Times New Roman',serif;max-width:560px;margin:0 auto;color:#1F1A14;background:#FBF8F3;padding:32px">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:24px;letter-spacing:0.18em;font-weight:500">LABEL AARFA</div>
+      <div style="font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#7B1E28;margin-top:4px">Fashion Redefined · Est. 2019</div>
+    </div>
+    <h1 style="font-weight:400;font-size:26px;margin:0 0 12px;text-align:center">Welcome to Label Aarfa</h1>
+    <p style="color:#6B5F4F;margin:0 0 28px;text-align:center;line-height:1.6">Thank you for joining the list. We're a small Delhi atelier crafting handmade ethnic wear in handloom cottons, soft crepes, and silks — and we're glad to have you here.</p>
+
+    <div style="background:#F6F0E5;border:1px dashed #B8924A;padding:24px;text-align:center;margin:0 0 28px;border-radius:8px">
+      <div style="font-size:10px;letter-spacing:0.32em;text-transform:uppercase;color:#7B1E28;margin-bottom:8px">Your Welcome Gift</div>
+      <div style="font-size:32px;letter-spacing:0.18em;font-weight:600;color:#1F1A14;margin:6px 0">WELCOME10</div>
+      <div style="font-size:13px;color:#6B5F4F;margin-top:6px">10% off your first order — use this code at checkout.</div>
+    </div>
+
+    <p style="color:#6B5F4F;margin:0 0 12px;line-height:1.6">What you can expect from us:</p>
+    <ul style="color:#6B5F4F;font-size:14px;line-height:1.8;margin:0 0 28px;padding-left:20px">
+      <li>First look at new arrivals before they go public</li>
+      <li>Private edits and limited releases</li>
+      <li>Stories from the atelier — our weavers, our craft, our pieces</li>
+    </ul>
+
+    <div style="text-align:center;margin:32px 0">
+      <a href="https://www.labelaarfa.com/" style="display:inline-block;padding:14px 32px;background:#1F1A14;color:#F6F0E5;text-decoration:none;font-size:11px;letter-spacing:0.25em;text-transform:uppercase;border-radius:4px">Shop the Collection</a>
+    </div>
+
+    <p style="color:#6B5F4F;font-size:13px;margin-top:32px;text-align:center">Questions? Reply to this email or write to care@labelaarfa.com.</p>
+    <p style="color:#A89888;font-size:11px;margin-top:24px;text-align:center;letter-spacing:0.18em">LABEL AARFA · NEW DELHI · INDIA</p>
+  </div>`;
+  return sendOrLog({
+    from: FROM, to: safeTo,
+    subject: 'Welcome to Label Aarfa — your 10% code is inside',
+    html,
+  }, 'newsletter-welcome');
+}
+
 export async function sendContactMessage({ name, email, message }) {
   const admin = (process.env.ADMIN_EMAIL || '').trim() || 'label.arfa@gmail.com';
   // Subject and replyTo can't include CRLF (header injection); body fields must be escaped
