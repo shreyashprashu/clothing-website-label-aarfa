@@ -1,6 +1,7 @@
 import Razorpay from 'razorpay';
 import { getServiceClient } from '../_lib/supabase.js';
 import { productById, effectivePriceInr } from '../_lib/products.js';
+import { sendOrderConfirmation } from '../_lib/email.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -54,6 +55,12 @@ export default async function handler(req, res) {
       if (error) throw error;
       const { error: liErr } = await sb.from('order_items').insert(lineItems.map((li) => ({ ...li, order_id: order.id })));
       if (liErr) throw liErr;
+
+      const to = shippingAddress?.email || guestEmail;
+      if (to) {
+        try { await sendOrderConfirmation({ to, order, items: lineItems }); }
+        catch (e) { console.error('COD confirmation email failed', e); }
+      }
       return res.status(200).json({ paymentMethod: 'cod', order });
     }
 

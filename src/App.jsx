@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, createContext, useContext } from 'react';
-import { ShoppingBag, Heart, Search, User, X, Menu, ChevronRight, ChevronLeft, Plus, Minus, Truck, ShieldCheck, RotateCcw, Hash, Globe2, Video, MapPin, Phone, Mail, Check, ArrowRight, SlidersHorizontal, Sparkles, Globe } from 'lucide-react';
+import { ShoppingBag, Heart, Search, User, X, Menu, ChevronRight, ChevronLeft, Plus, Minus, Truck, ShieldCheck, RotateCcw, Hash, Globe2, Video, MapPin, Phone, Mail, Check, ArrowRight, SlidersHorizontal, Sparkles, Globe, Package, Clock } from 'lucide-react';
 import { supabase, supabaseConfigured } from './lib/supabase';
 import { api, loadRazorpay } from './lib/api';
 
@@ -206,6 +206,8 @@ function applySeo(page) {
     cur = { ...home, title: 'Contact Label Aarfa — Atelier in New Delhi', desc: 'Visit our atelier at 28/132 West Patel Nagar, New Delhi. Email care@labelaarfa.com or call +91 98xxx xxx00.', url: SITE_URL + '/contact' };
   } else if (page.name === 'wishlist') {
     cur = { ...home, title: 'Wishlist — Label Aarfa', desc: 'Pieces you have saved from the Label Aarfa collection.', url: SITE_URL + '/wishlist' };
+  } else if (page.name === 'orders') {
+    cur = { ...home, title: 'My Orders — Label Aarfa', desc: 'Track your Label Aarfa orders and shipments.', url: SITE_URL + '/orders' };
   }
 
   const absImage = cur.image.startsWith('http') ? cur.image : window.location.origin + cur.image;
@@ -338,9 +340,12 @@ function Header() {
                 <div className="absolute right-0 top-full mt-2 w-64 z-50 overflow-hidden animate-fadeIn" style={{ backgroundColor: '#FBF8F3', border: '1px solid #E8DDC9', borderRadius: '10px', boxShadow: '0 12px 28px -10px rgba(31, 26, 20, 0.22)' }}>
                   <div className="px-4 py-3" style={{ borderBottom: '1px solid #E8DDC9' }}>
                     <div className="text-[10px] tracking-[0.22em] uppercase font-light mb-1" style={{ color: '#6B5F4F' }}>Signed in as</div>
-                    <div className="text-sm font-light truncate" style={{ color: '#1F1A14' }}>{user.email}</div>
+                    <div className="text-sm font-light truncate" style={{ color: '#1F1A14' }}>{user.email || user.phone}</div>
                   </div>
-                  <button onClick={() => { setAccountOpen(false); signOut(); }} className="w-full px-4 py-3 text-left text-[11px] tracking-[0.22em] uppercase font-light transition-colors hover:bg-[#F6F0E5]" style={{ color: '#1F1A14' }}>
+                  <button onClick={() => { setAccountOpen(false); navigate('orders'); }} className="w-full px-4 py-3 text-left text-[11px] tracking-[0.22em] uppercase font-light transition-colors hover:bg-[#F6F0E5] flex items-center gap-2" style={{ color: '#1F1A14' }}>
+                    <Package className="w-3.5 h-3.5" strokeWidth={1.5} /> My Orders
+                  </button>
+                  <button onClick={() => { setAccountOpen(false); signOut(); }} className="w-full px-4 py-3 text-left text-[11px] tracking-[0.22em] uppercase font-light transition-colors hover:bg-[#F6F0E5]" style={{ color: '#1F1A14', borderTop: '1px solid #E8DDC9' }}>
                     Sign out
                   </button>
                 </div>
@@ -406,9 +411,16 @@ function MobileMenu() {
         </nav>
         <div className="p-5 space-y-4" style={{ borderTop: '1px solid #E8DDC9', backgroundColor: '#F6F0E5' }}>
           {user ? (
-            <div>
-              <div className="text-[10px] tracking-[0.22em] uppercase font-light mb-1" style={{ color: '#6B5F4F' }}>Signed in as</div>
-              <div className="text-sm font-light mb-3 truncate" style={{ color: '#1F1A14' }}>{user.email}</div>
+            <div className="space-y-3">
+              <div>
+                <div className="text-[10px] tracking-[0.22em] uppercase font-light mb-1" style={{ color: '#6B5F4F' }}>Signed in as</div>
+                <div className="text-sm font-light truncate" style={{ color: '#1F1A14' }}>{user.email || user.phone}</div>
+              </div>
+              <button onClick={() => { setMobileMenuOpen(false); navigate('orders'); }}
+                className="w-full py-3 text-xs tracking-[0.22em] uppercase font-light transition-colors flex items-center justify-center gap-2"
+                style={{ border: '1px solid #1F1A14', color: '#1F1A14', borderRadius: '4px', backgroundColor: 'transparent' }}>
+                <Package className="w-4 h-4" strokeWidth={1.5} /> My Orders
+              </button>
               <button onClick={() => { setMobileMenuOpen(false); signOut(); }}
                 className="w-full py-3 text-xs tracking-[0.22em] uppercase font-light transition-colors flex items-center justify-center gap-2"
                 style={{ border: '1px solid #1F1A14', color: '#1F1A14', borderRadius: '4px', backgroundColor: 'transparent' }}>
@@ -1335,6 +1347,215 @@ function AuthModal() {
 }
 
 /* ================================================================
+   ORDERS PAGE — order history + status timeline
+   ================================================================ */
+const formatPaise = (paise) => `₹${Math.round(paise / 100).toLocaleString('en-IN')}`;
+const relativeTime = (iso) => {
+  const t = new Date(iso).getTime();
+  const diff = Date.now() - t;
+  const day = 86_400_000;
+  if (diff < 3600_000) return 'just now';
+  if (diff < day) return `${Math.floor(diff / 3600_000)}h ago`;
+  if (diff < 7 * day) return `${Math.floor(diff / day)}d ago`;
+  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+const STATUS_LABELS = {
+  created: 'Awaiting payment',
+  paid: 'Order confirmed',
+  cod_confirmed: 'Order confirmed (COD)',
+  failed: 'Payment failed',
+  shipped: 'Shipped',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+  refunded: 'Refunded',
+};
+
+function StatusTimeline({ status }) {
+  const steps = ['Placed', 'Processing', 'Shipped', 'Delivered'];
+  let active = 0;
+  if (['paid', 'cod_confirmed'].includes(status)) active = 1;
+  if (status === 'shipped') active = 2;
+  if (status === 'delivered') active = 3;
+  const isCancelled = ['cancelled', 'failed', 'refunded'].includes(status);
+  if (isCancelled) {
+    return (
+      <div className="flex items-center gap-2 text-[11px] sm:text-xs tracking-[0.18em] uppercase font-light" style={{ color: '#7B1E28' }}>
+        <X className="w-4 h-4" strokeWidth={1.5} /> {STATUS_LABELS[status]}
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center">
+      {steps.map((label, i) => {
+        const done = i <= active;
+        return (
+          <React.Fragment key={label}>
+            <div className="flex flex-col items-center" style={{ minWidth: '60px' }}>
+              <div className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center transition-colors" style={{
+                backgroundColor: done ? '#7B1E28' : '#FBF8F3',
+                border: `1px solid ${done ? '#7B1E28' : '#E8DDC9'}`,
+                borderRadius: '50%',
+              }}>
+                {done ? <Check className="w-3.5 h-3.5" style={{ color: 'white' }} strokeWidth={2.2} /> : <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#D6C9B0' }} />}
+              </div>
+              <div className="text-[9px] sm:text-[10px] tracking-[0.15em] uppercase font-light mt-1.5 text-center" style={{ color: done ? '#1F1A14' : '#A89888' }}>
+                {label}
+              </div>
+            </div>
+            {i < steps.length - 1 && (
+              <div className="flex-1 h-px mx-1 sm:mx-2 -mt-4" style={{ backgroundColor: i < active ? '#7B1E28' : '#E8DDC9' }} />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+function OrderCard({ order }) {
+  const items = order.order_items || [];
+  const isCancelled = ['cancelled', 'failed', 'refunded'].includes(order.status);
+  return (
+    <article className="overflow-hidden shadow-sm" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8DDC9', borderRadius: '12px' }}>
+      <header className="px-5 sm:px-6 py-4 flex flex-wrap items-baseline justify-between gap-2" style={{ backgroundColor: '#F6F0E5', borderBottom: '1px solid #E8DDC9' }}>
+        <div>
+          <div className="text-[10px] tracking-[0.22em] uppercase font-light" style={{ color: '#6B5F4F' }}>Order</div>
+          <div className="font-serif text-lg sm:text-xl tracking-wide" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, color: '#1F1A14' }}>
+            #{order.id.slice(0, 8).toUpperCase()}
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[10px] tracking-[0.22em] uppercase font-light" style={{ color: '#6B5F4F' }}>Placed</div>
+          <div className="text-xs sm:text-sm font-light" style={{ color: '#1F1A14' }}>{relativeTime(order.created_at)}</div>
+        </div>
+      </header>
+
+      <div className="px-5 sm:px-6 py-5 space-y-4">
+        {items.map((li) => {
+          const product = PRODUCTS.find((p) => p.id === li.product_id);
+          return (
+            <div key={li.id} className="flex gap-3 sm:gap-4 items-center">
+              <div className="w-14 h-16 sm:w-16 sm:h-20 shrink-0 overflow-hidden" style={{ backgroundColor: '#F6F0E5', borderRadius: '6px' }}>
+                {product && <img src={product.images[0]} alt="" className="w-full h-full object-cover" loading="lazy" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] sm:text-sm font-light leading-snug line-clamp-2" style={{ color: '#1F1A14' }}>{li.product_name}</div>
+                <div className="text-[10px] sm:text-[11px] mt-1 tracking-wide" style={{ color: '#6B5F4F' }}>Size {li.size} · Qty {li.quantity}</div>
+              </div>
+              <div className="text-sm font-medium tabular-nums" style={{ color: '#1F1A14' }}>{formatPaise(li.line_total_paise)}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="px-5 sm:px-6 py-4 grid grid-cols-2 gap-y-1 text-[12px] sm:text-[13px]" style={{ borderTop: '1px solid #E8DDC9' }}>
+        <span className="font-light" style={{ color: '#6B5F4F' }}>Subtotal</span>
+        <span className="text-right font-light tabular-nums" style={{ color: '#1F1A14' }}>{formatPaise(order.subtotal_paise)}</span>
+        <span className="font-light" style={{ color: '#6B5F4F' }}>Shipping</span>
+        <span className="text-right font-light tabular-nums" style={{ color: '#1F1A14' }}>{order.shipping_paise === 0 ? 'Free' : formatPaise(order.shipping_paise)}</span>
+        <span className="font-medium uppercase tracking-[0.18em] text-[10px] sm:text-[11px] pt-2 mt-1" style={{ color: '#1F1A14', borderTop: '1px solid #E8DDC9' }}>Total</span>
+        <span className="text-right font-semibold tabular-nums pt-2 mt-1" style={{ color: '#1F1A14', borderTop: '1px solid #E8DDC9' }}>{formatPaise(order.total_paise)}</span>
+      </div>
+
+      <div className="px-5 sm:px-6 py-5" style={{ borderTop: '1px solid #E8DDC9' }}>
+        <StatusTimeline status={order.status} />
+      </div>
+
+      <details className="group" style={{ borderTop: '1px solid #E8DDC9' }}>
+        <summary className="px-5 sm:px-6 py-3 cursor-pointer text-[11px] tracking-[0.22em] uppercase font-light flex items-center justify-between list-none" style={{ color: '#6B5F4F' }}>
+          <span>Shipping & payment details</span>
+          <ChevronRight className="w-4 h-4 transition-transform group-open:rotate-90" strokeWidth={1.5} />
+        </summary>
+        <div className="px-5 sm:px-6 pb-5 grid sm:grid-cols-2 gap-5 text-[13px] font-light leading-relaxed" style={{ color: '#6B5F4F' }}>
+          <div>
+            <div className="text-[10px] tracking-[0.22em] uppercase mb-1.5" style={{ color: '#1F1A14' }}>Ship to</div>
+            <div style={{ color: '#1F1A14' }}>{order.shipping_address?.name}</div>
+            <div>{order.shipping_address?.line1}</div>
+            {order.shipping_address?.line2 && <div>{order.shipping_address.line2}</div>}
+            <div>{order.shipping_address?.city}, {order.shipping_address?.state} {order.shipping_address?.pincode}</div>
+            <div className="mt-1">{order.shipping_address?.phone}</div>
+          </div>
+          <div>
+            <div className="text-[10px] tracking-[0.22em] uppercase mb-1.5" style={{ color: '#1F1A14' }}>Payment</div>
+            <div>{order.payment_method === 'cod' ? 'Cash on Delivery' : 'Razorpay'}</div>
+            <div className="text-[11px] mt-1" style={{ color: isCancelled ? '#7B1E28' : '#2F6B3E' }}>{STATUS_LABELS[order.status] || order.status}</div>
+            {order.razorpay_payment_id && <div className="text-[11px] mt-2 font-mono break-all">Payment id: {order.razorpay_payment_id}</div>}
+          </div>
+        </div>
+      </details>
+    </article>
+  );
+}
+
+function OrdersPage() {
+  const { user, navigate, setAuthOpen } = useApp();
+  const [orders, setOrders] = useState(null);
+
+  useEffect(() => {
+    if (!user || !supabase) { setOrders([]); return; }
+    let cancelled = false;
+    supabase
+      .from('orders')
+      .select('*, order_items(*)')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) { console.error('orders fetch', error); setOrders([]); return; }
+        setOrders(data || []);
+      });
+    return () => { cancelled = true; };
+  }, [user]);
+
+  if (!user) {
+    return (
+      <main className="max-w-2xl mx-auto px-5 sm:px-6 py-16 sm:py-20 lg:py-24 text-center">
+        <Package className="w-12 h-12 mx-auto mb-5" style={{ color: '#D6C9B0' }} strokeWidth={1} />
+        <h1 className="font-serif text-3xl sm:text-4xl mb-2 sm:mb-3" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>My Orders</h1>
+        <p className="font-light mb-7 text-sm" style={{ color: '#6B5F4F' }}>Sign in to view your order history and track shipments.</p>
+        <button onClick={() => setAuthOpen(true)} className="px-9 py-3.5 sm:py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
+          Sign In
+        </button>
+      </main>
+    );
+  }
+
+  return (
+    <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-14 lg:py-16">
+      <div className="text-[10px] sm:text-[11px] tracking-[0.18em] uppercase font-light mb-5 sm:mb-6 flex items-center gap-2" style={{ color: '#6B5F4F' }}>
+        <button onClick={() => navigate('home')} className="hover:opacity-70 transition-opacity">Home</button>
+        <span>/</span>
+        <span style={{ color: '#1F1A14' }}>My Orders</span>
+      </div>
+
+      <div className="text-center mb-10 sm:mb-12">
+        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl mb-2 sm:mb-3" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>My Orders</h1>
+        {orders && orders.length > 0 && (
+          <p className="font-light text-sm" style={{ color: '#6B5F4F' }}>{orders.length} {orders.length === 1 ? 'order' : 'orders'}</p>
+        )}
+      </div>
+
+      {orders === null ? (
+        <div className="py-16 text-center">
+          <Clock className="w-8 h-8 mx-auto mb-3 animate-pulse" style={{ color: '#D6C9B0' }} strokeWidth={1.2} />
+          <p className="font-light text-sm" style={{ color: '#6B5F4F' }}>Loading your orders…</p>
+        </div>
+      ) : orders.length === 0 ? (
+        <div className="text-center py-16 sm:py-20">
+          <Package className="w-12 h-12 mx-auto mb-5" style={{ color: '#D6C9B0' }} strokeWidth={1} />
+          <p className="font-light mb-6 text-sm" style={{ color: '#6B5F4F' }}>You haven't placed any orders yet.</p>
+          <button onClick={() => navigate('category', 'all')} className="px-8 py-3.5 text-white text-xs tracking-[0.22em] uppercase transition-opacity hover:opacity-90 shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>Discover the Collection</button>
+        </div>
+      ) : (
+        <div className="space-y-6 sm:space-y-7">
+          {orders.map((o) => <OrderCard key={o.id} order={o} />)}
+        </div>
+      )}
+    </main>
+  );
+}
+
+/* ================================================================
    WISHLIST PAGE
    ================================================================ */
 function WishlistPage() {
@@ -1495,7 +1716,16 @@ function CheckoutPage() {
           </div>
         </div>
 
-        <button onClick={() => navigate('home')} className="px-9 py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase transition-opacity hover:opacity-90 shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>Continue Shopping</button>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {user && (
+            <button onClick={() => navigate('orders')} className="px-9 py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase transition-opacity hover:opacity-90 shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
+              Track Your Order
+            </button>
+          )}
+          <button onClick={() => navigate('home')} className="px-9 py-4 text-[11px] sm:text-xs tracking-[0.25em] uppercase font-light transition-colors" style={{ border: '1px solid #1F1A14', color: '#1F1A14', backgroundColor: 'transparent', borderRadius: '4px' }}>
+            Continue Shopping
+          </button>
+        </div>
       </main>
     );
   }
@@ -1773,7 +2003,7 @@ function Footer() {
             { label: 'Shipping Policy', onClick: () => {} },
             { label: 'Returns & Refunds', onClick: () => {} },
             { label: 'Size Guide', onClick: () => {} },
-            { label: 'Track Order', onClick: () => {} },
+            { label: 'Track Order', onClick: () => navigate('orders') },
           ]} />
           <FooterCol title="About" links={[
             { label: 'Our Story', onClick: () => navigate('about') },
@@ -1822,6 +2052,7 @@ function Router() {
     case 'category': return <CategoryPage slug={page.data || 'all'} />;
     case 'product': return <ProductPage id={page.data} />;
     case 'wishlist': return <WishlistPage />;
+    case 'orders': return <OrdersPage />;
     case 'checkout': return <CheckoutPage />;
     case 'about': return <AboutPage />;
     case 'contact': return <ContactPage />;
