@@ -1036,6 +1036,7 @@ function ValueProps() {
 function Newsletter() {
   const [email, setEmail] = useState('');
   const [done, setDone] = useState(false);
+  const [alreadySubscribed, setAlreadySubscribed] = useState(false);
   const [busy, setBusy] = useState(false);
   const { showToast } = useApp();
   const submit = async (e) => {
@@ -1043,7 +1044,8 @@ function Newsletter() {
     if (!email.includes('@') || busy) return;
     setBusy(true);
     try {
-      await api.newsletter({ email });
+      const res = await api.newsletter({ email });
+      setAlreadySubscribed(Boolean(res?.alreadySubscribed));
       setDone(true);   // stays until the user navigates away — no auto-reset
     } catch (err) {
       showToast(err.message || 'Could not subscribe');
@@ -1072,6 +1074,23 @@ function Newsletter() {
               </button>
             </form>
           </>
+        ) : alreadySubscribed ? (
+          <div className="animate-fadeIn">
+            <div className="inline-flex items-center justify-center w-14 h-14 mb-6 sm:mb-7" style={{
+              borderRadius: '50%',
+              backgroundColor: 'rgba(184, 146, 74, 0.12)',
+              border: '1px solid rgba(184, 146, 74, 0.5)',
+            }}>
+              <Check className="w-6 h-6" style={{ color: '#B8924A' }} strokeWidth={1.5} />
+            </div>
+            <div className="text-[10px] sm:text-[11px] tracking-[0.32em] uppercase mb-3 font-light" style={{ color: '#B8924A' }}>Already On The List</div>
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl mb-4 sm:mb-5" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}>
+              You're <em className="italic" style={{ color: '#B8924A' }}>already with us</em>
+            </h2>
+            <p className="text-sm sm:text-base font-light leading-relaxed max-w-md mx-auto" style={{ color: 'rgba(246, 240, 229, 0.75)' }}>
+              Looks like {email} is already subscribed. We'll keep you posted on new arrivals and private edits — no need to sign up again.
+            </p>
+          </div>
         ) : (
           <div className="animate-fadeIn">
             <div className="inline-flex items-center justify-center w-14 h-14 mb-6 sm:mb-7" style={{

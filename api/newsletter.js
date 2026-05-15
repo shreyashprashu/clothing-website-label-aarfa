@@ -33,7 +33,7 @@ export default async function handler(req, res) {
       catch (e) { console.error('newsletter welcome email failed', e?.message); }
     }
 
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, alreadySubscribed: !isFresh });
   } catch (err) {
     console.error('newsletter error', err);
     return res.status(500).json({ error: err.message || 'Subscribe failed' });
