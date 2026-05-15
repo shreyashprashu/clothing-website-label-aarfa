@@ -31,11 +31,16 @@ function ProductImage({
   if (!src) return null;
   const base = src.replace(/\.(jpe?g|png)$/i, '');
   const srcSet = `${base}.400.webp 400w, ${base}.800.webp 800w, ${base}.1280.webp 1280w`;
-  // `display: contents` removes <picture>'s own box from layout, so the inner
-  // <img> sizes against its grandparent — keeping w-full/h-full/absolute
-  // patterns working exactly as they did when the <img> was bare.
+  // <picture> defaults to display:inline, which collapses the inner <img>
+  // when callers expect "w-full h-full" / "absolute inset-0" to fill an
+  // aspect-ratio parent (Hero, ProductCard). We make <picture> THE rendered
+  // box — caller's className + style land on it — and the inner <img> just
+  // fills <picture> at 100%/100%. object-position is parsed out of the
+  // className (e.g. "object-top") since `object-*` only has meaning on
+  // replaced elements (the img), not the picture wrapper.
+  const objectPosition = (/\bobject-(top|bottom|left|right|center)\b/.exec(className || '') || [, 'center'])[1];
   return (
-    <picture style={{ display: 'contents' }}>
+    <picture className={className} style={{ display: 'block', ...style }} onClick={onClick}>
       <source type="image/webp" srcSet={srcSet} sizes={sizes} />
       <img
         src={src}
@@ -45,9 +50,7 @@ function ProductImage({
         fetchPriority={fetchPriority}
         width={width}
         height={height}
-        className={className}
-        style={style}
-        onClick={onClick}
+        style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover', objectPosition }}
       />
     </picture>
   );
