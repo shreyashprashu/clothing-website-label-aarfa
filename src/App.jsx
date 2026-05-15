@@ -457,7 +457,7 @@ function applySeo(page) {
           price: (onSale ? p.salePrice : p.price).toString(),
           availability: 'https://schema.org/InStock',
           itemCondition: 'https://schema.org/NewCondition',
-          ...(onSale && { priceValidUntil: '2025-12-31' }),
+          ...(onSale && { priceValidUntil: '2026-12-31' }),
         },
       });
       setJsonLd('ld-breadcrumb', {
@@ -727,9 +727,9 @@ function MobileMenu() {
 function Hero() {
   const { navigate } = useApp();
   const slides = [
-    { image: IMG + 'Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg', eyebrow: 'New Edit · 2025', title: 'Crafted', accent: 'Elegance', sub: 'A collection composed in silk, breath, and stillness.' },
+    { image: IMG + 'Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg', eyebrow: 'New Edit · 2026', title: 'Crafted', accent: 'Elegance', sub: 'A collection composed in silk, breath, and stillness.' },
     { image: IMG + 'Label-Aarfa-Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg', eyebrow: 'Heritage Weaves', title: 'Hand-loomed', accent: 'Stories', sub: 'Each thread carries the memory of the loom that made it.' },
-    { image: IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg', eyebrow: 'Festive 2025', title: 'Quietly', accent: 'Regal', sub: 'Pieces meant for moments you want to remember.' },
+    { image: IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg', eyebrow: 'Festive 2026', title: 'Quietly', accent: 'Regal', sub: 'Pieces meant for moments you want to remember.' },
   ];
   const [active, setActive] = useState(0);
   useEffect(() => { const t = setInterval(() => setActive((a) => (a + 1) % slides.length), 6500); return () => clearInterval(t); }, []);
@@ -2384,7 +2384,7 @@ const POLICIES = {
     title: 'Shipping Policy',
     eyebrow: 'Delivery & Tracking',
     intro: 'How and when your order reaches you.',
-    updated: 'May 2025',
+    updated: 'May 2026',
     sections: [
       { heading: 'Order processing', body: 'Every piece is finished by hand in our Delhi atelier. Ready-to-wear orders are dispatched within 2 business days. Custom-stitched or made-to-measure pieces take 7–10 business days before dispatch.' },
       { heading: 'Delivery within India', body: 'Standard delivery takes 4–7 business days from dispatch. Metros (Delhi NCR, Mumbai, Bangalore, Chennai, Hyderabad, Kolkata, Pune) typically receive in 3–5 days. Shipping is free on orders above ₹2,999; ₹99 otherwise.' },
@@ -2397,7 +2397,7 @@ const POLICIES = {
     title: 'Return, Exchange & Cancellation Policy',
     eyebrow: '24-hour Exchange Window',
     intro: 'Exchanges only for size issues, within 24 hours of delivery. No returns once sold.',
-    updated: 'May 2025',
+    updated: 'May 2026',
     sections: [
       {
         heading: 'Exchange Policy',
@@ -2428,7 +2428,7 @@ const POLICIES = {
     title: 'Sustainability',
     eyebrow: 'Slow Couture',
     intro: 'How we try to make clothing that does not cost the earth.',
-    updated: 'May 2025',
+    updated: 'May 2026',
     sections: [
       { heading: 'Small-batch production', body: 'Most styles are made in runs of 20–60 pieces. Slow production means very little dead stock, no warehouse incineration, and pieces that are made closer to when they are bought — rather than produced years in advance.' },
       { heading: 'Handloom and natural fabrics', body: 'Where possible, we work with handloom cotton, soft crepe, viscose muslin, silk, and pashmina — fabrics that breathe, age well, and biodegrade. Synthetics, when used, are disclosed clearly on each product page.' },
@@ -2441,7 +2441,7 @@ const POLICIES = {
     title: 'Privacy Policy',
     eyebrow: 'Your Data',
     intro: 'A plain-English summary of what we collect and what we do with it.',
-    updated: 'May 2025',
+    updated: 'May 2026',
     sections: [
       { heading: 'What we collect', body: 'When you place an order: your name, email, phone, shipping address, and the items you ordered. When you create an account: your email (or phone). Payments are processed by Razorpay — we never see or store raw card numbers.' },
       { heading: 'How we use it', body: 'To process your order, send order updates, respond to your messages, and (only if you explicitly opt in) email you about new collections. We do not sell your data, ever.' },
@@ -2454,7 +2454,7 @@ const POLICIES = {
     title: 'Terms of Service',
     eyebrow: 'Fine print',
     intro: 'The terms that apply when you use our website and place orders.',
-    updated: 'May 2025',
+    updated: 'May 2026',
     sections: [
       { heading: 'Use of this site', body: 'By browsing labelaarfa.com or placing an order, you agree to these terms. You must be 18 or older — or have a parent/guardian\'s consent — to place orders.' },
       { heading: 'Product descriptions and images', body: 'We work hard to represent every piece accurately. Colours may vary slightly with your screen calibration, and handcrafted pieces show natural variations in embroidery, weave, and print — this is a signature of the craft, not a defect.' },
