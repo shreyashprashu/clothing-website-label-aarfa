@@ -84,7 +84,7 @@ export async function sendOrderAdminNotification({ order, items, address }) {
   const addr = address || order.shipping_address || {};
 
   const rows = (items || []).map((i) =>
-    `<tr><td style="padding:8px 12px;border-bottom:1px solid #E8DDC9">${esc(i.product_name)}<br><span style="color:#A89888;font-size:12px">Size ${esc(i.size)} · Qty ${Number(i.quantity) || 0}${i.color ? ' · ' + esc(i.color) : ''}</span></td><td style="padding:8px 12px;border-bottom:1px solid #E8DDC9;text-align:right;white-space:nowrap">${fmt(i.line_total_paise)}</td></tr>`
+    `<tr><td style="padding:8px 12px;border-bottom:1px solid #E8DDC9">${esc(i.product_name)}<br><span style="color:#A89888;font-size:12px">Size ${esc(i.size)} · Qty ${Number(i.quantity) || 0}</span></td><td style="padding:8px 12px;border-bottom:1px solid #E8DDC9;text-align:right;white-space:nowrap">${fmt(i.line_total_paise)}</td></tr>`
   ).join('');
 
   const html = `

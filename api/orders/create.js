@@ -81,7 +81,7 @@ export default async function handler(req, res) {
     const headerForcesIntl = headerCountry && headerCountry !== 'IN';
 
     // Server-side price computation — never trust client totals.
-    // Aggregate quantity per product across all (size,color) lines to enforce stock at the
+    // Aggregate quantity per product across size lines to enforce stock at the
     // product level, since stock is a single field per product (not per variant).
     const perProductQty = new Map();
     let subtotalInr = 0;
@@ -95,9 +95,11 @@ export default async function handler(req, res) {
       const unit = effectivePriceInr(p);
       const line = unit * qty;
       subtotalInr += line;
+      // `color` column is kept on the schema for legacy rows but always written
+      // as empty string now — UI has no color selection.
       lineItems.push({
         product_id: p.id, product_name: p.name,
-        size: it.size, color: it.color || '',
+        size: it.size, color: '',
         quantity: qty,
         unit_price_paise: unit * 100,
         line_total_paise: line * 100,
