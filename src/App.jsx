@@ -1187,16 +1187,19 @@ function AuthModal() {
   if (!authOpen) return null;
   const isValid = method === 'phone' ? phone.length === 10 : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+  const credentials = () => method === 'phone'
+    ? { phone: `+91${phone}` }
+    : { email };
+
   const sendOtp = async () => {
     if (!isValid || busy) return;
-    if (method === 'phone') { showToast('Phone OTP coming soon — please use email'); return; }
     if (!supabase) { showToast('Auth not configured (set Supabase env vars)'); return; }
     setBusy(true);
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    const { error } = await supabase.auth.signInWithOtp({ ...credentials(), options: { shouldCreateUser: true } });
     setBusy(false);
     if (error) { showToast(error.message); return; }
     setStep(2);
-    showToast('OTP sent to your email');
+    showToast(`OTP sent to your ${method === 'phone' ? 'phone' : 'email'}`);
   };
 
   const verify = async () => {
@@ -1204,18 +1207,22 @@ function AuthModal() {
     if (token.length < 6 || busy) return;
     if (!supabase) { showToast('Auth not configured'); return; }
     setBusy(true);
-    // Try 'email' first (works for magic-link OTP); fall back to 'signup' for new-user confirmation tokens.
-    let { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-    if (error) ({ error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' }));
+    let result;
+    if (method === 'phone') {
+      result = await supabase.auth.verifyOtp({ phone: `+91${phone}`, token, type: 'sms' });
+    } else {
+      result = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+      if (result.error) result = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
+    }
     setBusy(false);
-    if (error) { showToast(error.message || 'Invalid OTP'); return; }
+    if (result.error) { showToast(result.error.message || 'Invalid OTP'); return; }
     showToast('Signed in successfully');
     reset();
   };
 
   const resend = async () => {
     if (!supabase) return;
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    const { error } = await supabase.auth.signInWithOtp({ ...credentials(), options: { shouldCreateUser: true } });
     if (error) { showToast(error.message); return; }
     setTimer(60); showToast('OTP resent');
   };
