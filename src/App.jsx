@@ -718,9 +718,14 @@ function Hero() {
 
   return (
     <section className="relative" style={{ backgroundColor: '#FBF8F3' }}>
-      <div className="max-w-[1440px] mx-auto grid lg:grid-cols-12 gap-0 items-stretch min-h-[560px] lg:min-h-[680px]">
+      {/* flex-col on mobile, grid on lg+. The earlier `grid` (with no
+          explicit columns on mobile) made the image panel's track width
+          depend on the text panel's max-content, which collapsed the
+          image to a thumbnail on iOS Safari. Flex column with w-full
+          on each pane is unambiguous. */}
+      <div className="max-w-[1440px] mx-auto flex flex-col lg:grid lg:grid-cols-12 gap-0 items-stretch min-h-[560px] lg:min-h-[680px]">
         {/* Image panel */}
-        <div className="lg:col-span-7 relative aspect-[4/5] lg:aspect-auto overflow-hidden order-1 lg:order-2">
+        <div className="w-full lg:col-span-7 relative aspect-[4/5] lg:aspect-auto overflow-hidden order-1 lg:order-2">
           {slides.map((s, i) => (
             <div key={i} className="absolute inset-0 transition-opacity duration-[1400ms]" style={{ opacity: i === active ? 1 : 0 }}>
               <ProductImage
@@ -742,7 +747,7 @@ function Hero() {
         </div>
 
         {/* Text panel — pure solid */}
-        <div className="lg:col-span-5 flex items-center order-2 lg:order-1 px-6 sm:px-10 lg:px-14 py-14 lg:py-20" style={{ backgroundColor: '#FBF8F3' }}>
+        <div className="w-full lg:col-span-5 flex items-center order-2 lg:order-1 px-6 sm:px-10 lg:px-14 py-14 lg:py-20" style={{ backgroundColor: '#FBF8F3' }}>
           <div key={active} className="max-w-md">
             <div className="text-[10px] sm:text-[11px] tracking-[0.32em] uppercase font-light mb-5 animate-slideUp" style={{ color: '#7B1E28' }}>
               {slides[active].eyebrow}
