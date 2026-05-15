@@ -472,7 +472,7 @@ function applySeo(page) {
   } else if (page.name === 'about') {
     cur = { ...home, title: 'About Label Aarfa — Our Story | Founded 2019, Delhi', desc: 'Founded in 2019 by Aarfa, our Delhi atelier works with master artisans across Jaipur, Delhi, and Lucknow to make ethnic wear with intention.', url: SITE_URL + '/about' };
   } else if (page.name === 'contact') {
-    cur = { ...home, title: 'Contact Label Aarfa — Atelier in New Delhi', desc: 'Our atelier is in New Delhi. Email label.arfa@gmail.com or call +91 98xxx xxx00.', url: SITE_URL + '/contact' };
+    cur = { ...home, title: 'Contact Label Aarfa — Atelier in New Delhi', desc: 'Our atelier is in New Delhi. Email care@labelaarfa.com or call +91 98xxx xxx00.', url: SITE_URL + '/contact' };
   } else if (page.name === 'wishlist') {
     cur = { ...home, title: 'Wishlist — Label Aarfa', desc: 'Pieces you have saved from the Label Aarfa collection.', url: SITE_URL + '/wishlist' };
   } else if (page.name === 'orders') {
@@ -2349,7 +2349,7 @@ function ContactPage() {
           <div className="lg:pl-0 space-y-6 sm:space-y-7">
             <ContactItem icon={MapPin} title="Atelier" body={<>Label Aarfa<br />New Delhi, India</>} />
             <ContactItem icon={Phone} title="Phone" body="+91 98xxx xxx00" />
-            <ContactItem icon={Mail} title="Email" body="label.arfa@gmail.com" />
+            <ContactItem icon={Mail} title="Email" body="care@labelaarfa.com" />
             <ContactItem icon={null} title="Hours" body={<>Monday – Saturday<br />11:00 AM – 8:00 PM IST</>} />
           </div>
           <div className="flex gap-3 pt-2">
@@ -2412,7 +2412,7 @@ const POLICIES = {
       },
       {
         heading: 'How to initiate an exchange',
-        body: 'Email label.arfa@gmail.com within 24 hours of delivery with your order ID, the size you would like, and your unboxing video.',
+        body: 'Email care@labelaarfa.com within 24 hours of delivery with your order ID, the size you would like, and your unboxing video.',
       },
       {
         heading: 'Return Policy',
@@ -2420,7 +2420,7 @@ const POLICIES = {
       },
       {
         heading: 'Cancellation',
-        body: 'You may cancel an order within 12 hours of placing it, provided it has not yet been packed for dispatch — write to label.arfa@gmail.com. After dispatch, our 24-hour exchange policy applies upon delivery.',
+        body: 'You may cancel an order within 12 hours of placing it, provided it has not yet been packed for dispatch — write to care@labelaarfa.com. After dispatch, our 24-hour exchange policy applies upon delivery.',
       },
     ],
   },
@@ -2446,7 +2446,7 @@ const POLICIES = {
       { heading: 'What we collect', body: 'When you place an order: your name, email, phone, shipping address, and the items you ordered. When you create an account: your email (or phone). Payments are processed by Razorpay — we never see or store raw card numbers.' },
       { heading: 'How we use it', body: 'To process your order, send order updates, respond to your messages, and (only if you explicitly opt in) email you about new collections. We do not sell your data, ever.' },
       { heading: 'Third parties involved', body: 'Razorpay (payment processing), Resend (email delivery), Supabase (database and authentication), our courier partners (delivery), and statutory bodies when legally compelled.' },
-      { heading: 'Your rights', body: 'You can ask us at any time to see, correct, or delete the data we hold about you — write to label.arfa@gmail.com. Account deletion takes effect within 30 days. Order records are retained for 7 years for tax compliance, then deleted.' },
+      { heading: 'Your rights', body: 'You can ask us at any time to see, correct, or delete the data we hold about you — write to care@labelaarfa.com. Account deletion takes effect within 30 days. Order records are retained for 7 years for tax compliance, then deleted.' },
       { heading: 'Cookies', body: 'Only the cookies needed to keep you signed in, remember your cart, and remember the currency we detected for your country. No third-party advertising or tracking cookies.' },
     ],
   },
@@ -2459,7 +2459,7 @@ const POLICIES = {
       { heading: 'Use of this site', body: 'By browsing labelaarfa.com or placing an order, you agree to these terms. You must be 18 or older — or have a parent/guardian\'s consent — to place orders.' },
       { heading: 'Product descriptions and images', body: 'We work hard to represent every piece accurately. Colours may vary slightly with your screen calibration, and handcrafted pieces show natural variations in embroidery, weave, and print — this is a signature of the craft, not a defect.' },
       { heading: 'Pricing and order acceptance', body: 'Prices are in INR for Indian customers; international prices include a flat ₹5,000 shipping/service fee. We reserve the right to refuse or cancel orders in case of stock errors, pricing errors, or suspected fraud — you will be refunded in full in such cases.' },
-      { heading: 'Cancellations', body: 'You may cancel an order within 12 hours of placing it, provided it has not yet been packed for dispatch — write to label.arfa@gmail.com. After dispatch, our 24-hour exchange policy applies upon delivery.' },
+      { heading: 'Cancellations', body: 'You may cancel an order within 12 hours of placing it, provided it has not yet been packed for dispatch — write to care@labelaarfa.com. After dispatch, our 24-hour exchange policy applies upon delivery.' },
       { heading: 'Intellectual property', body: 'All photography, design, and copy on this site are the property of Label Aarfa. You may not reuse them commercially without written permission.' },
       { heading: 'Governing law', body: 'These terms are governed by the laws of India. Any disputes will be subject to the exclusive jurisdiction of the courts in New Delhi.' },
     ],
@@ -2481,7 +2481,7 @@ const SIZE_CHART = {
   tips: [
     { heading: 'How to measure', body: 'Use a soft tailor\'s tape over light clothing. Stand relaxed. Measure bust around its fullest part, waist at the natural waistline (typically its narrowest point), and hip around the fullest part of your seat.' },
     { heading: 'Between sizes?', body: 'Choose the larger size — most of our silhouettes can be taken in by your local tailor far more easily than they can be let out.' },
-    { heading: 'Custom stitching', body: 'For made-to-measure, email label.arfa@gmail.com with your measurements. Custom orders take 7–10 extra days for dispatch and are non-exchangeable.' },
+    { heading: 'Custom stitching', body: 'For made-to-measure, email care@labelaarfa.com with your measurements. Custom orders take 7–10 extra days for dispatch and are non-exchangeable.' },
     { heading: 'A note on fit', body: 'Handcrafted pieces have a 0.5–1" tolerance — this is part of the character of slow-stitched clothing, not a flaw.' },
   ],
 };

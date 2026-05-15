@@ -61,7 +61,7 @@ export async function sendOrderConfirmation({ to, order, items }) {
       ${order.discount_paise > 0 ? `<tr><td style="color:#7B1E28">Discount${order.promo_code ? ` (${order.promo_code})` : ''}</td><td style="text-align:right;color:#7B1E28">−${fmt(order.discount_paise)}</td></tr>` : ''}
       <tr><td style="padding-top:8px;border-top:1px solid #E8DDC9;font-weight:600">Total</td><td style="padding-top:8px;border-top:1px solid #E8DDC9;text-align:right;font-weight:600">${fmt(order.total_paise)}</td></tr>
     </table>
-    <p style="color:#6B5F4F;font-size:13px;margin-top:32px">Questions? Reply to this email or write to label.arfa@gmail.com.</p>
+    <p style="color:#6B5F4F;font-size:13px;margin-top:32px">Questions? Reply to this email or write to care@labelaarfa.com.</p>
   </div>`;
 
   return sendOrLog({
