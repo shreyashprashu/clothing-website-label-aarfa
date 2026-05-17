@@ -1288,53 +1288,16 @@ function CategoryPreview({ title, sub, products, target }) {
 
 function EditorialBanner() {
   const { navigate } = useApp();
-  // 3-slide carousel. Uses SECOND-position product images (the detail /
-  // alt-angle shots that aren't the primary card hero) so the editorial
-  // banner never repeats whatever's already showing in the Premium /
-  // Pakistani grid below. All three are 1200w sources, giving the
-  // 1280w WebP variant something near-native to upscale from. Pauses when
-  // the tab is hidden (same iOS-Safari-burst defence Hero uses).
-  const slides = useMemo(() => ([
-    IMG + 'pakistani-9a-2.jpg',
-    IMG + 'pakistani-9b-2.jpg',
-    IMG + 'pakistani-9a-3.jpg',
-  ]), []);
-  const [active, setActive] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => { if (document.hidden) return; setActive((a) => (a + 1) % slides.length); }, 5500);
-    return () => clearInterval(t);
-  }, [slides.length]);
-
+  // Single image — reverted from the 3-slide carousel after the user
+  // judged the carousel imagery (premium-11-1 / 4-1 / 6a-1, then
+  // pakistani-9a-2 etc.) didn't suit the section. Back to the original
+  // premium-2-1.jpg (Mehnaaz Off White) that was here before any of the
+  // "upgrade" attempts.
   return (
     <section style={{ backgroundColor: '#1F1A14' }}>
       <div className="max-w-[1440px] mx-auto grid lg:grid-cols-2 min-h-[440px] sm:min-h-[500px] lg:min-h-[560px]">
         <div className="relative h-[320px] sm:h-[400px] lg:h-auto order-1 lg:order-none overflow-hidden">
-          {slides.map((src, i) => (
-            <div key={src} className="absolute inset-0 transition-opacity duration-[1400ms]" style={{ opacity: i === active ? 1 : 0 }}>
-              <ProductImage
-                src={src}
-                alt="From the atelier"
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                loading={i === 0 ? 'eager' : 'lazy'}
-                className="absolute inset-0 w-full h-full object-cover object-top"
-              />
-            </div>
-          ))}
-          {/* Indicator pips, gold on dark — match the brand accent. */}
-          <div className="absolute bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActive(i)}
-                aria-label={`Editorial slide ${i + 1}`}
-                className="h-1.5 rounded-full transition-all duration-500"
-                style={{
-                  width: i === active ? '24px' : '6px',
-                  backgroundColor: i === active ? '#B8924A' : 'rgba(246, 240, 229, 0.4)',
-                }}
-              />
-            ))}
-          </div>
+          <ProductImage src={IMG + 'premium-2-1.jpg'} alt="Editorial" sizes="(min-width: 1024px) 50vw, 100vw" className="absolute inset-0 w-full h-full object-cover object-top" />
         </div>
         <div className="flex items-center justify-center px-6 py-12 sm:p-12 lg:p-20 order-2" style={{ color: '#F6F0E5' }}>
           <div className="max-w-md">
@@ -3050,12 +3013,10 @@ function AboutPage() {
   return (
     <main>
       <div className="relative h-[50vh] sm:h-[60vh] min-h-[340px] sm:min-h-[400px] overflow-hidden" style={{ backgroundColor: '#1F1A14' }}>
-        {/* "Slow couture" hero — chose an unstitched flat-lay (no model
-            face, all fabric + textile detail) for the editorial vibe the
-            About page wants. unstitched-12-1.jpg is 1200×1600 which is the
-            highest-resolution source we have, so the 1280w WebP variant
-            renders crisply at full-bleed instead of being upscaled. */}
-        <ProductImage src={IMG + 'unstitched-12-1.jpg'} alt="" sizes="100vw" loading="eager" fetchPriority="high" className="w-full h-full object-cover object-center" />
+        {/* Reverted from premium-10-1.jpg (face) → unstitched-12-1.jpg
+            (flat-lay) → back to the original Premium-orignal-long-pakistani-
+            Cordset.jpeg that the user originally placed here. */}
+        <ProductImage src={IMG + 'Premium-orignal-long-pakistani-Cordset.jpeg'} alt="" sizes="100vw" loading="eager" fetchPriority="high" className="w-full h-full object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(31,26,20,0.35) 0%, rgba(31,26,20,0.6) 100%)' }} />
         <div className="absolute inset-0 flex items-center justify-center text-center px-5">
           <div className="max-w-2xl" style={{ color: '#F6F0E5' }}>
