@@ -1,0 +1,30 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "//": "SPA fallback. Static files in public/ and /assets/* match before this rule, and serverless functions in /api/* are also matched first — so this only catches deep-link routes (/products/..., /collections/..., /about, /info/..., etc.) and hands them to index.html so the React router can resolve them.",
+      "source": "/((?!api/|assets/|images/|info/|logo|favicon|robots\\.txt|sitemap\\.xml|llms\\.txt|404\\.html|icons\\.svg).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(logo.*\\.(svg|png))",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
+}

@@ -19,6 +19,10 @@ async function get(path) {
 export const api = {
   createOrder: (payload, token) => post('/api/orders/create', payload, token),
   verifyOrder: (payload) => post('/api/orders/verify', payload),
+  // Release stock + flip the order to 'cancelled' when the user closes the
+  // Razorpay modal without paying (or when verify rejects). Safe to call even
+  // after a successful payment — server only acts on still-`created` rows.
+  cancelOrder: (payload) => post('/api/orders/cancel', payload),
   contact:     (payload) => post('/api/contact', payload),
   newsletter:  (payload) => post('/api/newsletter', payload),
   inventory:   () => get('/api/inventory'),

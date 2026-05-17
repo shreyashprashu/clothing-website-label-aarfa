@@ -56,6 +56,9 @@ api/                 Vercel Serverless Functions (Node.js runtime, ESM)
                      Razorpay order create + atomic DB insert
     verify.js        POST: HMAC verify Razorpay signature → atomic flip to paid → send emails
                      (stock is already reserved at create-time)
+    cancel.js        POST: customer dismissed the Razorpay modal without paying. Atomically
+                     transitions order 'created' → 'cancelled' (so paid orders are never
+                     touched) and releases the reserved stock via increment_stock.
   webhooks/
     razorpay.js      POST: async events (payment.captured, payment.failed, refund.processed).
                      payment.captured uses atomic .neq('status','paid') so only the winner of
@@ -228,8 +231,10 @@ Product-card hover swaps to the second image over 1100ms — **only on devices t
 
 ## App architecture
 
-- **Single Context** (`AppCtx`, `useApp()`) holds page, cart, wishlist, drawer/modal open states, user (Supabase `Session.user` or null), currency, toast, and `signOut()`. No Redux, no router library.
-- **Routing** is a state-based switch in `Router()` — `home | category | product | wishlist | orders | checkout | about | contact | info`. `navigate(name, data)` scrolls top + closes mobile menu. URLs do not change on navigation (known limitation).
+- **Single Context** (`AppCtx`, `useApp()`) holds page, cart, wishlist, drawer/modal open states, user (Supabase `Session.user` or null), currency, toast, live stock + `getStock()`/`refreshStock()`, and `signOut()`. No Redux, no router library.
+- **Routing** is a state-based switch in `Router()` — `home | category | product | wishlist | orders | checkout | about | contact | info`. `navigate(name, data)` updates state AND `history.pushState`s a clean URL (`/products/raha-co-ord-set-105`, `/collections/premium`, etc.) so the browser back button walks back through app pages (iOS Safari was exiting the site after one back tap before this). A `popstate` listener applies the previous page without pushing again. Initial mount seeds `page` synchronously from `pageFromUrl(window.location.pathname)` so deep links don't flash the home page first. URL ↔ page mapping lives next to `CATEGORY_SEO`: `urlForPage(name, data)`, `pageFromUrl(pathname)`, `productSlug(p) = slugify(p.name) + '-' + p.id`.
+- **SPA fallback on Vercel** is enforced by `vercel.json` — anything that doesn't match a static file, `/api/*` function, `/assets/`, `/images/`, `/info/`, or the brand assets is rewritten to `/index.html` so deep links resolve.
+- **ErrorBoundary** at the very top of the tree catches any render-time throw and shows a brand-styled "Back to home" fallback instead of a blank white page.
 - **Auth**: `AppProvider` hydrates the Supabase session on mount, subscribes to `onAuthStateChange`. Sign-in methods: **email OTP** and **Google OAuth**. Phone OTP is disabled (DLT/TRAI registration friction). Sign-in hydration runs effects gated on `user?.id` change: upserts the `profiles` row with Google metadata, fetches the default address, merges DB wishlist + cart with local.
 - **Cart line key**: `${productId}-${size}` — color was removed when the swatch UI went away. `hydrateCart()` always recomputes the key on read, so legacy color-keyed rows in localStorage or `user_carts` auto-dedupe.
 - **Cart cross-device sync**: `user_carts` (JSONB blob) is the source of truth when signed in. Sign-in merges DB with local (MAX qty for shared keys); every subsequent cart change upserts to DB. The merge waits on `cartSyncReadyRef` so the empty initial state doesn't overwrite saved data.

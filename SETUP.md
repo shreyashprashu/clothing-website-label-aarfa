@@ -10,7 +10,7 @@ If you skip a service, the corresponding feature will fail gracefully with a toa
 ## 1. Supabase — database + auth + OTP
 
 1. Create a project at <https://supabase.com/dashboard> (free tier is fine to start).
-2. Once provisioned, open **SQL Editor** → **New query** → paste the contents of [supabase/schema.sql](supabase/schema.sql) → **Run**. This creates all tables, RLS policies, and the trigger that auto-creates a `profiles` row on signup.
+2. Once provisioned, open **SQL Editor** → **New query** → paste the contents of [supabase/schema.sql](supabase/schema.sql) → **Run**. This creates all tables, RLS policies, the live-inventory functions (`try_decrement_stock`, `increment_stock`), and the trigger that auto-creates a `profiles` row on signup. Re-running this file is safe — every `CREATE` / `INSERT` is idempotent (`on conflict do nothing` on the stock seed, so you can re-run the script after schema edits without wiping your live counts).
 3. **Project Settings → API**: copy these three values:
    - `Project URL` → `VITE_SUPABASE_URL`
    - `anon public` key → `VITE_SUPABASE_ANON_KEY`
@@ -84,7 +84,11 @@ Once env vars are in place and the site is redeployed:
 - [ ] Open the site, click the user icon, enter your email, click **Send OTP**. Check inbox for the 6-digit code. Enter it. Toast: "Signed in successfully". User icon turns wine-coloured.
 - [ ] Add a product to cart, go to checkout, fill the address form, pick **Cash on Delivery**, click Pay. Should land on the success screen and a new row should appear in Supabase `orders` with status `cod_confirmed`.
 - [ ] Same flow but pick **UPI / Card / Wallet**. Razorpay modal opens. Pay with test card `4111 1111 1111 1111`. After payment, success screen + Supabase order is now `paid` + `paid_at` is set.
-- [ ] Refresh inbox — should have an order-confirmation email (only if Resend is configured).
+- [ ] Open the same product page again — the stock count should have dropped by what you just bought (live from `/api/inventory` after checkout).
+- [ ] Open a product, click "Pay", then **close the Razorpay modal without paying**. Refresh — the stock should be back where it started (cancel-on-dismiss released the reservation via `/api/orders/cancel`).
+- [ ] Order-confirmation email should arrive with the product thumbnail, the **LA-XXXXXXXX** order ref, and the chosen colour next to size. Admin email at `ADMIN_EMAIL` should arrive with the colour shown as a wine "COLOUR: X" pill.
+- [ ] **Back-button check on iOS Safari** — open the site → tap into a product → tap browser back. You should land on the previous page (not exit the site). Tap back again until you reach home; only then should back exit the tab.
+- [ ] **Deep-link check** — paste `https://www.labelaarfa.com/products/<some-slug>` directly into a new tab. Should resolve to the product page, not 404. (This requires `vercel.json` to be deployed.)
 - [ ] Submit the contact form on `/contact`. Check Supabase `contact_messages` table and your `ADMIN_EMAIL` inbox.
 - [ ] Submit the newsletter form in the footer. Check Supabase `newsletter_subscribers` table.
 
@@ -94,10 +98,8 @@ Once env vars are in place and the site is redeployed:
 
 | Feature | Status | Where it goes when you're ready |
 |---|---|---|
-| Phone-number OTP | UI present, disabled — clicking shows "coming soon" | Wire MSG91 or Fast2SMS through `api/auth/send-sms-otp.js`. |
-| Persistent cart / wishlist across devices | localStorage only | Add `carts` / `wishlists` tables (commented in schema) and sync on auth state change. |
-| Order history page for signed-in users | Not built | Add a `/account/orders` route reading `orders` filtered by `user_id`. |
-| Inventory tracking | Hardcoded `PRODUCTS` array | Move to `products` table in Supabase; sync after each order. |
+| Phone-number OTP | Disabled (TRAI/DLT registration burden) | Wire MSG91 or Fast2SMS through `api/auth/send-sms-otp.js` once you have DLT clearance. |
+| Abandoned-cart cleanup cron | Manual | Vercel Cron hitting an endpoint that finds `orders.status='created'` older than 30 min and calls the same `releaseStockForOrder` helper the webhook uses. The Razorpay modal-dismiss path already covers the common case via `/api/orders/cancel`; a cron is the belt-and-braces for tab-crash scenarios. |
 | Shipping integration | Manual | Shiprocket or Delhivery API + webhook for tracking updates. |
 | Invoices / GST | Manual | Razorpay Invoices or a separate tool like Sleek/Zoho. |
 

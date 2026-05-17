@@ -287,7 +287,13 @@ const loadStoredWishlist = () => {
 const loadWishlistOwner = () => { try { return localStorage.getItem(WISHLIST_OWNER_KEY) || ''; } catch { return ''; } };
 
 function AppProvider({ children }) {
-  const [page, setPage] = useState({ name: 'home', data: null });
+  // Seed the page from the URL synchronously so a deep link (e.g. /products/...)
+  // renders the right view on the very first paint — no flash of the home page
+  // followed by the real page after the mount effect lands.
+  const [page, setPage] = useState(() => {
+    if (typeof window === 'undefined') return { name: 'home', data: null };
+    return pageFromUrl(window.location.pathname);
+  });
   const [cart, setCart] = useState(loadStoredCart);
   const [wishlist, setWishlist] = useState(loadStoredWishlist);
   const [cartOpen, setCartOpen] = useState(false);
@@ -307,7 +313,7 @@ function AppProvider({ children }) {
     try {
       const data = await api.inventory();
       if (data?.stock && typeof data.stock === 'object') setStockMap(data.stock);
-    } catch (e) { /* keep showing fallback stock — server is the source of truth at order time */ }
+    } catch { /* keep showing fallback stock — server is the source of truth at order time */ }
   };
   const getStock = (productId) => {
     if (Object.prototype.hasOwnProperty.call(stockMap, productId)) return stockMap[productId];
@@ -325,7 +331,32 @@ function AppProvider({ children }) {
   };
   // Use instant scroll on route change — the page-enter fade does the visual work.
   // Smooth-scrolling a long page while new content fades in feels like two things competing.
-  const navigate = (name, data = null) => { setPage({ name, data }); window.scrollTo({ top: 0, behavior: 'auto' }); setMobileMenuOpen(false); };
+  //
+  // navigate() pushes the new page into browser history so the OS back button
+  // (especially iOS Safari's swipe-back) walks BACK through app pages instead
+  // of exiting the site after a single tap. The popstate handler below catches
+  // back/forward and applies the page WITHOUT pushing again.
+  const navigate = (name, data = null) => {
+    const next = { name, data };
+    setPage(next);
+    try {
+      const url = urlForPage(name, data);
+      // Don't push a duplicate entry if the user clicks the same link twice in
+      // a row — that'd require multiple back-presses to escape one page.
+      if (window.location.pathname !== url) {
+        window.history.pushState({ page: next }, '', url);
+      } else {
+        window.history.replaceState({ page: next }, '', url);
+      }
+    } catch { /* SSR / sandboxed iframe — silently fall back to state-only nav */ }
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    setMobileMenuOpen(false);
+    // Close any open drawer / overlay on navigation. Otherwise tapping "back"
+    // would change the page underneath a still-visible drawer, which feels broken.
+    setCartOpen(false);
+    setSearchOpen(false);
+    setAuthOpen(false);
+  };
 
   const addToCart = (product, size, quantity = 1) => {
     const key = cartKey(product.id, size);
@@ -506,6 +537,33 @@ function AppProvider({ children }) {
   // the hardcoded `stock` on PRODUCTS until /api/inventory responds.
   useEffect(() => { refreshStock(); }, []);
 
+  // Wire browser history to the React router.
+  // 1. Replace the initial history entry with one that carries `state.page` so
+  //    popstate has something to read on the first back press. (Page state was
+  //    already seeded synchronously by useState, above.)
+  // 2. Subscribe to popstate — every back/forward updates page state without
+  //    pushing a new entry (which would create a navigation loop).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const initial = pageFromUrl(window.location.pathname);
+    try { window.history.replaceState({ page: initial }, '', urlForPage(initial.name, initial.data)); } catch {}
+    const onPop = (e) => {
+      // Prefer the page we stuffed into state.page; fall back to URL parse for
+      // entries pushed before this listener (or from external links).
+      const next = e.state?.page || pageFromUrl(window.location.pathname);
+      setPage(next);
+      // Same cleanup as navigate() — back-out of an open drawer should not
+      // leave its overlay covering the page underneath.
+      setCartOpen(false);
+      setSearchOpen(false);
+      setAuthOpen(false);
+      setMobileMenuOpen(false);
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
   // Geo-detect currency + fetch live FX rates. Cached in localStorage for 6h.
   const [ratesVersion, setRatesVersion] = useState(0);
   useEffect(() => {
@@ -560,6 +618,86 @@ const CATEGORY_SEO = {
   all:           { title: 'All Products — Label Aarfa Couture', desc: 'The complete Label Aarfa collection across our premium, coord, Pakistani ready-to-wear, and unstitched lines.', path: '/collections/all' },
 };
 
+// =============================================================
+// URL ROUTING — single-state router with REAL browser history
+// =============================================================
+// Earlier the router lived entirely in React state, so the URL never changed
+// and the back button on iOS Safari (or any browser) exited the site after
+// a single tap. Now every navigate() also pushState()s, and we listen for
+// popstate so the back/forward buttons drive React state instead of bouncing
+// off the window. Deep links resolve correctly because parseUrl() runs at
+// mount time and translates /products/<slug>, /collections/<slug>, etc. back
+// into a page object.
+
+// Browser path → page state. Mirrors the navigation slugs the menus push.
+const CATEGORY_PATH_TO_SLUG = {
+  premium: 'premium', coords: 'coords', pakistani: 'pakistani', unstitched: 'unstitched',
+  'new-arrivals': 'newarrivals', sale: 'sale', all: 'all',
+};
+const CATEGORY_SLUG_TO_PATH = Object.fromEntries(
+  Object.entries(CATEGORY_PATH_TO_SLUG).map(([path, slug]) => [slug, path])
+);
+const INFO_SLUGS = new Set(['shipping', 'returns', 'sustainability', 'privacy', 'terms', 'size-guide']);
+
+// product-name → bare path slug (no /products/ prefix). We need to resolve
+// back to a product id when a deep link arrives, so memoize the lookup.
+const productSlug = (p) => slugify(p.name) + '-' + p.id;
+let _productSlugMap = null;
+function productBySlug(slug) {
+  if (!_productSlugMap) {
+    _productSlugMap = new Map();
+    for (const p of PRODUCTS) _productSlugMap.set(productSlug(p), p);
+  }
+  return _productSlugMap.get(slug);
+}
+
+// Build the URL path for any page state. Used by pushState() in navigate()
+// AND by applySeo() for the <link rel="canonical">, so the same definition
+// stays in sync between routing and SEO.
+function urlForPage(name, data) {
+  if (name === 'home') return '/';
+  if (name === 'category') {
+    const path = CATEGORY_SLUG_TO_PATH[data] || data || 'all';
+    return `/collections/${path}`;
+  }
+  if (name === 'product') {
+    const p = PRODUCTS.find((pp) => pp.id === data);
+    return p ? `/products/${productSlug(p)}` : '/';
+  }
+  if (name === 'wishlist') return '/wishlist';
+  if (name === 'orders') return '/orders';
+  if (name === 'checkout') return '/checkout';
+  if (name === 'about') return '/about';
+  if (name === 'contact') return '/contact';
+  if (name === 'info') return `/info/${data}`;
+  return '/';
+}
+
+// URL path → page state. Falls back to home for anything unrecognised so a
+// typo in the address bar lands gracefully instead of throwing.
+function pageFromUrl(pathname) {
+  const parts = (pathname || '/').split('/').filter(Boolean);
+  if (parts.length === 0) return { name: 'home', data: null };
+  if (parts[0] === 'collections' && parts[1]) {
+    const slug = CATEGORY_PATH_TO_SLUG[parts[1]] || parts[1];
+    return { name: 'category', data: slug };
+  }
+  if (parts[0] === 'products' && parts[1]) {
+    const p = productBySlug(parts[1]);
+    return p ? { name: 'product', data: p.id } : { name: 'home', data: null };
+  }
+  if (parts[0] === 'info' && parts[1] && INFO_SLUGS.has(parts[1])) {
+    return { name: 'info', data: parts[1] };
+  }
+  if (parts.length === 1) {
+    const top = parts[0];
+    if (['wishlist', 'orders', 'checkout', 'about', 'contact'].includes(top)) {
+      return { name: top, data: null };
+    }
+  }
+  return { name: 'home', data: null };
+}
+
 function setMeta(name, content, attr = 'name') {
   let el = document.querySelector(`meta[${attr}="${name}"]`);
   if (!el) { el = document.createElement('meta'); el.setAttribute(attr, name); document.head.appendChild(el); }
@@ -598,7 +736,7 @@ function applySeo(page) {
   } else if (page.name === 'product') {
     const p = (typeof PRODUCTS !== 'undefined') ? PRODUCTS.find((x) => x.id === page.data) : null;
     if (p) {
-      const url = `${SITE_URL}/products/${slugify(p.name)}`;
+      const url = `${SITE_URL}${urlForPage('product', p.id)}`;
       cur = {
         title: `${p.name} — Label Aarfa`,
         desc: p.description.length > 155 ? p.description.slice(0, 152) + '…' : p.description,
@@ -2604,15 +2742,32 @@ function CheckoutPage() {
             });
             finishOrder(result.orderId, v?.email);
           } catch (e) {
-            showToast(e.message || 'Verification failed');
+            // Don't auto-cancel here — verify might have failed for a network
+            // reason while the payment actually succeeded. We let the webhook
+            // (payment.captured) be the authoritative confirmation in that
+            // case. Customer sees a clear message and the admin gets pinged
+            // through the webhook path.
+            showToast(e.message || 'Payment verification delayed — we will email confirmation shortly');
           } finally {
             releaseLock();
           }
         },
-        modal: { ondismiss: () => releaseLock() },
+        modal: {
+          // Customer closed the Razorpay modal without paying. Release the
+          // stock reservation we made at create-time so the units go back on
+          // the shelf for the next visitor.
+          ondismiss: async () => {
+            try { await api.cancelOrder({ orderId: result.orderId }); } catch {}
+            refreshStock?.();
+            releaseLock();
+          },
+        },
       });
-      rzp.on('payment.failed', (resp) => {
+      rzp.on('payment.failed', async (resp) => {
         showToast(resp.error?.description || 'Payment failed');
+        // Same release as ondismiss — payment didn't go through, return stock.
+        try { await api.cancelOrder({ orderId: result.orderId }); } catch {}
+        refreshStock?.();
         releaseLock();
       });
       rzp.open();
@@ -3305,8 +3460,40 @@ function Router() {
   return <div key={`${page.name}:${page.data ?? ''}`} className="page-enter">{content}</div>;
 }
 
+// Top-level safety net. Anything that throws during render lands here
+// instead of nuking the whole page to a blank white. Mostly defends against
+// edge-case data shapes — a bad cart row, a missing image URL — that we
+// don't want to take the whole site down for. Reload button gets the
+// customer back into a working state. We DON'T wire this to any external
+// error tracker (Sentry etc.) yet; console.error is enough for now.
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { err: null }; }
+  static getDerivedStateFromError(err) { return { err }; }
+  componentDidCatch(err, info) {
+    try { console.error('[ErrorBoundary]', err, info?.componentStack); } catch {}
+  }
+  render() {
+    if (!this.state.err) return this.props.children;
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: "'Cormorant Garamond', Georgia, serif", color: '#1F1A14', backgroundColor: '#FBF8F3', textAlign: 'center' }}>
+        <div style={{ fontSize: 28, letterSpacing: '0.18em', fontWeight: 500, marginBottom: 8 }}>LABEL AARFA</div>
+        <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: '#6B5F4F', fontSize: 14, marginBottom: 24, maxWidth: 420 }}>
+          Something on this page didn't load. Please refresh — if it keeps happening, write to <a href="mailto:care@labelaarfa.com" style={{ color: '#7B1E28' }}>care@labelaarfa.com</a>.
+        </div>
+        <button
+          onClick={() => { try { window.location.assign('/'); } catch {} }}
+          style={{ padding: '14px 28px', background: '#1F1A14', color: '#FBF8F3', border: 'none', borderRadius: 4, fontSize: 12, letterSpacing: '0.22em', textTransform: 'uppercase', fontFamily: "'Inter', system-ui, sans-serif", cursor: 'pointer' }}
+        >
+          Back to home
+        </button>
+      </div>
+    );
+  }
+}
+
 export default function App() {
   return (
+    <ErrorBoundary>
     <AppProvider>
       <style>{`
         body { font-family: 'Inter', system-ui, sans-serif; color: #1F1A14; -webkit-font-smoothing: antialiased; background-color: #FBF8F3; }
@@ -3356,5 +3543,6 @@ export default function App() {
         <Toast />
       </div>
     </AppProvider>
+    </ErrorBoundary>
   );
 }

@@ -150,13 +150,17 @@ export async function sendOrderAdminNotification({ order, items, address }) {
 
   const html = `
   <div style="font-family:Georgia,'Times New Roman',serif;max-width:640px;margin:0 auto;color:#1F1A14;background:#FBF8F3;padding:28px">
-    <div style="margin-bottom:24px;border-bottom:2px solid #7B1E28;padding-bottom:14px;display:flex;align-items:center;gap:14px">
-      <img src="${LOGO_URL}" alt="Label Aarfa" width="44" height="44" style="display:inline-block;width:44px;height:44px;border:0;vertical-align:middle" />
-      <div style="display:inline-block;vertical-align:middle">
-        <div style="font-size:20px;letter-spacing:0.18em;font-weight:500">LABEL AARFA</div>
-        <div style="font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#7B1E28;margin-top:4px">New Order — Ship Required</div>
-      </div>
-    </div>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-bottom:24px;border-bottom:2px solid #7B1E28;padding-bottom:14px">
+      <tr>
+        <td valign="middle" style="width:56px;padding-right:14px">
+          <img src="${LOGO_URL}" alt="Label Aarfa" width="44" height="44" style="display:block;width:44px;height:44px;border:0" />
+        </td>
+        <td valign="middle">
+          <div style="font-size:20px;letter-spacing:0.18em;font-weight:500">LABEL AARFA</div>
+          <div style="font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#7B1E28;margin-top:4px">New Order — Ship Required</div>
+        </td>
+      </tr>
+    </table>
 
     <h2 style="font-weight:400;font-size:22px;margin:0 0 8px">Order ${esc(orderRef)}</h2>
     <div style="font-size:12px;color:#6B5F4F;margin-bottom:20px">Placed ${esc(placed)} IST · Payment: ${order.payment_method === 'cod' ? 'Cash on Delivery' : 'Razorpay'} · Status: <strong>${esc(order.status)}</strong></div>
