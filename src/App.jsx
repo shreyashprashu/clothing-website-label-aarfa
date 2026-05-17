@@ -285,9 +285,16 @@ function AppProvider({ children }) {
   }, []);
 
   const signOut = async () => {
+    // Wipe everything that was tied to the signed-in customer so the next
+    // person on this device (or the same person testing) doesn't inherit
+    // the prior cart / wishlist / address. We also short-circuit the cart
+    // DB sync so the empty local cart doesn't overwrite the saved one.
+    cartSyncReadyRef.current = false;
+    setCart([]);
+    setWishlist([]);
+    setDefaultAddress(null);
     if (!supabase) { setUser(null); return; }
     await supabase.auth.signOut();
-    setDefaultAddress(null);
     showToast('Signed out');
   };
 
@@ -491,7 +498,7 @@ function applySeo(page) {
   } else if (page.name === 'about') {
     cur = { ...home, title: 'About Label Aarfa — Our Story | Founded 2019, Delhi', desc: 'Founded in 2019 by Aarfa, our Delhi atelier works with master artisans across Jaipur, Delhi, and Lucknow to make ethnic wear with intention.', url: SITE_URL + '/about' };
   } else if (page.name === 'contact') {
-    cur = { ...home, title: 'Contact Label Aarfa — Atelier in New Delhi', desc: 'Our atelier is in New Delhi. Email care@labelaarfa.com or call +91 83699 07626.', url: SITE_URL + '/contact' };
+    cur = { ...home, title: 'Contact Label Aarfa — Atelier in New Delhi', desc: 'Our atelier is in New Delhi. Email care@labelaarfa.com or call +91 83688 07626.', url: SITE_URL + '/contact' };
   } else if (page.name === 'wishlist') {
     cur = { ...home, title: 'Wishlist — Label Aarfa', desc: 'Pieces you have saved from the Label Aarfa collection.', url: SITE_URL + '/wishlist' };
   } else if (page.name === 'orders') {
@@ -501,7 +508,8 @@ function applySeo(page) {
     if (slug === 'size-guide') {
       cur = { ...home, title: 'Size Guide — Label Aarfa', desc: 'Body measurement chart for Label Aarfa kurtas, coord sets, and stitched suits. Sizes XS to XXL with bust, waist, hip ranges.', url: SITE_URL + '/info/size-guide' };
     } else if (POLICIES[slug]) {
-      cur = { ...home, title: `${POLICIES[slug].title} — Label Aarfa`, desc: POLICIES[slug].intro, url: SITE_URL + '/info/' + slug };
+      const p = POLICIES[slug];
+      cur = { ...home, title: `${p.title} — Label Aarfa`, desc: p.intro || p.title, url: SITE_URL + '/info/' + slug };
     }
   }
 
@@ -551,7 +559,7 @@ function DiscountBadge({ priceInr, salePriceInr }) {
    HEADER
    ================================================================ */
 function AnnouncementBar() {
-  const msgs = ['Free shipping on orders above ₹2,999', '24-hour size-exchange window', 'Use WELCOME10 for 10% off your first order'];
+  const msgs = ['Free shipping on orders above ₹2,999', 'Use WELCOME10 for 10% off your first order'];
   const [i, setI] = useState(0);
   // Skip the tick when the tab is hidden — mobile browsers throttle setInterval in
   // backgrounded tabs and fire a burst when you return, which restarts the fade
@@ -1010,7 +1018,7 @@ function SaleStrip({ products }) {
 function ValueProps() {
   const items = [
     { icon: Truck, title: 'Free Shipping', sub: 'On orders above ₹2,999' },
-    { icon: RotateCcw, title: 'Size Exchanges', sub: '24-hour exchange window' },
+    { icon: RotateCcw, title: 'Damage Protection', sub: 'Unboxing video, 24 hrs' },
     { icon: ShieldCheck, title: 'Secure Checkout', sub: 'UPI, cards & wallets' },
     { icon: Sparkles, title: 'Made by Hand', sub: 'In our Delhi atelier' },
   ];
@@ -1397,7 +1405,7 @@ function ProductPage({ id }) {
 
           <div className="pt-6 sm:pt-7 space-y-3" style={{ borderTop: '1px solid #E8DDC9' }}>
             <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><Truck className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> Free shipping on orders above ₹2,999</div>
-            <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><RotateCcw className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> 24-hour size exchange</div>
+            <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><RotateCcw className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> Damage exchange with 24-hour unboxing video</div>
             <div className="flex items-center gap-3 text-xs font-light" style={{ color: '#6B5F4F' }}><ShieldCheck className="w-4 h-4 shrink-0" style={{ color: '#7B1E28' }} strokeWidth={1.2} /> Secure online payments</div>
           </div>
         </div>
@@ -1430,8 +1438,8 @@ function ProductPage({ id }) {
           )}
           {tab === 'shipping' && (
             <div className="space-y-3">
-              <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Shipping:</strong> Dispatched within 2 business days. India: 4–7 days. International: 7–14 days.</p>
-              <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Exchanges:</strong> 24-hour size-exchange window from delivery. Items must be unused, unworn, unwashed, with tags. Unboxing video is mandatory. ₹350 shipping fee. No returns or refunds.</p>
+              <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Shipping:</strong> Dispatched within 2 business days. Delivery typically takes 7–8 business days within India.</p>
+              <p><strong className="font-medium" style={{ color: '#1F1A14' }}>Refunds & exchanges:</strong> No refunds or returns once an order is placed. For damaged, defective, or incorrect items, share a complete unboxing video within 24 hours of delivery to claim an exchange or coupon. Orders cannot be cancelled after placement.</p>
             </div>
           )}
         </div>
@@ -2438,7 +2446,7 @@ function ContactPage() {
         <div className="space-y-6 sm:space-y-7 lg:pl-8" style={{ borderLeft: 'none' }}>
           <div className="lg:pl-0 space-y-6 sm:space-y-7">
             <ContactItem icon={MapPin} title="Atelier" body={<>Label Aarfa<br />New Delhi, India</>} />
-            <ContactItem icon={Phone} title="Phone" body={<a href="tel:+918369907626" style={{ color: 'inherit', textDecoration: 'none' }}>+91 83699 07626</a>} />
+            <ContactItem icon={Phone} title="Phone" body={<a href="tel:+918368807626" style={{ color: 'inherit', textDecoration: 'none' }}>+91 83688 07626</a>} />
             <ContactItem icon={Mail} title="Email" body="care@labelaarfa.com" />
             <ContactItem icon={null} title="Hours" body={<>Monday – Saturday<br />11:00 AM – 8:00 PM IST</>} />
           </div>
@@ -2484,33 +2492,35 @@ const POLICIES = {
     ],
   },
   returns: {
-    title: 'Return, Exchange & Cancellation Policy',
-    eyebrow: '24-hour Exchange Window',
-    intro: 'Exchanges only for size issues, within 24 hours of delivery. No returns once sold.',
+    title: 'Refund, Exchange & Cancellation Policy',
+    // Eyebrow + intro intentionally blank — InfoPage skips both when empty.
+    eyebrow: '',
+    intro: '',
     updated: 'May 2026',
     sections: [
       {
-        heading: 'Exchange Policy',
-        body: 'We offer exchanges only in cases of size-related issues. Customers must notify us within 24 hours of delivery if they wish to request a size exchange. Please note the following conditions for exchanges:',
-        bullets: [
-          'The item must be unused, unworn, unwashed, undamaged, and returned with all original tags and packaging intact.',
-          'Customers are requested to clearly mention their name and mobile number while sending the product back.',
-          'Exchange requests are accepted only for size concerns. Exchanges for different products are not permitted.',
-          'A shipping and handling fee of ₹350 for exchanges will be borne by the customer.',
-          'An unboxing/opening video recorded at the time of opening the parcel is mandatory for all exchange requests. Without this video, we will not be able to process the request.',
-        ],
+        heading: 'Refunds',
+        body: 'We do not offer refunds or returns once an order is placed.',
       },
       {
-        heading: 'How to initiate an exchange',
-        body: 'Email care@labelaarfa.com within 24 hours of delivery with your order ID, the size you would like, and your unboxing video.',
+        heading: 'Damaged, defective, or incorrect items',
+        body: 'If your parcel arrives damaged, defective, or contains an incorrect product, share a complete unboxing video of the parcel — without any cuts or edits — within 24 hours of delivery. Claims without an unboxing video will not be accepted. Once the item reaches our warehouse, it undergoes a one-day quality check. After pickup, the replacement typically takes 10 to 15 days to reach you.',
       },
       {
-        heading: 'Return Policy',
-        body: 'We do not accept returns once a product has been sold.',
+        heading: 'How exchanges work',
+        body: 'In place of a refund, you may choose any other dress of equivalent value in exchange for the one you received. We do not process refund requests in cash — for prepaid orders, the full amount of the dress (excluding courier charges) is issued as a coupon code or applied to an exchange dress, depending on the order value.',
       },
       {
         heading: 'Cancellation',
-        body: 'You may cancel an order within 12 hours of placing it, provided it has not yet been packed for dispatch — write to care@labelaarfa.com. After dispatch, our 24-hour exchange policy applies upon delivery.',
+        body: 'Orders cannot be cancelled once successfully placed.',
+      },
+      {
+        heading: 'Dispatch & delivery',
+        body: 'Ready-stock orders are usually dispatched within 2 working days. Delivery typically takes 7–8 business days, depending on the destination. Shipping details are shared via email once the order is dispatched.',
+      },
+      {
+        heading: 'Need help?',
+        body: 'Write to care@labelaarfa.com or call +91 83688 07626 and we will look after you.',
       },
     ],
   },
@@ -2549,7 +2559,7 @@ const POLICIES = {
       { heading: 'Use of this site', body: 'By browsing labelaarfa.com or placing an order, you agree to these terms. You must be 18 or older — or have a parent/guardian\'s consent — to place orders.' },
       { heading: 'Product descriptions and images', body: 'We work hard to represent every piece accurately. Colours may vary slightly with your screen calibration, and handcrafted pieces show natural variations in embroidery, weave, and print — this is a signature of the craft, not a defect.' },
       { heading: 'Pricing and order acceptance', body: 'Prices are in INR for Indian customers; international prices include a flat ₹5,000 shipping/service fee. We reserve the right to refuse or cancel orders in case of stock errors, pricing errors, or suspected fraud — you will be refunded in full in such cases.' },
-      { heading: 'Cancellations', body: 'You may cancel an order within 12 hours of placing it, provided it has not yet been packed for dispatch — write to care@labelaarfa.com. After dispatch, our 24-hour exchange policy applies upon delivery.' },
+      { heading: 'Cancellations', body: 'Orders cannot be cancelled once successfully placed.' },
       { heading: 'Intellectual property', body: 'All photography, design, and copy on this site are the property of Label Aarfa. You may not reuse them commercially without written permission.' },
       { heading: 'Governing law', body: 'These terms are governed by the laws of India. Any disputes will be subject to the exclusive jurisdiction of the courts in New Delhi.' },
     ],
@@ -2601,15 +2611,19 @@ function InfoPage({ slug }) {
       </div>
 
       <header className="text-center mb-10 sm:mb-14">
-        <div className="text-[10px] sm:text-[11px] tracking-[0.32em] uppercase font-light mb-3 sm:mb-4" style={{ color: '#7B1E28' }}>
-          {policy.eyebrow}
-        </div>
+        {policy.eyebrow && (
+          <div className="text-[10px] sm:text-[11px] tracking-[0.32em] uppercase font-light mb-3 sm:mb-4" style={{ color: '#7B1E28' }}>
+            {policy.eyebrow}
+          </div>
+        )}
         <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl mb-3 sm:mb-4" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>
           {policy.title}
         </h1>
-        <p className="font-light text-sm sm:text-base max-w-xl mx-auto" style={{ color: '#6B5F4F' }}>
-          {policy.intro}
-        </p>
+        {policy.intro && (
+          <p className="font-light text-sm sm:text-base max-w-xl mx-auto" style={{ color: '#6B5F4F' }}>
+            {policy.intro}
+          </p>
+        )}
       </header>
 
       <div className="space-y-8 sm:space-y-10">
@@ -2756,7 +2770,7 @@ function Footer() {
           <FooterCol title="Customer Care" links={[
             { label: 'Contact Us', onClick: () => navigate('contact') },
             { label: 'Shipping Policy', onClick: () => navigate('info', 'shipping') },
-            { label: 'Returns & Exchanges', onClick: () => navigate('info', 'returns') },
+            { label: 'Refunds & Exchanges', onClick: () => navigate('info', 'returns') },
             { label: 'Size Guide', onClick: () => navigate('info', 'size-guide') },
             { label: 'Track Order', onClick: () => navigate('orders') },
           ]} />
