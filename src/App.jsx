@@ -285,14 +285,26 @@ function AppProvider({ children }) {
   }, []);
 
   const signOut = async () => {
-    // Wipe everything that was tied to the signed-in customer so the next
-    // person on this device (or the same person testing) doesn't inherit
-    // the prior cart / wishlist / address. We also short-circuit the cart
-    // DB sync so the empty local cart doesn't overwrite the saved one.
+    // Wipe everything tied to the signed-in customer so the next person on
+    // this device (or the same person testing) doesn't inherit the prior
+    // cart / wishlist / address. The DB-side user_cart row is preserved
+    // (sync ref short-circuited before the wipe), so a re-login restores it.
+    //
+    // We do BOTH: clear the React state (so the open drawer updates this
+    // tick) AND wipe localStorage synchronously (so anything reading from
+    // disk — page refresh, another tab — sees the cleared state immediately,
+    // not after the persist effect's next tick).
     cartSyncReadyRef.current = false;
     setCart([]);
     setWishlist([]);
+    setCartOpen(false);
     setDefaultAddress(null);
+    try {
+      localStorage.setItem(CART_KEY, '[]');
+      localStorage.setItem(CART_OWNER_KEY, '');
+      localStorage.setItem(WISHLIST_KEY, '[]');
+      localStorage.setItem(WISHLIST_OWNER_KEY, '');
+    } catch {}
     if (!supabase) { setUser(null); return; }
     await supabase.auth.signOut();
     showToast('Signed out');
