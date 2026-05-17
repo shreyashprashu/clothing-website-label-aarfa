@@ -1,5 +1,26 @@
 import React, { useState, useEffect, useMemo, useRef, createContext, useContext } from 'react';
-import { ShoppingBag, Heart, Search, User, X, Menu, ChevronRight, ChevronLeft, Plus, Minus, Truck, ShieldCheck, RotateCcw, Hash, Globe2, Video, MapPin, Phone, Mail, Check, ArrowRight, SlidersHorizontal, Sparkles, Globe, Package, Clock } from 'lucide-react';
+import { ShoppingBag, Heart, Search, User, X, Menu, ChevronRight, ChevronLeft, Plus, Minus, Truck, ShieldCheck, RotateCcw, MapPin, Phone, Mail, Check, ArrowRight, SlidersHorizontal, Sparkles, Globe, Package, Clock } from 'lucide-react';
+
+// Single source of truth for the brand's social presence. Only Instagram for
+// now — Hash / Globe / Video placeholders in the footer + contact page were
+// dead links. Update here if/when other channels go live.
+const INSTAGRAM_URL = 'https://www.instagram.com/labelaarfa?igsh=azR4bHl6ZjA0eTR0';
+
+// Inline Instagram glyph — same paths as the modern Lucide icon, just
+// inlined because the lucide-react version we're on (1.16) predates the
+// Instagram export. Stroke / size are controlled by props so it matches the
+// other Lucide icons used elsewhere (strokeWidth 1.5, 16px / w-4 h-4).
+function Instagram({ className, strokeWidth = 1.5, ...rest }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth={strokeWidth}
+      strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true" {...rest}>
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
 import { supabase, supabaseConfigured } from './lib/supabase';
 import { api, loadRazorpay } from './lib/api';
 
@@ -1267,11 +1288,51 @@ function CategoryPreview({ title, sub, products, target }) {
 
 function EditorialBanner() {
   const { navigate } = useApp();
+  // 3-slide carousel using the largest-source premium edits we have. Each
+  // crossfades on a 5.5s interval, matched to the Hero cadence so the two
+  // moving sections don't feel like they're racing each other on screen.
+  // Pauses when the tab is hidden (same iOS-Safari-burst defence Hero uses).
+  const slides = useMemo(() => ([
+    IMG + 'premium-11-1.jpg',
+    IMG + 'premium-4-1.jpg',
+    IMG + 'premium-6a-1.jpg',
+  ]), []);
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => { if (document.hidden) return; setActive((a) => (a + 1) % slides.length); }, 5500);
+    return () => clearInterval(t);
+  }, [slides.length]);
+
   return (
     <section style={{ backgroundColor: '#1F1A14' }}>
       <div className="max-w-[1440px] mx-auto grid lg:grid-cols-2 min-h-[440px] sm:min-h-[500px] lg:min-h-[560px]">
         <div className="relative h-[320px] sm:h-[400px] lg:h-auto order-1 lg:order-none overflow-hidden">
-          <ProductImage src={IMG + 'premium-2-1.jpg'} alt="Editorial" sizes="(min-width: 1024px) 50vw, 100vw" className="absolute inset-0 w-full h-full object-cover object-top" />
+          {slides.map((src, i) => (
+            <div key={src} className="absolute inset-0 transition-opacity duration-[1400ms]" style={{ opacity: i === active ? 1 : 0 }}>
+              <ProductImage
+                src={src}
+                alt="From the atelier"
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                loading={i === 0 ? 'eager' : 'lazy'}
+                className="absolute inset-0 w-full h-full object-cover object-top"
+              />
+            </div>
+          ))}
+          {/* Indicator pips, gold on dark — match the brand accent. */}
+          <div className="absolute bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActive(i)}
+                aria-label={`Editorial slide ${i + 1}`}
+                className="h-1.5 rounded-full transition-all duration-500"
+                style={{
+                  width: i === active ? '24px' : '6px',
+                  backgroundColor: i === active ? '#B8924A' : 'rgba(246, 240, 229, 0.4)',
+                }}
+              />
+            ))}
+          </div>
         </div>
         <div className="flex items-center justify-center px-6 py-12 sm:p-12 lg:p-20 order-2" style={{ color: '#F6F0E5' }}>
           <div className="max-w-md">
@@ -2987,7 +3048,10 @@ function AboutPage() {
   return (
     <main>
       <div className="relative h-[50vh] sm:h-[60vh] min-h-[340px] sm:min-h-[400px] overflow-hidden" style={{ backgroundColor: '#1F1A14' }}>
-        <ProductImage src={IMG + 'Premium-orignal-long-pakistani-Cordset.jpeg'} alt="" sizes="100vw" loading="eager" className="w-full h-full object-cover" />
+        {/* Hero image is the highest-resolution source we have on file
+            (premium-10-1.jpg, 1204×1600) — picked because it fills the
+            full-bleed hero without visibly pixelating on a 1440px display. */}
+        <ProductImage src={IMG + 'premium-10-1.jpg'} alt="" sizes="100vw" loading="eager" fetchPriority="high" className="w-full h-full object-cover object-top" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(31,26,20,0.35) 0%, rgba(31,26,20,0.6) 100%)' }} />
         <div className="absolute inset-0 flex items-center justify-center text-center px-5">
           <div className="max-w-2xl" style={{ color: '#F6F0E5' }}>
@@ -3076,11 +3140,16 @@ function ContactPage() {
             <ContactItem icon={null} title="Hours" body={<>Monday – Saturday<br />11:00 AM – 8:00 PM IST</>} />
           </div>
           <div className="flex gap-3 pt-2">
-            {[Hash, Globe2, Video].map((Icon, i) => (
-              <a key={i} href="#" className="w-11 h-11 flex items-center justify-center transition-colors" style={{ border: '1px solid #E8DDC9', borderRadius: '50%', color: '#1F1A14', backgroundColor: '#FFFFFF' }}>
-                <Icon className="w-4 h-4" strokeWidth={1.5} />
-              </a>
-            ))}
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Label Aarfa on Instagram"
+              className="w-11 h-11 flex items-center justify-center transition-colors hover:bg-[#F6F0E5]"
+              style={{ border: '1px solid #E8DDC9', borderRadius: '50%', color: '#1F1A14', backgroundColor: '#FFFFFF' }}
+            >
+              <Instagram className="w-4 h-4" strokeWidth={1.5} />
+            </a>
           </div>
         </div>
       </div>
@@ -3377,11 +3446,16 @@ function Footer() {
             <div className="text-[10px] tracking-[0.4em] uppercase font-light mb-5" style={{ color: '#B8924A' }}>Fashion Redefined · Est. 2019</div>
             <p className="text-sm font-light leading-relaxed mb-6" style={{ color: 'rgba(246, 240, 229, 0.65)' }}>Handcrafted ethnic wear from our Delhi atelier since 2019. Made slowly, made with care.</p>
             <div className="flex gap-3">
-              {[Hash, Globe2, Video].map((Icon, i) => (
-                <a key={i} href="#" className="w-10 h-10 flex items-center justify-center transition-colors" style={{ border: '1px solid rgba(246, 240, 229, 0.2)', borderRadius: '50%' }}>
-                  <Icon className="w-4 h-4" strokeWidth={1.5} />
-                </a>
-              ))}
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Label Aarfa on Instagram"
+                className="w-10 h-10 flex items-center justify-center transition-colors hover:bg-white/10"
+                style={{ border: '1px solid rgba(246, 240, 229, 0.2)', borderRadius: '50%' }}
+              >
+                <Instagram className="w-4 h-4" strokeWidth={1.5} />
+              </a>
             </div>
           </div>
 

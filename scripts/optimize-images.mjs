@@ -10,8 +10,17 @@ import { join, parse } from 'node:path';
 import sharp from 'sharp';
 
 const DIRS = ['public/images/products', 'public/images/diaries'];
-const WIDTHS = [400, 800, 1280];
-const QUALITY = 82;
+// Per-width quality tiers. Thumbnails (400w in grid cards) don't benefit
+// visibly from a higher quality, but the 800w and 1280w variants land in
+// hero/PDP slots where preservation of edge detail matters — so we spend
+// the extra bytes there. Source files in this project max at ~1200px wide,
+// so the 1280w pass is effectively the original resolution at the chosen
+// quality, which is the highest-fidelity render we can produce.
+const WIDTH_QUALITY = [
+  { width: 400,  quality: 82 },
+  { width: 800,  quality: 88 },
+  { width: 1280, quality: 92 },
+];
 
 let generated = 0;
 let skipped = 0;
@@ -26,7 +35,7 @@ for (const SRC of DIRS) {
     const { name } = parse(file);
     const srcStat = await stat(srcPath);
 
-    for (const w of WIDTHS) {
+    for (const { width: w, quality } of WIDTH_QUALITY) {
       const outPath = join(SRC, `${name}.${w}.webp`);
       if (existsSync(outPath)) {
         const outStat = await stat(outPath);
@@ -34,7 +43,7 @@ for (const SRC of DIRS) {
       }
       await sharp(srcPath)
         .resize({ width: w, withoutEnlargement: true })
-        .webp({ quality: QUALITY })
+        .webp({ quality })
         .toFile(outPath);
       generated++;
     }
