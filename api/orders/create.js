@@ -97,9 +97,14 @@ export default async function handler(req, res) {
       subtotalInr += line;
       // `color` column is kept on the schema for legacy rows but always written
       // as empty string now — UI has no color selection.
+      // `color` is server-authoritative — pulled from the canonical PRODUCTS
+      // list keyed by product id, NOT taken from the client. Colour variants
+      // are separate product ids (e.g. Raha Blue=105, Raha Pink=106), so the
+      // moment we validated `productById(it.productId)` above we already know
+      // exactly which colour the customer chose.
       lineItems.push({
         product_id: p.id, product_name: p.name,
-        size: it.size, color: '',
+        size: it.size, color: p.color || '',
         quantity: qty,
         unit_price_paise: unit * 100,
         line_total_paise: line * 100,

@@ -25,40 +25,46 @@ export const PRODUCTS = [
   { id: 16, name: 'Lavender 3-Piece Stitched Dress',                  price: 3299, salePrice: 1999, sizes: ['S','M','L','XL','XXL'], stock: 0, image: 'Lavender-3-Piece-Dress-Stitched.jpeg' },
 
   // ----- Premium Collection (active) -----
-  { id: 101, name: 'Sabrina Maroon Co-Ord Set',           price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 8,  image: 'premium-1-1.jpg' },
-  { id: 102, name: 'Mehnaaz Co-ord Set with Dupatta',     price: 2499, sizes: ['S','M','L','XL','XXL'], stock: 3,  image: 'premium-2-1.jpg' },
-  { id: 103, name: 'Ayra Studded Co-Ord Set',             price: 1499, sizes: ['S','M','L','XL','XXL'], stock: 4,  image: 'premium-3-1.jpg' },
-  { id: 104, name: 'Farinah Co-Ord Set',                  price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 5,  image: 'premium-4-1.jpg' },
-  { id: 105, name: 'Raha Co-Ord Set',                     price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 3,  image: 'premium-5a-1.jpg' },
-  { id: 106, name: 'Raha Co-Ord Set',                     price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 3,  image: 'premium-5b-1.jpg' },
-  { id: 107, name: 'Aliza Co-ord Set',                    price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 3,  image: 'premium-6a-1.jpg' },
-  { id: 108, name: 'Aliza Co-ord Set',                    price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 3,  image: 'premium-6b-1.jpg' },
-  { id: 109, name: 'Renee Printed Co-Ord Set',            price: 1550, sizes: ['S','M','L','XL','XXL'], stock: 4,  image: 'premium-7-1.jpg' },
-  { id: 110, name: 'Mia Co-ord Set',                      price: 1650, sizes: ['S','M','L','XL','XXL'], stock: 5,  image: 'premium-8-1.jpg' },
-  { id: 111, name: 'Rebecca Co-ord Set',                  price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 1,  image: 'premium-9-1.jpg' },
-  { id: 112, name: 'Ambrina Embroidered Co-ord Set',      price: 1850, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'premium-10-1.jpg' },
-  { id: 113, name: 'Lyra Co-ord Set with Dupatta',        price: 2350, sizes: ['S','M','L','XL','XXL'], stock: 3,  image: 'premium-11-1.jpg' },
-  { id: 114, name: 'Myra Polka Co-Ord Set',               price: 1750, sizes: ['S','M','L','XL','XXL'], stock: 5,  image: 'premium-12-1.jpg' },
-  { id: 115, name: 'Faizah Royal Blue Lounge Co-ord Set', price: 1650, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'premium-13-1.jpg' },
+  // `color` is written into order_items.color and is rendered alongside Size
+  // in customer + admin emails, the cart drawer, and the orders page so the
+  // chosen variant is unambiguous end-to-end. KEEP IN SYNC with `colorName`
+  // on the matching product in src/App.jsx.
+  { id: 101, name: 'Sabrina Maroon Co-Ord Set',           price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 8,  image: 'premium-1-1.jpg',  color: 'Maroon' },
+  { id: 102, name: 'Mehnaaz Co-ord Set with Dupatta',     price: 2499, sizes: ['S','M','L','XL','XXL'], stock: 3,  image: 'premium-2-1.jpg',  color: 'Off White' },
+  { id: 103, name: 'Ayra Studded Co-Ord Set',             price: 1499, sizes: ['S','M','L','XL','XXL'], stock: 4,  image: 'premium-3-1.jpg',  color: 'Black' },
+  { id: 104, name: 'Farinah Co-Ord Set',                  price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 5,  image: 'premium-4-1.jpg',  color: 'Powder Blue' },
+  { id: 105, name: 'Raha Co-Ord Set',                     price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 3,  image: 'premium-5a-1.jpg', color: 'Blue' },
+  { id: 106, name: 'Raha Co-Ord Set',                     price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 3,  image: 'premium-5b-1.jpg', color: 'Pink' },
+  { id: 107, name: 'Aliza Co-ord Set',                    price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 3,  image: 'premium-6a-1.jpg', color: 'Green' },
+  { id: 108, name: 'Aliza Co-ord Set',                    price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 3,  image: 'premium-6b-1.jpg', color: 'Dark Blue' },
+  { id: 109, name: 'Renee Printed Co-Ord Set',            price: 1550, sizes: ['S','M','L','XL','XXL'], stock: 4,  image: 'premium-7-1.jpg',  color: 'Grey' },
+  { id: 110, name: 'Mia Co-ord Set',                      price: 1650, sizes: ['S','M','L','XL','XXL'], stock: 5,  image: 'premium-8-1.jpg',  color: 'Red' },
+  { id: 111, name: 'Rebecca Co-ord Set',                  price: 1999, sizes: ['S','M','L','XL','XXL'], stock: 1,  image: 'premium-9-1.jpg',  color: 'Black Multi' },
+  { id: 112, name: 'Ambrina Embroidered Co-ord Set',      price: 1850, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'premium-10-1.jpg', color: 'Black' },
+  { id: 113, name: 'Lyra Co-ord Set with Dupatta',        price: 2350, sizes: ['S','M','L','XL','XXL'], stock: 3,  image: 'premium-11-1.jpg', color: 'Off White' },
+  { id: 114, name: 'Myra Polka Co-Ord Set',               price: 1750, sizes: ['S','M','L','XL','XXL'], stock: 5,  image: 'premium-12-1.jpg', color: 'Beige & Black' },
+  { id: 115, name: 'Faizah Royal Blue Lounge Co-ord Set', price: 1650, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'premium-13-1.jpg', color: 'Royal Blue' },
 
   // ----- Co-ord Sets (Solid Farshi Salwar, 5 colour variants) -----
-  { id: 201, name: 'Solid Farshi Salwar Co-ord Set', price: 1250, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'coord-1a-1.jpg' },
-  { id: 202, name: 'Solid Farshi Salwar Co-ord Set', price: 1250, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'coord-1b-1.jpg' },
-  { id: 203, name: 'Solid Farshi Salwar Co-ord Set', price: 1250, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'coord-1c-1.jpg' },
-  { id: 204, name: 'Solid Farshi Salwar Co-ord Set', price: 1250, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'coord-1d-1.jpg' },
-  { id: 205, name: 'Solid Farshi Salwar Co-ord Set', price: 1250, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'coord-1e-1.jpg' },
+  { id: 201, name: 'Solid Farshi Salwar Co-ord Set', price: 1250, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'coord-1a-1.jpg', color: 'Pink' },
+  { id: 202, name: 'Solid Farshi Salwar Co-ord Set', price: 1250, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'coord-1b-1.jpg', color: 'Black' },
+  { id: 203, name: 'Solid Farshi Salwar Co-ord Set', price: 1250, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'coord-1c-1.jpg', color: 'Red' },
+  { id: 204, name: 'Solid Farshi Salwar Co-ord Set', price: 1250, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'coord-1d-1.jpg', color: 'Lavender' },
+  { id: 205, name: 'Solid Farshi Salwar Co-ord Set', price: 1250, sizes: ['S','M','L','XL','XXL'], stock: 10, image: 'coord-1e-1.jpg', color: 'Grey' },
 
   // ----- Pakistani Ready-to-Wear -----
-  { id: 301, name: 'Designer Ajrakh Print Suit Set',          price: 1250, sizes: ['S','M','L','XL','XXL'], stock: 8, image: 'pakistani-1-1.jpg' },
-  { id: 302, name: 'Ombre Luxury Suit',                       price: 1499, sizes: ['S','M','L','XL','XXL'], stock: 6, image: 'pakistani-2-1.jpg' },
+  { id: 301, name: 'Designer Ajrakh Print Suit Set',          price: 1250, sizes: ['S','M','L','XL','XXL'], stock: 8, image: 'pakistani-1-1.jpg', color: 'Yellow' },
+  { id: 302, name: 'Ombre Luxury Suit',                       price: 1499, sizes: ['S','M','L','XL','XXL'], stock: 6, image: 'pakistani-2-1.jpg', color: 'Pink' },
+  // 303–308 are generic Turkish coord designs — no single named colour; the
+  // "· Edit NN" suffix on the product name is what disambiguates the print.
   { id: 303, name: 'Pakistani Turkish Coord Set · Edit 01',   price: 1499, sizes: ['S','M','L','XL','XXL'], stock: 7, image: 'pakistani-3-1.jpg' },
   { id: 304, name: 'Pakistani Turkish Coord Set · Edit 02',   price: 1499, sizes: ['S','M','L','XL','XXL'], stock: 7, image: 'pakistani-4-1.jpg' },
   { id: 305, name: 'Pakistani Turkish Coord Set · Edit 03',   price: 1499, sizes: ['S','M','L','XL','XXL'], stock: 7, image: 'pakistani-5-1.jpg' },
   { id: 306, name: 'Pakistani Turkish Coord Set · Edit 04',   price: 1499, sizes: ['S','M','L','XL','XXL'], stock: 7, image: 'pakistani-6-1.jpg' },
   { id: 307, name: 'Pakistani Turkish Coord Set · Edit 05',   price: 1499, sizes: ['S','M','L','XL','XXL'], stock: 7, image: 'pakistani-7-1.jpg' },
   { id: 308, name: 'Pakistani Turkish Coord Set · Edit 06',   price: 1499, sizes: ['S','M','L','XL','XXL'], stock: 7, image: 'pakistani-8-1.jpg' },
-  { id: 309, name: 'Pakistani Cutwork Printed Suit',          price: 1550, sizes: ['S','M','L','XL','XXL'], stock: 7, image: 'pakistani-9a-1.jpg' },
-  { id: 310, name: 'Pakistani Cutwork Printed Suit',          price: 1550, sizes: ['S','M','L','XL','XXL'], stock: 7, image: 'pakistani-9b-1.jpg' },
+  { id: 309, name: 'Pakistani Cutwork Printed Suit',          price: 1550, sizes: ['S','M','L','XL','XXL'], stock: 7, image: 'pakistani-9a-1.jpg', color: 'Black Multi' },
+  { id: 310, name: 'Pakistani Cutwork Printed Suit',          price: 1550, sizes: ['S','M','L','XL','XXL'], stock: 7, image: 'pakistani-9b-1.jpg', color: 'Black Lavender' },
 
   // ----- Unstitched Collection -----
   { id: 401, name: 'Unstitched Karachi-Print Suit · Edit 01', price: 999, sizes: ['Free Size'], stock: 5, image: 'unstitched-1-1.jpg' },
@@ -80,8 +86,8 @@ export const PRODUCTS = [
   { id: 417, name: 'Unstitched Karachi-Print Suit · Edit 17', price: 999, sizes: ['Free Size'], stock: 5, image: 'unstitched-17-1.jpg' },
   { id: 418, name: 'Unstitched Karachi-Print Suit · Edit 18', price: 999, sizes: ['Free Size'], stock: 5, image: 'unstitched-18-1.jpg' },
   { id: 419, name: 'Unstitched Karachi-Print Suit · Edit 19', price: 999, sizes: ['Free Size'], stock: 5, image: 'unstitched-19-1.jpg' },
-  { id: 420, name: 'Unstitched Party Wear Suit',              price: 1600, sizes: ['Free Size'], stock: 3, image: 'unstitched-20a-1.jpg' },
-  { id: 421, name: 'Unstitched Party Wear Suit',              price: 1600, sizes: ['Free Size'], stock: 3, image: 'unstitched-20b-1.jpg' },
+  { id: 420, name: 'Unstitched Party Wear Suit',              price: 1600, sizes: ['Free Size'], stock: 3, image: 'unstitched-20a-1.jpg', color: 'Black' },
+  { id: 421, name: 'Unstitched Party Wear Suit',              price: 1600, sizes: ['Free Size'], stock: 3, image: 'unstitched-20b-1.jpg', color: 'White' },
 ];
 
 export const productById = (id) => PRODUCTS.find((p) => p.id === Number(id));

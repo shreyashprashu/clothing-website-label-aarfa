@@ -66,17 +66,21 @@ export async function sendOrderConfirmation({ to, order, items }) {
   // Each line gets a 72×90 thumbnail of the product. Falls back to a soft cream
   // tile if the image URL can't be resolved (e.g. legacy product missing from
   // the lookup) — better than a broken image icon in the inbox.
+  //
+  // Colour is shown only when present (multi-colour SKU). For one-colour
+  // products we leave it out so the line doesn't read "Size M · · Qty 1".
   const rows = items.map((i) => {
     const img = productImageUrl(Number(i.product_id));
     const thumb = img
       ? `<img src="${img}" alt="" width="72" height="90" style="display:block;width:72px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #E8DDC9" />`
       : `<div style="width:72px;height:90px;background:#F6F0E5;border-radius:6px;border:1px solid #E8DDC9"></div>`;
+    const colourPart = i.color ? ` · <span style="color:#7B1E28;font-weight:500">${esc(i.color)}</span>` : '';
     return `
       <tr>
         <td style="padding:12px 0;border-bottom:1px solid #E8DDC9;width:84px;vertical-align:top">${thumb}</td>
         <td style="padding:12px 0 12px 12px;border-bottom:1px solid #E8DDC9;vertical-align:top">
           <div style="font-size:14px;color:#1F1A14;line-height:1.35">${esc(i.product_name)}</div>
-          <div style="font-size:12px;color:#A89888;margin-top:4px">Size ${esc(i.size)} · Qty ${Number(i.quantity) || 0}</div>
+          <div style="font-size:12px;color:#A89888;margin-top:4px">Size ${esc(i.size)}${colourPart} · Qty ${Number(i.quantity) || 0}</div>
         </td>
         <td style="padding:12px 0;border-bottom:1px solid #E8DDC9;text-align:right;vertical-align:top;white-space:nowrap;font-size:14px;color:#1F1A14;font-weight:500">${fmt(i.line_total_paise)}</td>
       </tr>`;
@@ -122,16 +126,23 @@ export async function sendOrderAdminNotification({ order, items, address }) {
     : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
   const addr = address || order.shipping_address || {};
 
+  // Admin row — colour shown on its OWN line (wine background pill) so it
+  // jumps out for the person pulling the SKU off the shelf. Skipped silently
+  // for one-colour products.
   const rows = (items || []).map((i) => {
     const img = productImageUrl(Number(i.product_id));
     const thumb = img
       ? `<img src="${img}" alt="" width="56" height="70" style="display:block;width:56px;height:70px;object-fit:cover;border-radius:4px;border:1px solid #E8DDC9" />`
       : `<div style="width:56px;height:70px;background:#F6F0E5;border-radius:4px;border:1px solid #E8DDC9"></div>`;
+    const colourPill = i.color
+      ? `<div style="margin-top:6px"><span style="display:inline-block;padding:3px 9px;background:#7B1E28;color:#F6F0E5;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;border-radius:4px">Colour: ${esc(i.color)}</span></div>`
+      : '';
     return `<tr>
       <td style="padding:10px 12px;border-bottom:1px solid #E8DDC9;width:68px;vertical-align:top">${thumb}</td>
       <td style="padding:10px 12px;border-bottom:1px solid #E8DDC9;vertical-align:top">
-        <div style="font-size:13px">${esc(i.product_name)}</div>
+        <div style="font-size:13px;font-weight:500">${esc(i.product_name)}</div>
         <div style="color:#A89888;font-size:12px;margin-top:2px">Size ${esc(i.size)} · Qty ${Number(i.quantity) || 0}</div>
+        ${colourPill}
       </td>
       <td style="padding:10px 12px;border-bottom:1px solid #E8DDC9;text-align:right;white-space:nowrap;vertical-align:top;font-size:13px">${fmt(i.line_total_paise)}</td>
     </tr>`;

@@ -1937,7 +1937,18 @@ function CartDrawer() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] sm:text-sm font-light leading-snug mb-1 truncate" style={{ color: '#1F1A14' }}>{item.product.name}</div>
-                    <div className="text-[10px] sm:text-[11px] mb-2 tracking-wide" style={{ color: '#6B5F4F' }}>Size {item.size}</div>
+                    <div className="text-[10px] sm:text-[11px] mb-2 tracking-wide flex items-center gap-1.5" style={{ color: '#6B5F4F' }}>
+                      <span>Size {item.size}</span>
+                      {item.product.colorName && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          {item.product.colorHex && (
+                            <span aria-hidden="true" className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.product.colorHex, border: '1px solid #E8DDC9' }} />
+                          )}
+                          <span>{item.product.colorName}</span>
+                        </>
+                      )}
+                    </div>
                     <Price priceInr={item.product.price} salePriceInr={item.product.salePrice} size="sm" />
                     <div className="flex items-center justify-between mt-2">
                       <div className="inline-flex items-center overflow-hidden" style={{ border: '1px solid #E8DDC9', borderRadius: '6px' }}>
@@ -2287,7 +2298,11 @@ function OrderCard({ order }) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-[13px] sm:text-sm font-light leading-snug line-clamp-2" style={{ color: '#1F1A14' }}>{li.product_name}</div>
-                <div className="text-[10px] sm:text-[11px] mt-1 tracking-wide" style={{ color: '#6B5F4F' }}>Size {li.size} · Qty {li.quantity}</div>
+                <div className="text-[10px] sm:text-[11px] mt-1 tracking-wide" style={{ color: '#6B5F4F' }}>
+                  Size {li.size}
+                  {li.color ? ` · ${li.color}` : ''}
+                  {' · '}Qty {li.quantity}
+                </div>
               </div>
               <div className="text-sm font-medium tabular-nums" style={{ color: '#1F1A14' }}>{formatPaise(li.line_total_paise)}</div>
             </div>
@@ -2746,7 +2761,9 @@ function CheckoutPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[11px] sm:text-xs font-light leading-snug truncate" style={{ color: '#1F1A14' }}>{item.product.name}</div>
-                  <div className="text-[10px] sm:text-[11px] my-0.5" style={{ color: '#6B5F4F' }}>Size {item.size} · Qty {item.quantity}</div>
+                  <div className="text-[10px] sm:text-[11px] my-0.5 flex items-center gap-1" style={{ color: '#6B5F4F' }}>
+                    <span>Size {item.size}{item.product.colorName ? ` · ${item.product.colorName}` : ''} · Qty {item.quantity}</span>
+                  </div>
                   <div className="text-[11px] sm:text-xs font-medium" style={{ color: '#1F1A14' }}>{formatPrice((item.product.salePrice || item.product.price) * item.quantity, currency)}</div>
                 </div>
               </div>
