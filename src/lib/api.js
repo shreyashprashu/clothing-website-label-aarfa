@@ -9,11 +9,19 @@ async function post(path, body, token) {
   return data;
 }
 
+async function get(path) {
+  const res = await fetch(path);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `${path} failed (${res.status})`);
+  return data;
+}
+
 export const api = {
   createOrder: (payload, token) => post('/api/orders/create', payload, token),
   verifyOrder: (payload) => post('/api/orders/verify', payload),
   contact:     (payload) => post('/api/contact', payload),
   newsletter:  (payload) => post('/api/newsletter', payload),
+  inventory:   () => get('/api/inventory'),
 };
 
 // Load the Razorpay Checkout JS — script-tag based, cached after first load.

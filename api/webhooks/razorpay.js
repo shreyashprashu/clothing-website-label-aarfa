@@ -25,6 +25,24 @@ function safeEqHex(a, b) {
   return ab.length === bb.length && crypto.timingSafeEqual(ab, bb);
 }
 
+// Aggregate this order's line items into the basket shape expected by
+// increment_stock(p_items jsonb) — [{product_id, qty}]. Used when a
+// previously-reserved order ends up failed or refunded, so the stock
+// goes back on the shelf.
+async function releaseStockForOrder(sb, orderId) {
+  try {
+    const { data: items, error } = await sb.from('order_items')
+      .select('product_id, quantity').eq('order_id', orderId);
+    if (error || !items?.length) return;
+    const agg = new Map();
+    for (const it of items) agg.set(it.product_id, (agg.get(it.product_id) || 0) + (it.quantity || 0));
+    const basket = Array.from(agg.entries()).map(([pid, qty]) => ({ product_id: pid, qty }));
+    await sb.rpc('increment_stock', { p_items: basket });
+  } catch (e) {
+    console.error('releaseStockForOrder failed', { orderId, err: e?.message });
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -69,15 +87,25 @@ export default async function handler(req, res) {
       const payment = event.payload?.payment?.entity;
       if (payment?.order_id) {
         // Only mark failed if the order hasn't already been paid (late webhooks shouldn't
-        // overwrite a successful payment).
-        await sb.from('orders').update({ status: 'failed' })
+        // overwrite a successful payment). Use .select() so we get the row back if (and
+        // only if) WE were the transition that flipped it — that's the path that should
+        // release the stock reservation.
+        const { data: failed } = await sb.from('orders')
+          .update({ status: 'failed' })
           .eq('razorpay_order_id', payment.order_id)
-          .eq('status', 'created');
+          .eq('status', 'created')
+          .select().maybeSingle();
+        if (failed) await releaseStockForOrder(sb, failed.id);
       }
     } else if (event.event === 'refund.processed') {
       const payment = event.payload?.payment?.entity;
       if (payment?.order_id) {
-        await sb.from('orders').update({ status: 'refunded' }).eq('razorpay_order_id', payment.order_id);
+        const { data: refunded } = await sb.from('orders')
+          .update({ status: 'refunded' })
+          .eq('razorpay_order_id', payment.order_id)
+          .neq('status', 'refunded')
+          .select().maybeSingle();
+        if (refunded) await releaseStockForOrder(sb, refunded.id);
       }
     }
 

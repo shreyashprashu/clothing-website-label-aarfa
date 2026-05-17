@@ -105,12 +105,34 @@ export default async function handler(req, res) {
         line_total_paise: line * 100,
       });
     }
-    for (const [pid, qty] of perProductQty) {
-      const p = productById(pid);
-      if (typeof p.stock === 'number' && qty > p.stock) {
-        return res.status(400).json({ error: `Only ${p.stock} of "${p.name}" available — please reduce the quantity` });
-      }
+    // ----- Atomic stock reservation -----
+    // The DB (public.product_stock) is the source of truth — the hardcoded
+    // `stock` in api/_lib/products.js is only a seed for schema.sql. Reserve
+    // here so two customers grabbing the last unit can't both succeed. If
+    // any later step throws, releaseStockOnce() returns the units.
+    const stockItems = Array.from(perProductQty.entries()).map(([pid, qty]) => ({ product_id: pid, qty }));
+    const { data: stockResult, error: stockErr } = await sb.rpc('try_decrement_stock', { p_items: stockItems });
+    if (stockErr) {
+      console.error('try_decrement_stock failed', stockErr);
+      return res.status(500).json({ error: 'Inventory check failed — please try again' });
     }
+    if (!stockResult?.ok) {
+      const p = productById(stockResult.insufficient_product_id);
+      const name = p?.name || `product ${stockResult.insufficient_product_id}`;
+      const avail = stockResult.available ?? 0;
+      return res.status(409).json({
+        error: avail === 0
+          ? `"${name}" just sold out — please remove it from your bag`
+          : `Only ${avail} of "${name}" available — please reduce the quantity`,
+      });
+    }
+    let stockReleased = false;
+    const releaseStockOnce = async () => {
+      if (stockReleased) return;
+      stockReleased = true;
+      try { await sb.rpc('increment_stock', { p_items: stockItems }); }
+      catch (e) { console.error('increment_stock rollback failed', e?.message); }
+    };
 
     // Pricing rules:
     //   Domestic (INR): free shipping >= ₹2999, else ₹99
@@ -141,19 +163,25 @@ export default async function handler(req, res) {
 
     // ----- COD -----
     if (paymentMethod === 'cod') {
-      const order = await insertOrderAtomic(sb, {
-        user_id: userId || null,
-        guest_email: userId ? null : (guestEmail || null),
-        status: 'cod_confirmed',
-        payment_method: 'cod',
-        subtotal_paise: subtotalInr * 100,
-        shipping_paise: (shippingInr + markupInr) * 100,
-        discount_paise: discountInr * 100,
-        promo_code: appliedPromoCode,
-        total_paise: totalInr * 100,
-        currency: 'INR',
-        shipping_address: shippingAddress,
-      }, lineItems);
+      let order;
+      try {
+        order = await insertOrderAtomic(sb, {
+          user_id: userId || null,
+          guest_email: userId ? null : (guestEmail || null),
+          status: 'cod_confirmed',
+          payment_method: 'cod',
+          subtotal_paise: subtotalInr * 100,
+          shipping_paise: (shippingInr + markupInr) * 100,
+          discount_paise: discountInr * 100,
+          promo_code: appliedPromoCode,
+          total_paise: totalInr * 100,
+          currency: 'INR',
+          shipping_address: shippingAddress,
+        }, lineItems);
+      } catch (dbErr) {
+        await releaseStockOnce();
+        throw dbErr;
+      }
 
       await saveDefaultAddress(sb, userId, shippingAddress);
 
@@ -178,12 +206,18 @@ export default async function handler(req, res) {
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
-    const rzpOrder = await rzp.orders.create({
-      amount: totalInr * 100,
-      currency: 'INR',
-      receipt: `la_${Date.now()}`,
-      notes: { source: 'label-aarfa-web' },
-    });
+    let rzpOrder;
+    try {
+      rzpOrder = await rzp.orders.create({
+        amount: totalInr * 100,
+        currency: 'INR',
+        receipt: `la_${Date.now()}`,
+        notes: { source: 'label-aarfa-web' },
+      });
+    } catch (rzpErr) {
+      await releaseStockOnce();
+      throw rzpErr;
+    }
 
     let order;
     try {
@@ -203,6 +237,8 @@ export default async function handler(req, res) {
       }, lineItems);
     } catch (dbErr) {
       // Razorpay order will expire on its own in ~15 min if never paid.
+      // Stock reservation gets released since we'll never receive a webhook.
+      await releaseStockOnce();
       console.error('Razorpay order created but DB insert failed — Razorpay order will auto-expire', { rzpOrderId: rzpOrder.id, err: dbErr?.message });
       throw dbErr;
     }

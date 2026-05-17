@@ -298,6 +298,22 @@ function AppProvider({ children }) {
   const [defaultAddress, setDefaultAddress] = useState(null);  // last-used shipping address for logged-in user
   const [currency, setCurrency] = useState('INR');
   const [toast, setToast] = useState(null);
+  // Live inventory snapshot fetched from /api/inventory. Keys are product ids,
+  // values are current stock. Falls back to the hardcoded `stock` on PRODUCTS
+  // until the first fetch resolves. Re-fetched after every successful order
+  // (and on a 409 oversold response) so the next page view shows fresh numbers.
+  const [stockMap, setStockMap] = useState({});
+  const refreshStock = async () => {
+    try {
+      const data = await api.inventory();
+      if (data?.stock && typeof data.stock === 'object') setStockMap(data.stock);
+    } catch (e) { /* keep showing fallback stock — server is the source of truth at order time */ }
+  };
+  const getStock = (productId) => {
+    if (Object.prototype.hasOwnProperty.call(stockMap, productId)) return stockMap[productId];
+    const p = PRODUCTS.find((pp) => pp.id === productId);
+    return typeof p?.stock === 'number' ? p.stock : 0;
+  };
 
   // Dedupe rapid toasts — each call clears the previous timer instead of stacking,
   // so 10 quick add-to-bag taps don't leave 10 pending timers in memory.
@@ -313,10 +329,12 @@ function AppProvider({ children }) {
 
   const addToCart = (product, size, quantity = 1) => {
     const key = cartKey(product.id, size);
-    // Stock guard — refuses to add beyond what's in stock and tells the user why.
+    // Stock guard against LIVE inventory (not the hardcoded seed). Server
+    // re-validates at order-create time as a final defence.
+    const liveStock = getStock(product.id);
     const currentQty = cart.find((i) => i.key === key)?.quantity || 0;
-    if (typeof product.stock === 'number' && currentQty + quantity > product.stock) {
-      const room = Math.max(0, product.stock - currentQty);
+    if (typeof liveStock === 'number' && currentQty + quantity > liveStock) {
+      const room = Math.max(0, liveStock - currentQty);
       showToast(room === 0 ? 'No more left in this size' : `Only ${room} more available`);
       return;
     }
@@ -331,9 +349,12 @@ function AppProvider({ children }) {
   const updateQty = (key, d) => {
     if (d > 0) {
       const item = cart.find((i) => i.key === key);
-      if (item && typeof item.product.stock === 'number' && item.quantity + d > item.product.stock) {
-        showToast(`Only ${item.product.stock} available`);
-        return;
+      if (item) {
+        const liveStock = getStock(item.product.id);
+        if (typeof liveStock === 'number' && item.quantity + d > liveStock) {
+          showToast(`Only ${liveStock} available`);
+          return;
+        }
       }
     }
     setCart((p) => p.map((i) => i.key === key ? { ...i, quantity: Math.max(0, i.quantity + d) } : i).filter((i) => i.quantity > 0));
@@ -481,6 +502,10 @@ function AppProvider({ children }) {
     }, { onConflict: 'user_id' }).then(() => {}, () => {});
   }, [cart, user?.id]);
 
+  // Live inventory fetch on mount. Don't block the render — falls back to
+  // the hardcoded `stock` on PRODUCTS until /api/inventory responds.
+  useEffect(() => { refreshStock(); }, []);
+
   // Geo-detect currency + fetch live FX rates. Cached in localStorage for 6h.
   const [ratesVersion, setRatesVersion] = useState(0);
   useEffect(() => {
@@ -513,7 +538,7 @@ function AppProvider({ children }) {
   useEffect(() => { applySeo(page); }, [page]);
 
   return (
-    <AppCtx.Provider value={{ page, navigate, cart, addToCart, updateQty, removeFromCart, setCart, wishlist, toggleWishlist, cartOpen, setCartOpen, searchOpen, setSearchOpen, mobileMenuOpen, setMobileMenuOpen, authOpen, setAuthOpen, user, setUser, signOut, defaultAddress, currency, setCurrency, ratesVersion, toast, showToast }}>
+    <AppCtx.Provider value={{ page, navigate, cart, addToCart, updateQty, removeFromCart, setCart, wishlist, toggleWishlist, cartOpen, setCartOpen, searchOpen, setSearchOpen, mobileMenuOpen, setMobileMenuOpen, authOpen, setAuthOpen, user, setUser, signOut, defaultAddress, currency, setCurrency, ratesVersion, toast, showToast, getStock, refreshStock }}>
       {children}
     </AppCtx.Provider>
   );
@@ -956,11 +981,12 @@ function Hero() {
    subtle shadow + 12px corners. Image is contained, not cropped.
    ================================================================ */
 function ProductCard({ product }) {
-  const { navigate, toggleWishlist, wishlist, addToCart } = useApp();
+  const { navigate, toggleWishlist, wishlist, addToCart, getStock } = useApp();
   const [hover, setHover] = useState(false);
   const isWished = wishlist.includes(product.id);
   const hasSale = product.salePrice && product.salePrice < product.price;
-  const soldOut = product.stock === 0;
+  const liveStock = getStock(product.id);
+  const soldOut = liveStock === 0;
   // Hover-swap image only renders on devices that actually hover.
   // Touch devices never see it, so don't ship the bytes.
   const hoverImg = SUPPORTS_HOVER ? product.images[1] : null;
@@ -990,9 +1016,9 @@ function ProductCard({ product }) {
               New
             </div>
           )}
-          {!soldOut && typeof product.stock === 'number' && product.stock > 0 && product.stock <= 5 && (
+          {!soldOut && typeof liveStock === 'number' && liveStock > 0 && liveStock <= 5 && (
             <div className="absolute top-3 left-3 z-10 px-2.5 py-1 text-[10px] tracking-[0.18em] uppercase font-medium shadow-sm" style={{ backgroundColor: '#FBF8F3', color: '#7B1E28', borderRadius: '4px', marginTop: (hasSale || product.isNew) ? '34px' : '0' }}>
-              Only {product.stock} left
+              Only {liveStock} left
             </div>
           )}
           <ProductImage
@@ -1326,7 +1352,9 @@ function CollectionsScroller() {
 function ClientDiaries() {
   const DIARIES = `${import.meta.env.BASE_URL}images/diaries/`;
   const events  = [1, 2, 3, 4, 5, 6].map((i) => `${DIARIES}event-${i}.jpg`);
-  // Reviews mosaic — 12 selected from the 20 available to keep page weight reasonable.
+  // Reviews mosaic — 12 selected from the 20 available. Mobile hides the last
+  // 6 via CSS (hidden-on-mobile class) so we keep the page weight under control
+  // on small screens (6 thumbs instead of 12 means roughly half the bytes).
   const reviews = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => `${DIARIES}review-${i}.jpg`);
   return (
     <section className="py-14 sm:py-20 lg:py-24" style={{ backgroundColor: '#FBF8F3', borderTop: '1px solid #E8DDC9' }}>
@@ -1422,7 +1450,14 @@ function ClientDiaries() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {reviews.map((src, i) => (
-              <div key={i} className="aspect-square overflow-hidden" style={{ borderRadius: '10px', backgroundColor: '#F6F0E5' }}>
+              <div
+                key={i}
+                // Hide the tail beyond index 5 on mobile; sm and up show them all.
+                // `loading="lazy"` is already the default on ProductImage so the
+                // hidden ones never download on small screens.
+                className={`aspect-square overflow-hidden ${i >= 6 ? 'hidden sm:block' : ''}`}
+                style={{ borderRadius: '10px', backgroundColor: '#F6F0E5' }}
+              >
                 <ProductImage
                   src={src}
                   alt={`Client review ${i + 1}`}
@@ -1442,7 +1477,7 @@ function ClientDiaries() {
    CATEGORY PAGE
    ================================================================ */
 function CategoryPage({ slug }) {
-  const { navigate } = useApp();
+  const { navigate, getStock } = useApp();
   const [sortBy, setSortBy] = useState('featured');
   const [sizeFilter, setSizeFilter] = useState(null);
   const [priceMax, setPriceMax] = useState(5000);
@@ -1459,7 +1494,7 @@ function CategoryPage({ slug }) {
     } else if (slug === 'sale') {
       // Only buyable sale items — sold-out legacy stays on the Premium archive
       // grid, not here.
-      list = list.filter((p) => p.salePrice && p.salePrice < p.price && p.stock > 0);
+      list = list.filter((p) => p.salePrice && p.salePrice < p.price && getStock(p.id) > 0);
     } else if (slug === 'all') {
       // 'all' keeps everything but hides legacy from the headline grid; users
       // can still reach them via direct product URLs.
@@ -1471,12 +1506,12 @@ function CategoryPage({ slug }) {
     if (sizeFilter) list = list.filter((p) => p.sizes.includes(sizeFilter));
     list = list.filter((p) => (p.salePrice || p.price) <= priceMax);
     // Always show in-stock pieces before sold-out within a sort group.
-    list.sort((a, b) => (a.stock === 0 ? 1 : 0) - (b.stock === 0 ? 1 : 0));
+    list.sort((a, b) => (getStock(a.id) === 0 ? 1 : 0) - (getStock(b.id) === 0 ? 1 : 0));
     if (sortBy === 'price-asc') list.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
     if (sortBy === 'price-desc') list.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
     if (sortBy === 'newest') list.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
     return list;
-  }, [slug, sortBy, sizeFilter, priceMax]);
+  }, [slug, sortBy, sizeFilter, priceMax, getStock]);
 
   const titles = {
     premium: 'Premium Collection',
@@ -1599,7 +1634,7 @@ function FilterContent({ sizeFilter, setSizeFilter, priceMax, setPriceMax }) {
    PRODUCT PAGE
    ================================================================ */
 function ProductPage({ id }) {
-  const { navigate, addToCart, toggleWishlist, wishlist, setCartOpen, currency } = useApp();
+  const { navigate, addToCart, toggleWishlist, wishlist, setCartOpen, currency, getStock } = useApp();
   const product = PRODUCTS.find((p) => p.id === id);
   const [mainImage, setMainImage] = useState(0);
   const [size, setSize] = useState(null);
@@ -1613,7 +1648,8 @@ function ProductPage({ id }) {
 
   if (!product) return <div className="py-20 text-center">Product not found.</div>;
   const isWished = wishlist.includes(product.id);
-  const soldOut = product.stock === 0;
+  const liveStock = getStock(product.id);
+  const soldOut = liveStock === 0;
   const peers = product.groupId ? peersOf(product) : [];
   const showSwatches = peers.length > 1;
   // Related strip — exclude both this product and any of its colour peers.
@@ -1694,10 +1730,10 @@ function ProductPage({ id }) {
                 <span>International orders: a flat {formatPrice(INTL_MARKUP_INR, currency)} service fee is added at checkout.</span>
               </div>
             )}
-            {typeof product.stock === 'number' && product.stock > 0 && product.stock <= 5 && (
+            {typeof liveStock === 'number' && liveStock > 0 && liveStock <= 5 && (
               <div className="text-[11px] sm:text-xs mt-2 font-medium tracking-wide flex items-center gap-1.5" style={{ color: '#7B1E28' }}>
                 <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#7B1E28' }} />
-                Only {product.stock} {product.stock === 1 ? 'piece' : 'pieces'} left
+                Only {liveStock} {liveStock === 1 ? 'piece' : 'pieces'} left
               </div>
             )}
           </div>
@@ -1715,7 +1751,7 @@ function ProductPage({ id }) {
               <div className="flex flex-wrap items-center gap-2.5">
                 {peers.map((peer) => {
                   const active = peer.id === product.id;
-                  const out = peer.stock === 0;
+                  const out = getStock(peer.id) === 0;
                   return (
                     <button
                       key={peer.id}
@@ -2156,6 +2192,10 @@ function AuthModal() {
    ORDERS PAGE — order history + status timeline
    ================================================================ */
 const formatPaise = (paise) => `₹${Math.round(paise / 100).toLocaleString('en-IN')}`;
+// Single source of truth for the human-readable order reference. Used in the
+// success page, OrdersPage, and email templates so the customer sees the
+// SAME code everywhere ("LA-A1B2C3D4"). Don't slice/upper-case ad hoc.
+const formatOrderRef = (uuid) => `LA-${String(uuid || '').slice(0, 8).toUpperCase()}`;
 const relativeTime = (iso) => {
   const t = new Date(iso).getTime();
   const diff = Date.now() - t;
@@ -2228,7 +2268,7 @@ function OrderCard({ order }) {
         <div>
           <div className="text-[10px] tracking-[0.22em] uppercase font-light" style={{ color: '#6B5F4F' }}>Order</div>
           <div className="font-serif text-lg sm:text-xl tracking-wide" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, color: '#1F1A14' }}>
-            #{order.id.slice(0, 8).toUpperCase()}
+            {formatOrderRef(order.id)}
           </div>
         </div>
         <div className="text-right">
@@ -2417,7 +2457,7 @@ function Row({ label, value, bold = false }) {
 }
 
 function CheckoutPage() {
-  const { cart, currency, navigate, setCart, showToast, user, defaultAddress } = useApp();
+  const { cart, currency, navigate, setCart, showToast, user, defaultAddress, refreshStock } = useApp();
   const [step, setStep] = useState(1);
   const [address, setAddress] = useState({ name: '', phone: '', pincode: '', line1: '', city: '', state: '', email: '' });
   const [addressTouched, setAddressTouched] = useState(false);
@@ -2491,10 +2531,12 @@ function CheckoutPage() {
   const [emailStatus, setEmailStatus] = useState(null);
 
   const finishOrder = (id, email) => {
-    setOrderId(id.slice(0, 8).toUpperCase());
+    setOrderId(formatOrderRef(id));
     setEmailStatus(email || null);
     setCart([]); setStep(3);
     showToast('Order placed successfully');
+    // Re-pull inventory so the next page view shows the freshly-decremented stock.
+    refreshStock?.();
   };
 
   const releaseLock = () => { lockRef.current = false; setProcessing(false); };
@@ -2535,7 +2577,7 @@ function CheckoutPage() {
         currency: result.currency,
         order_id: result.razorpayOrderId,
         name: 'Label Aarfa',
-        description: `Order ${result.orderId.slice(0, 8)}`,
+        description: `Order ${formatOrderRef(result.orderId)}`,
         prefill: { name: address.name, email: shippingAddress.email || '', contact: address.phone },
         theme: { color: '#7B1E28' },
         handler: async (rsp) => {
@@ -2561,6 +2603,9 @@ function CheckoutPage() {
       rzp.open();
     } catch (e) {
       showToast(e.message || 'Could not place order');
+      // If the failure was an inventory race ("X just sold out"), pull fresh
+      // stock so the cart drawer & catalogue immediately show the new numbers.
+      if (/sold out|available/i.test(e?.message || '')) refreshStock?.();
       releaseLock();
     }
   };

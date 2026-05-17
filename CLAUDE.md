@@ -44,18 +44,27 @@ api/                 Vercel Serverless Functions (Node.js runtime, ESM)
   _lib/
     supabase.js      Server Supabase client (service_role, bypasses RLS)
     email.js         Resend helpers — sendOrderConfirmation, sendOrderAdminNotification,
-                     sendContactMessage, sendNewsletterWelcome. esc() helper for XSS-safe HTML.
-    products.js      Server-side product price source of truth (mirrors src/App.jsx PRODUCTS)
+                     sendContactMessage, sendNewsletterWelcome. brandHeader() injects logo PNG.
+                     formatOrderRef() must stay in sync with the same helper in src/App.jsx.
+    products.js      Server-side product source of truth (id, name, price, sizes, stock seed,
+                     image filename). Mirrors src/App.jsx PRODUCTS. productImageUrl(id) returns
+                     the absolute hosted URL for email thumbnails.
     promos.js        Promo code registry + validatePromo() — server is final authority
   orders/
-    create.js        POST: JWT-verify userId, server-derive prices, validate promo,
+    create.js        POST: JWT-verify userId, server-derive prices, validate promo, atomically
+                     reserve stock via try_decrement_stock RPC (releases on any later failure),
                      Razorpay order create + atomic DB insert
     verify.js        POST: HMAC verify Razorpay signature → atomic flip to paid → send emails
+                     (stock is already reserved at create-time)
   webhooks/
-    razorpay.js      POST: async events (payment.captured, payment.failed, refund.processed)
-                     — atomic .neq('status','paid') means only the winner of the race emails
+    razorpay.js      POST: async events (payment.captured, payment.failed, refund.processed).
+                     payment.captured uses atomic .neq('status','paid') so only the winner of
+                     the verify-vs-webhook race emails. payment.failed/refund call
+                     releaseStockForOrder() to return reserved units to the shelf.
   contact.js         POST: contact form → DB row + Resend email to ADMIN_EMAIL
   newsletter.js      POST: upsert newsletter_subscribers row + sendNewsletterWelcome on fresh signups
+  inventory.js       GET: returns { stock: { <product_id>: <int>, ... } } from product_stock.
+                     60s edge cache + 5-min SWR. Read with service role (RLS-off table).
   geo.js             GET: returns visitor's country (Vercel ip header), suggested currency,
                      fresh INR-base FX rates (Frankfurter, cached 6h), markupInr
 
@@ -66,8 +75,12 @@ scripts/
 
 supabase/
   schema.sql         Paste-into-SQL-Editor schema. Idempotent (CREATE IF NOT EXISTS / ALTER ADD
-                     COLUMN IF NOT EXISTS). Tables: profiles, addresses, orders, order_items,
-                     user_carts, wishlist_items, newsletter_subscribers, contact_messages.
+                     COLUMN IF NOT EXISTS / `on conflict do nothing` seed inserts).
+                     Tables: profiles, addresses, orders, order_items, user_carts, wishlist_items,
+                     newsletter_subscribers, contact_messages, product_stock.
+                     RPC functions: try_decrement_stock(p_items jsonb) → atomic checkout
+                     reservation, increment_stock(p_items jsonb) → release for refunds /
+                     order rollback.
                      RLS: own-only SELECT/INSERT/UPDATE on profiles + addresses + own orders.
                      Trigger handle_new_user auto-inserts profile row + maps Google metadata.
 
@@ -243,6 +256,13 @@ Product-card hover swaps to the second image over 1100ms — **only on devices t
   5. Webhook (`api/webhooks/razorpay`) is the safety net for browser crashes / flaky networks. Same atomic update — whichever path flips status first owns the email send. The other path no-ops.
 - **Emails**: `FROM_EMAIL` defaults to `onboarding@resend.dev` (Resend's shared sender, only delivers to the account email). Production should set `FROM_EMAIL=Label Aarfa <care@labelaarfa.com>` after verifying the domain in Resend. `ADMIN_EMAIL` defaults to `label.arfa@gmail.com` (where order + contact-form notifications land — direct, bypassing the Hostinger forwarder). The forwarder routes inbound mail at `care@labelaarfa.com` to the same Gmail. **Branded templates**: `brandHeader()` in `api/_lib/email.js` injects the LA monogram PNG (`/logo-mark-email.png`) + wordmark + tagline above every transactional email. Order confirmation and admin notification rows include a 72×90 (customer) / 56×70 (admin) product thumbnail by URL — fetched via `productImageUrl(line.product_id)` on the server. If the lookup fails (legacy product missing from the mirror), a soft cream tile renders instead of a broken-image icon.
 - **Promo codes**: `api/_lib/promos.js` is the source of truth. Client mirrors the list in `src/App.jsx` for instant feedback while typing, but `api/orders/create` re-runs `validatePromo()` and rejects with 400 if invalid. `firstOrderOnly` flag is enforced via a count of the user's prior `paid`/`cod_confirmed`/`shipped`/`delivered` orders (guests are exempt — no stable identity to count against). `WELCOME10` = 10% off, INR-only, first-order-only. Order rows persist `promo_code` (text) + `discount_paise` (int) for receipts and emails.
+- **Inventory (live stock)**: `public.product_stock` is the single source of truth. Hardcoded `stock` fields on `api/_lib/products.js` and `src/App.jsx` are only seeds. Two Postgres functions enforce atomicity:
+  - `try_decrement_stock(p_items jsonb)` → locks rows in id order, verifies every requested qty is available, then decrements in one transaction. Returns `{ok:true}` or `{ok:false, insufficient_product_id, available, requested}`.
+  - `increment_stock(p_items jsonb)` → inverse; used as rollback if the order insert / Razorpay call fails, and on `payment.failed` / `refund.processed` webhooks.
+  - `api/orders/create` reserves stock for **both** COD and Razorpay orders the moment the order is placed (Amazon-style "1 left in stock" reservation). If Razorpay payment is abandoned and the webhook fires `payment.failed`, the webhook releases the reservation.
+  - `api/inventory` (GET) returns `{stock: {<id>: <int>, ...}}` with 60s edge cache + 5-min SWR. Client fetches on mount and after every successful checkout. ProductCard / ProductPage / addToCart / updateQty all call `useApp().getStock(productId)`, which prefers the live map and falls back to the hardcoded seed while the first fetch is in flight.
+  - On 409 oversold response from `/api/orders/create`, the checkout flow re-pulls inventory so the cart drawer + catalogue update immediately.
+- **Order references**: customer-facing order ids are formatted via `formatOrderRef(uuid)` → `LA-XXXXXXXX` (uppercase 8-char prefix). The helper lives in `src/App.jsx` (used by success page, OrdersPage, Razorpay description) and is duplicated verbatim in `api/_lib/email.js` (used by both customer and admin email subject + body). Don't slice/upper-case ad hoc anywhere else.
 - **Newsletter**: `api/newsletter` upserts `newsletter_subscribers`, and on **fresh** signups (status was missing or != active) sends `sendNewsletterWelcome({ to })` — an HTML email with the WELCOME10 code in a dashed callout. Re-subscribing an already-active address returns `{ ok: true, alreadySubscribed: true }` and silently skips the welcome email; the client renders a different "You're already with us" panel that doesn't dangle the 10% code again.
 - **RLS is on** for `profiles`, `addresses`, `orders`, `order_items`. Service role bypasses RLS — only use the service client from `api/_lib/supabase.js` server-side. Anon-key reads from the browser are limited to a user's own rows. `profiles` has SELECT, INSERT, UPDATE policies all gated on `auth.uid() = id` (INSERT matters because the client's sign-in upsert hits the INSERT branch when the trigger-created row is missing).
 - **Errors**: API routes return `{ error: '...' }` with a non-2xx status. `src/lib/api.js` `post()` throws on non-OK, so callers can `try/catch` and `showToast(err.message)`.

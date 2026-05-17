@@ -195,3 +195,118 @@ create policy "order_items_select_own" on public.order_items for select using (
 -- newsletter_subscribers + contact_messages: writes only via service_role, no client reads.
 -- Keep RLS off (default) and never expose anon-key queries to these tables from the client.
 -- If you want defence in depth: enable RLS with no policies.
+
+-- =============================================================
+-- Inventory — single source of truth for live stock
+-- =============================================================
+-- One row per product_id. `stock` is decremented atomically when an order
+-- is placed (via try_decrement_stock below). Service role only writes;
+-- the client reads through /api/inventory which uses service_role too,
+-- so RLS is left off and the public anon key never touches this table.
+create table if not exists public.product_stock (
+  product_id int primary key,
+  stock int not null default 0 check (stock >= 0),
+  updated_at timestamptz not null default now()
+);
+
+-- Seed initial stock from the hardcoded values in api/_lib/products.js +
+-- src/App.jsx. `on conflict do nothing` means re-running this file never
+-- overwrites the live stock in production — only fills in newly-added
+-- product ids. Adjust quantities manually via the Supabase dashboard.
+insert into public.product_stock (product_id, stock) values
+  -- Legacy line (intentionally sold out)
+  (1,0),(2,0),(3,0),(4,0),(5,0),(6,0),(7,0),(8,0),
+  (9,0),(10,0),(11,0),(12,0),(13,0),(14,0),(15,0),(16,0),
+  -- Premium Collection (active)
+  (101,8),(102,3),(103,4),(104,5),(105,3),(106,3),(107,3),(108,3),
+  (109,4),(110,5),(111,1),(112,10),(113,3),(114,5),(115,10),
+  -- Co-ord Sets (Solid Farshi, 5 colour variants)
+  (201,10),(202,10),(203,10),(204,10),(205,10),
+  -- Pakistani Ready-to-Wear
+  (301,8),(302,6),(303,7),(304,7),(305,7),(306,7),(307,7),(308,7),(309,7),(310,7),
+  -- Unstitched Collection
+  (401,5),(402,5),(403,5),(404,5),(405,5),(406,5),(407,5),(408,5),(409,5),(410,5),
+  (411,5),(412,5),(413,5),(414,5),(415,5),(416,5),(417,5),(418,5),(419,5),
+  (420,3),(421,3)
+on conflict (product_id) do nothing;
+
+-- Atomically check + decrement stock for a basket. Returns
+--   { ok: true }
+-- on success, or
+--   { ok: false, insufficient_product_id: <id>, available: <int>, requested: <int> }
+-- on failure (no rows mutated). Rows are locked in product_id order to
+-- avoid deadlocks between concurrent checkouts hitting overlapping items.
+create or replace function public.try_decrement_stock(p_items jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  item jsonb;
+  pid int;
+  qty int;
+  cur int;
+begin
+  -- First pass: lock + verify every row, abort if any is short.
+  for item in
+    select e from jsonb_array_elements(p_items) e
+    order by (e->>'product_id')::int
+  loop
+    pid := (item->>'product_id')::int;
+    qty := (item->>'qty')::int;
+    select stock into cur from public.product_stock where product_id = pid for update;
+    if cur is null then
+      -- Lazy-seed any product the in-memory catalogue knows about but the DB
+      -- doesn't yet (new products added after the seed). Default to 0 so we
+      -- fail safe — admin must explicitly raise it.
+      insert into public.product_stock (product_id, stock) values (pid, 0);
+      cur := 0;
+    end if;
+    if cur < qty then
+      return jsonb_build_object(
+        'ok', false,
+        'insufficient_product_id', pid,
+        'available', cur,
+        'requested', qty
+      );
+    end if;
+  end loop;
+
+  -- Second pass: every row already locked, decrement is safe.
+  for item in select e from jsonb_array_elements(p_items) e loop
+    pid := (item->>'product_id')::int;
+    qty := (item->>'qty')::int;
+    update public.product_stock
+      set stock = stock - qty, updated_at = now()
+      where product_id = pid;
+  end loop;
+
+  return jsonb_build_object('ok', true);
+end;
+$$;
+
+-- Inverse helper for refunds / cancelled-after-paid scenarios. Adds qty back
+-- to the row, lazy-seeds if missing. Never throws on missing row.
+create or replace function public.increment_stock(p_items jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  item jsonb;
+  pid int;
+  qty int;
+begin
+  for item in select e from jsonb_array_elements(p_items) e loop
+    pid := (item->>'product_id')::int;
+    qty := (item->>'qty')::int;
+    insert into public.product_stock (product_id, stock)
+      values (pid, qty)
+      on conflict (product_id) do update
+      set stock = public.product_stock.stock + excluded.stock,
+          updated_at = now();
+  end loop;
+end;
+$$;

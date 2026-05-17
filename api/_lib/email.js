@@ -36,6 +36,11 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
   { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
 ));
 
+// Customer-facing order reference. MUST match formatOrderRef() in src/App.jsx
+// so the success page, OrdersPage, customer email, and admin email all show
+// the SAME string ("LA-A1B2C3D4"). Don't sprinkle ad-hoc slices elsewhere.
+const formatOrderRef = (uuid) => `LA-${String(uuid || '').slice(0, 8).toUpperCase()}`;
+
 // Resend's shared sender `onboarding@resend.dev` can only deliver to the email
 // address that registered the Resend account. Detect this so we can return a
 // clearer error rather than silently failing.
@@ -81,7 +86,7 @@ export async function sendOrderConfirmation({ to, order, items }) {
   <div style="font-family:Georgia,'Times New Roman',serif;max-width:580px;margin:0 auto;color:#1F1A14;background:#FBF8F3;padding:32px">
     ${brandHeader()}
     <h1 style="font-weight:400;font-size:26px;margin:0 0 8px;text-align:center">Thank you for your order</h1>
-    <p style="color:#6B5F4F;margin:0 0 24px;text-align:center">Order <strong style="color:#1F1A14">#${esc(String(order.id).slice(0, 8))}</strong> is confirmed. We will dispatch it within 2 business days.</p>
+    <p style="color:#6B5F4F;margin:0 0 24px;text-align:center">Order <strong style="color:#1F1A14">${esc(formatOrderRef(order.id))}</strong> is confirmed. We will dispatch it within 2 business days.</p>
 
     <table style="width:100%;border-collapse:collapse;border-top:1px solid #E8DDC9">
       ${rows}
@@ -100,7 +105,7 @@ export async function sendOrderConfirmation({ to, order, items }) {
 
   return sendOrLog({
     from: FROM, to,
-    subject: `Order confirmed — Label Aarfa #${String(order.id).slice(0, 8)}`,
+    subject: `Order confirmed — Label Aarfa ${formatOrderRef(order.id)}`,
     html,
   }, 'order-confirmation');
 }
@@ -111,7 +116,7 @@ export async function sendOrderConfirmation({ to, order, items }) {
 export async function sendOrderAdminNotification({ order, items, address }) {
   const admin = (process.env.ADMIN_EMAIL || '').trim() || 'label.arfa@gmail.com';
   const fmt = (paise) => `₹${(paise / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
-  const orderShort = String(order.id || '').slice(0, 8).toUpperCase();
+  const orderRef = formatOrderRef(order.id);
   const placed = order.created_at
     ? new Date(order.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
     : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
@@ -142,7 +147,7 @@ export async function sendOrderAdminNotification({ order, items, address }) {
       </div>
     </div>
 
-    <h2 style="font-weight:400;font-size:22px;margin:0 0 8px">Order #${esc(orderShort)}</h2>
+    <h2 style="font-weight:400;font-size:22px;margin:0 0 8px">Order ${esc(orderRef)}</h2>
     <div style="font-size:12px;color:#6B5F4F;margin-bottom:20px">Placed ${esc(placed)} IST · Payment: ${order.payment_method === 'cod' ? 'Cash on Delivery' : 'Razorpay'} · Status: <strong>${esc(order.status)}</strong></div>
 
     <h3 style="font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;color:#7B1E28;margin:0 0 8px">Customer</h3>
@@ -183,7 +188,7 @@ export async function sendOrderAdminNotification({ order, items, address }) {
 
   return sendOrLog({
     from: FROM, to: admin,
-    subject: `New order #${orderShort} — ${addr.name || 'Customer'} (${order.payment_method === 'cod' ? 'COD' : 'Paid'})`,
+    subject: `New order ${orderRef} — ${addr.name || 'Customer'} (${order.payment_method === 'cod' ? 'COD' : 'Paid'})`,
     html,
   }, 'order-admin-notification');
 }
