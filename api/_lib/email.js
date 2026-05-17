@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { productImageUrl } from './products.js';
 
 let _resend;
 function client() {
@@ -10,6 +11,23 @@ function client() {
 }
 
 const FROM = (process.env.FROM_EMAIL || 'Label Aarfa <onboarding@resend.dev>').trim();
+
+// Absolute URL of any static file under public/. Used for the logo + product
+// thumbnails in transactional emails so they render in the recipient's inbox.
+const SITE_URL = (process.env.SITE_URL || 'https://www.labelaarfa.com').replace(/\/$/, '');
+const LOGO_URL = `${SITE_URL}/logo-mark-email.png`;
+
+// Reusable branded header for every email. Centered logo + tagline. Keeps the
+// inbox preview consistent and gives the templates a single source of truth
+// for our "above the headline" branding.
+function brandHeader() {
+  return `
+    <div style="text-align:center;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #E8DDC9">
+      <img src="${LOGO_URL}" alt="Label Aarfa" width="56" height="56" style="display:inline-block;width:56px;height:56px;border:0;margin-bottom:10px" />
+      <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:0.22em;font-weight:500;color:#1F1A14">LABEL AARFA</div>
+      <div style="font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#7B1E28;margin-top:6px">Fashion Redefined · Est. 2019</div>
+    </div>`;
+}
 
 // Always escape any string we put into an email HTML body. Even fields we think come
 // from our own DB can be user-controlled — names, product names entered by an attacker
@@ -40,33 +58,49 @@ async function sendOrLog(payload, label) {
 
 export async function sendOrderConfirmation({ to, order, items }) {
   const fmt = (paise) => `₹${(paise / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
-  const rows = items.map((i) =>
-    `<tr><td style="padding:8px 0">${esc(i.product_name)} <span style="color:#A89888">(Size ${esc(i.size)}, qty ${Number(i.quantity) || 0})</span></td><td style="padding:8px 0;text-align:right">${fmt(i.line_total_paise)}</td></tr>`
-  ).join('');
+  // Each line gets a 72×90 thumbnail of the product. Falls back to a soft cream
+  // tile if the image URL can't be resolved (e.g. legacy product missing from
+  // the lookup) — better than a broken image icon in the inbox.
+  const rows = items.map((i) => {
+    const img = productImageUrl(Number(i.product_id));
+    const thumb = img
+      ? `<img src="${img}" alt="" width="72" height="90" style="display:block;width:72px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #E8DDC9" />`
+      : `<div style="width:72px;height:90px;background:#F6F0E5;border-radius:6px;border:1px solid #E8DDC9"></div>`;
+    return `
+      <tr>
+        <td style="padding:12px 0;border-bottom:1px solid #E8DDC9;width:84px;vertical-align:top">${thumb}</td>
+        <td style="padding:12px 0 12px 12px;border-bottom:1px solid #E8DDC9;vertical-align:top">
+          <div style="font-size:14px;color:#1F1A14;line-height:1.35">${esc(i.product_name)}</div>
+          <div style="font-size:12px;color:#A89888;margin-top:4px">Size ${esc(i.size)} · Qty ${Number(i.quantity) || 0}</div>
+        </td>
+        <td style="padding:12px 0;border-bottom:1px solid #E8DDC9;text-align:right;vertical-align:top;white-space:nowrap;font-size:14px;color:#1F1A14;font-weight:500">${fmt(i.line_total_paise)}</td>
+      </tr>`;
+  }).join('');
 
   const html = `
-  <div style="font-family:Georgia,'Times New Roman',serif;max-width:560px;margin:0 auto;color:#1F1A14;background:#FBF8F3;padding:32px">
-    <div style="text-align:center;margin-bottom:24px">
-      <div style="font-size:24px;letter-spacing:0.18em;font-weight:500">LABEL AARFA</div>
-      <div style="font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#7B1E28;margin-top:4px">Fashion Redefined · Est. 2019</div>
-    </div>
-    <h1 style="font-weight:400;font-size:24px;margin:0 0 8px">Thank you for your order</h1>
-    <p style="color:#6B5F4F;margin:0 0 24px">Order <strong>#${order.id.slice(0, 8)}</strong> is confirmed. We will dispatch it within 2 business days.</p>
-    <table style="width:100%;border-collapse:collapse;border-top:1px solid #E8DDC9;border-bottom:1px solid #E8DDC9">
+  <div style="font-family:Georgia,'Times New Roman',serif;max-width:580px;margin:0 auto;color:#1F1A14;background:#FBF8F3;padding:32px">
+    ${brandHeader()}
+    <h1 style="font-weight:400;font-size:26px;margin:0 0 8px;text-align:center">Thank you for your order</h1>
+    <p style="color:#6B5F4F;margin:0 0 24px;text-align:center">Order <strong style="color:#1F1A14">#${esc(String(order.id).slice(0, 8))}</strong> is confirmed. We will dispatch it within 2 business days.</p>
+
+    <table style="width:100%;border-collapse:collapse;border-top:1px solid #E8DDC9">
       ${rows}
     </table>
-    <table style="width:100%;margin-top:16px;font-size:14px">
-      <tr><td>Subtotal</td><td style="text-align:right">${fmt(order.subtotal_paise)}</td></tr>
-      <tr><td>Shipping</td><td style="text-align:right">${order.shipping_paise === 0 ? 'Free' : fmt(order.shipping_paise)}</td></tr>
-      ${order.discount_paise > 0 ? `<tr><td style="color:#7B1E28">Discount${order.promo_code ? ` (${order.promo_code})` : ''}</td><td style="text-align:right;color:#7B1E28">−${fmt(order.discount_paise)}</td></tr>` : ''}
-      <tr><td style="padding-top:8px;border-top:1px solid #E8DDC9;font-weight:600">Total</td><td style="padding-top:8px;border-top:1px solid #E8DDC9;text-align:right;font-weight:600">${fmt(order.total_paise)}</td></tr>
+
+    <table style="width:100%;margin-top:20px;font-size:14px">
+      <tr><td style="padding:4px 0;color:#6B5F4F">Subtotal</td><td style="padding:4px 0;text-align:right">${fmt(order.subtotal_paise)}</td></tr>
+      <tr><td style="padding:4px 0;color:#6B5F4F">Shipping</td><td style="padding:4px 0;text-align:right">${order.shipping_paise === 0 ? 'Free' : fmt(order.shipping_paise)}</td></tr>
+      ${order.discount_paise > 0 ? `<tr><td style="padding:4px 0;color:#7B1E28">Discount${order.promo_code ? ` (${esc(order.promo_code)})` : ''}</td><td style="padding:4px 0;text-align:right;color:#7B1E28">−${fmt(order.discount_paise)}</td></tr>` : ''}
+      <tr><td style="padding:10px 0 4px;border-top:1px solid #E8DDC9;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;font-size:12px">Total</td><td style="padding:10px 0 4px;border-top:1px solid #E8DDC9;text-align:right;font-weight:600;font-size:16px">${fmt(order.total_paise)}</td></tr>
     </table>
-    <p style="color:#6B5F4F;font-size:13px;margin-top:32px">Questions? Reply to this email or write to care@labelaarfa.com.</p>
+
+    <p style="color:#6B5F4F;font-size:13px;margin-top:32px;text-align:center">Questions? Reply to this email or write to care@labelaarfa.com.</p>
+    <p style="color:#A89888;font-size:11px;margin-top:18px;text-align:center;letter-spacing:0.18em">LABEL AARFA · NEW DELHI · INDIA</p>
   </div>`;
 
   return sendOrLog({
     from: FROM, to,
-    subject: `Order confirmed — Label Aarfa #${order.id.slice(0, 8)}`,
+    subject: `Order confirmed — Label Aarfa #${String(order.id).slice(0, 8)}`,
     html,
   }, 'order-confirmation');
 }
@@ -83,15 +117,29 @@ export async function sendOrderAdminNotification({ order, items, address }) {
     : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
   const addr = address || order.shipping_address || {};
 
-  const rows = (items || []).map((i) =>
-    `<tr><td style="padding:8px 12px;border-bottom:1px solid #E8DDC9">${esc(i.product_name)}<br><span style="color:#A89888;font-size:12px">Size ${esc(i.size)} · Qty ${Number(i.quantity) || 0}</span></td><td style="padding:8px 12px;border-bottom:1px solid #E8DDC9;text-align:right;white-space:nowrap">${fmt(i.line_total_paise)}</td></tr>`
-  ).join('');
+  const rows = (items || []).map((i) => {
+    const img = productImageUrl(Number(i.product_id));
+    const thumb = img
+      ? `<img src="${img}" alt="" width="56" height="70" style="display:block;width:56px;height:70px;object-fit:cover;border-radius:4px;border:1px solid #E8DDC9" />`
+      : `<div style="width:56px;height:70px;background:#F6F0E5;border-radius:4px;border:1px solid #E8DDC9"></div>`;
+    return `<tr>
+      <td style="padding:10px 12px;border-bottom:1px solid #E8DDC9;width:68px;vertical-align:top">${thumb}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #E8DDC9;vertical-align:top">
+        <div style="font-size:13px">${esc(i.product_name)}</div>
+        <div style="color:#A89888;font-size:12px;margin-top:2px">Size ${esc(i.size)} · Qty ${Number(i.quantity) || 0}</div>
+      </td>
+      <td style="padding:10px 12px;border-bottom:1px solid #E8DDC9;text-align:right;white-space:nowrap;vertical-align:top;font-size:13px">${fmt(i.line_total_paise)}</td>
+    </tr>`;
+  }).join('');
 
   const html = `
   <div style="font-family:Georgia,'Times New Roman',serif;max-width:640px;margin:0 auto;color:#1F1A14;background:#FBF8F3;padding:28px">
-    <div style="margin-bottom:24px;border-bottom:2px solid #7B1E28;padding-bottom:14px">
-      <div style="font-size:20px;letter-spacing:0.18em;font-weight:500">LABEL AARFA</div>
-      <div style="font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#7B1E28;margin-top:4px">New Order — Ship Required</div>
+    <div style="margin-bottom:24px;border-bottom:2px solid #7B1E28;padding-bottom:14px;display:flex;align-items:center;gap:14px">
+      <img src="${LOGO_URL}" alt="Label Aarfa" width="44" height="44" style="display:inline-block;width:44px;height:44px;border:0;vertical-align:middle" />
+      <div style="display:inline-block;vertical-align:middle">
+        <div style="font-size:20px;letter-spacing:0.18em;font-weight:500">LABEL AARFA</div>
+        <div style="font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#7B1E28;margin-top:4px">New Order — Ship Required</div>
+      </div>
     </div>
 
     <h2 style="font-weight:400;font-size:22px;margin:0 0 8px">Order #${esc(orderShort)}</h2>
@@ -146,11 +194,8 @@ export async function sendOrderAdminNotification({ order, items, address }) {
 export async function sendNewsletterWelcome({ to }) {
   const safeTo = String(to || '').replace(/[\r\n]+/g, ' ').slice(0, 254);
   const html = `
-  <div style="font-family:Georgia,'Times New Roman',serif;max-width:560px;margin:0 auto;color:#1F1A14;background:#FBF8F3;padding:32px">
-    <div style="text-align:center;margin-bottom:28px">
-      <div style="font-size:24px;letter-spacing:0.18em;font-weight:500">LABEL AARFA</div>
-      <div style="font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#7B1E28;margin-top:4px">Fashion Redefined · Est. 2019</div>
-    </div>
+  <div style="font-family:Georgia,'Times New Roman',serif;max-width:580px;margin:0 auto;color:#1F1A14;background:#FBF8F3;padding:32px">
+    ${brandHeader()}
     <h1 style="font-weight:400;font-size:26px;margin:0 0 12px;text-align:center">Welcome to Label Aarfa</h1>
     <p style="color:#6B5F4F;margin:0 0 28px;text-align:center;line-height:1.6">Thank you for joining the list. We're a small Delhi atelier crafting handmade ethnic wear in handloom cottons, soft crepes, and silks — and we're glad to have you here.</p>
 

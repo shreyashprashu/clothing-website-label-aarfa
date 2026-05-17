@@ -57,26 +57,119 @@ function ProductImage({
 }
 
 /* ================================================================
-   PRODUCTS — every image from labelaarfa.com/all-products
+   PRODUCTS — Active inventory (Premium, Coords, Pakistani, Unstitched)
+   + Legacy 16 (the previous catalogue, now archived under 'premium' as
+   sold-out so existing wishlists/share-links still resolve).
+   ================================================================
+
+   Schema notes
+   - `category` is one of: premium | coords | pakistani | unstitched | premium-legacy.
+     'premium-legacy' is filtered out of the active 'premium' listing — it only
+     shows up in 'all' and direct product links.
+   - `stock` of 0 renders the card as Sold Out and disables add-to-bag.
+   - `groupId` ties color variants together. The category grid hides duplicates by
+     showing only the lowest-id variant per group; the ProductPage renders peer
+     swatches you can click to switch to a sibling colour.
    ================================================================ */
 const PRODUCTS = [
-  { id: 1, name: 'Luxury Wine Rayon Tunic with Printed Palazzo', category: 'stitched', price: 2999, salePrice: 1499, images: [IMG + 'Luxury-Wine-Rayon-Tunic-Printed-Palazzo.jpeg',IMG + 'Luxury-Wine-Rayon-Tunic-with-Printed-Palazzo.jpeg'], fabric: 'Rayon', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 3, description: 'A regal wine-toned tunic crafted in soft rayon, paired with a printed palazzo. Tailored for fluid drape and evening elegance.' },
-  { id: 2, name: 'Brown Kurta with Cream Heart Printed Palazzo', category: 'coords', price: 2499, salePrice: 1499, images: [IMG + 'Brown-Kurta-with-Cream-Heart-Printed-Palazzo-Set-for-Women.jpeg',IMG + 'Brown-Kurta-with-Cream-Heart-Printed-Palazzo.jpeg'], fabric: 'Cotton', sizes: ['XS','S','M','L','XL','XXL'], isNew: false, stock: 8, description: 'Earthy brown kurta paired with a whimsical cream heart-printed palazzo. Romantic, refined, and quietly playful.' },
-  { id: 3, name: 'Stitched Red and Black Coord Set', category: 'stitched', price: 2899, salePrice: 1499, images: [IMG + 'stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Red-and-Black-women-clothes.jpeg',IMG + 'Best-stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Premium-stitched-Red-and-Black-women-clothes.jpeg'], fabric: 'Crepe', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 4, description: 'A striking red and black ensemble — bold contrast, impeccable stitching, designed to make an entrance.' },
-  { id: 4, name: 'Designer Cords Set for Women', category: 'coords', price: 2999, salePrice: 1750, images: [IMG + 'Designer-Cords-Set-For-Women-in-Delhi.jpeg',IMG + 'Best-Designer-Cords-Set-For-Women.jpeg',IMG + 'Label-Aarfa-Designer-Cords-Set-For-Women.jpeg',IMG + 'Designer-Cords-Set-For-Women.jpeg'], fabric: 'Cotton Blend', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 12, description: 'A modern coord set with timeless silhouette — soft drape, considered details, made for everyday luxury.' },
-  { id: 5, name: 'Coffee Shaded Embroidered Cotton Suit', category: 'stitched', price: 2999, salePrice: 1750, images: [IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg',IMG + 'Label-Aarfa-Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg',IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set-Price.jpeg',IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set-for-Women.jpeg'], fabric: 'Cotton', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 5, description: 'Deep coffee tones meet intricate embroidery. A suit set that whispers craftsmanship in every thread.' },
-  { id: 6, name: 'Jaipur Royal Blue Cotton Handloom Kurta', category: 'newarrivals', price: 2499, salePrice: 1499, images: [IMG + 'Label-Aarfa-Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg',IMG + 'Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg'], fabric: 'Handloom Cotton', sizes: ['XS','S','M','L','XL','XXL'], isNew: true, stock: 15, description: 'Hand-woven in Jaipur — royal blue cotton with breathable structure and heritage in every weave.' },
-  { id: 7, name: 'Yellow Pashmina A-line Kurta with Salwar', category: 'newarrivals', price: 2999, salePrice: 1750, images: [IMG + 'Label-Aarfa-Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg',IMG + 'Yellow-Pashmina-A-line-Kurta.jpeg',IMG + 'Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg'], fabric: 'Pashmina', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 2, description: 'Sunlit yellow pashmina with a graceful A-line silhouette. Includes coordinated salwar and shawl.' },
-  { id: 8, name: 'Stitched Soft Crepe Kurta with Tissue Silk Dupatta', category: 'stitched', price: 3499, salePrice: 1999, images: [IMG + 'Premium-soft-crepe-fabric.jpeg',IMG + 'Stiched-soft-crepe-fabric-with-Tissue-Silk-Dupatta.jpeg',IMG + 'women-Premium-soft-crepe-fabric-with-Tissue-Silk-Dupatta.jpeg',IMG + 'Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg'], fabric: 'Soft Crepe', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 7, description: 'A premium soft crepe kurta finished with a luminous tissue silk dupatta. Drape that flows like poetry.' },
-  { id: 9, name: 'Elegant Viscose Muslin Embroidered Suit', category: 'stitched', price: 3499, salePrice: 1999, images: [IMG + 'Elegant-Viscose-Muslin-Embroidered-Suit-Set.jpeg',IMG + 'Elegant-Viscose-Muslin-Embroidered-Suit.jpeg',IMG + 'Viscose-Muslin-Embroidered-Suit-Set.jpeg'], fabric: 'Viscose Muslin', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 18, description: 'Cloud-soft viscose muslin embroidered with restraint and intention. Light to wear, lasting to remember.' },
-  { id: 10, name: 'Office Wear Baby Pink Cotton Kurta Set', category: 'newarrivals', price: 3299, salePrice: 1999, images: [IMG + 'Office-Wear-Kurta-Sets-for-Women-Affordable-Cotton.jpeg',IMG + 'Office-Wear-Kurta-Sets-for-Women-Baby-pink.jpeg',IMG + 'Kurta-Sets-for-Women-Affordable-Cotton.jpeg',IMG + 'Office-Wear-Kurta-Sets-for-Women.jpeg'], fabric: 'Cotton', sizes: ['XS','S','M','L','XL','XXL'], isNew: false, stock: 25, description: 'A workwear kurta set in tender baby pink — composed, breathable, and quietly powerful.' },
-  { id: 11, name: 'Floral Cotton Kurti Set with Dupatta', category: 'newarrivals', price: 3499, salePrice: 1999, images: [IMG + 'Floral-Cotton-Kurti-Set-with-Dupatta-for-women.jpeg',IMG + 'Best-Floral-Cotton-Kurti-Set-with-Dupatta.jpeg',IMG + 'Label-Aarfa-Floral-Cotton-Kurti-Set-with-Dupatta.jpeg',IMG + 'Floral-Cotton-Kurti-Set-with-Dupatta.jpeg'], fabric: 'Cotton', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 6, description: 'A garden in motion — floral prints on breathable cotton, finished with a flowing dupatta.' },
-  { id: 12, name: 'Designer Shirt & Dupatta Casual Set', category: 'coords', price: 3299, salePrice: 1999, images: [IMG + 'Best-Designer-Shirt-Dupatta-Casual-Collection.jpeg',IMG + 'Designer-Shirt-Dupatta-Casual-Muslim-Collection.jpeg',IMG + 'Designer-Shirt-Dupatta-Casual-Collection.jpeg',IMG + 'Shirt-Dupatta-Casual-Collection.jpeg'], fabric: 'Cotton Blend', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 4, description: 'A relaxed shirt paired with a soft dupatta — fluid, modern, effortlessly put-together.' },
-  { id: 13, name: 'Floral Silk Suit for Women', category: 'sale', price: 3499, salePrice: 1999, images: [IMG + 'silk-suits-for-women-sale-Online-at-Best-Price.jpeg',IMG + 'Buy-silk-suits-for-women-sale-Online-at-Best-Price.jpeg'], fabric: 'Silk', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 14, description: 'Silk suit blooming with floral motifs — luminous, ceremonial, and worth keeping forever.' },
-  { id: 14, name: 'Ivory Kurta Set with Blue Floral Embroidery', category: 'newarrivals', price: 3499, salePrice: 1999, images: [IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg',IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery.jpeg',IMG + 'Ivory-Kurta-Set-with-Blue-Floral.jpeg',IMG + 'Label-AarfaIvory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg'], fabric: 'Cotton', sizes: ['XS','S','M','L','XL','XXL'], isNew: true, stock: 9, description: 'Ivory canvas with cobalt embroidery — a study in restraint and contrast.' },
-  { id: 15, name: 'Original Long Pakistani Cordset', category: 'coords', price: 3499, salePrice: 1999, images: [IMG + 'orignal-long-pakistani-Cordset.jpeg',IMG + 'Premium-orignal-long-pakistani-Cordset-in-Delhi.jpeg',IMG + 'Premium-orignal-long-pakistani-Cordset.jpeg'], fabric: 'Lawn', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 11, description: 'Long Pakistani coordset with authentic detailing — a long-line silhouette for graceful presence.' },
-  { id: 16, name: 'Lavender 3-Piece Stitched Dress', category: 'stitched', price: 3299, salePrice: 1999, images: [IMG + 'Lavender-3-Piece-Dress-Stitched.jpeg',IMG + 'Label-Aarfa-Lavender-3-Piece-Dress.jpeg'], fabric: 'Georgette', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 3, description: 'A three-piece in soft lavender — modern proportions, romantic palette, ready-to-wear.' },
+  // ------- LEGACY (sold out) -------
+  { id: 1, name: 'Luxury Wine Rayon Tunic with Printed Palazzo', category: 'premium-legacy', price: 2999, salePrice: 1499, images: [IMG + 'Luxury-Wine-Rayon-Tunic-Printed-Palazzo.jpeg',IMG + 'Luxury-Wine-Rayon-Tunic-with-Printed-Palazzo.jpeg'], fabric: 'Rayon', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'A regal wine-toned tunic crafted in soft rayon, paired with a printed palazzo. Tailored for fluid drape and evening elegance.' },
+  { id: 2, name: 'Brown Kurta with Cream Heart Printed Palazzo', category: 'premium-legacy', price: 2499, salePrice: 1499, images: [IMG + 'Brown-Kurta-with-Cream-Heart-Printed-Palazzo-Set-for-Women.jpeg',IMG + 'Brown-Kurta-with-Cream-Heart-Printed-Palazzo.jpeg'], fabric: 'Cotton', sizes: ['XS','S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'Earthy brown kurta paired with a whimsical cream heart-printed palazzo. Romantic, refined, and quietly playful.' },
+  { id: 3, name: 'Stitched Red and Black Coord Set', category: 'premium-legacy', price: 2899, salePrice: 1499, images: [IMG + 'stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Red-and-Black-women-clothes.jpeg',IMG + 'Best-stitched-Red-and-Black-women-clothes.jpeg',IMG + 'Premium-stitched-Red-and-Black-women-clothes.jpeg'], fabric: 'Crepe', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'A striking red and black ensemble — bold contrast, impeccable stitching, designed to make an entrance.' },
+  { id: 4, name: 'Designer Cords Set for Women', category: 'premium-legacy', price: 2999, salePrice: 1750, images: [IMG + 'Designer-Cords-Set-For-Women-in-Delhi.jpeg',IMG + 'Best-Designer-Cords-Set-For-Women.jpeg',IMG + 'Label-Aarfa-Designer-Cords-Set-For-Women.jpeg',IMG + 'Designer-Cords-Set-For-Women.jpeg'], fabric: 'Cotton Blend', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'A modern coord set with timeless silhouette — soft drape, considered details, made for everyday luxury.' },
+  { id: 5, name: 'Coffee Shaded Embroidered Cotton Suit', category: 'premium-legacy', price: 2999, salePrice: 1750, images: [IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg',IMG + 'Label-Aarfa-Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg',IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set-Price.jpeg',IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set-for-Women.jpeg'], fabric: 'Cotton', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'Deep coffee tones meet intricate embroidery. A suit set that whispers craftsmanship in every thread.' },
+  { id: 6, name: 'Jaipur Royal Blue Cotton Handloom Kurta', category: 'premium-legacy', price: 2499, salePrice: 1499, images: [IMG + 'Label-Aarfa-Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg',IMG + 'Jaipur-Royal-blue-Cotton-handloom-kurta.jpeg'], fabric: 'Handloom Cotton', sizes: ['XS','S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'Hand-woven in Jaipur — royal blue cotton with breathable structure and heritage in every weave.' },
+  { id: 7, name: 'Yellow Pashmina A-line Kurta with Salwar', category: 'premium-legacy', price: 2999, salePrice: 1750, images: [IMG + 'Label-Aarfa-Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg',IMG + 'Yellow-Pashmina-A-line-Kurta.jpeg',IMG + 'Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg'], fabric: 'Pashmina', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'Sunlit yellow pashmina with a graceful A-line silhouette. Includes coordinated salwar and shawl.' },
+  { id: 8, name: 'Stitched Soft Crepe Kurta with Tissue Silk Dupatta', category: 'premium-legacy', price: 3499, salePrice: 1999, images: [IMG + 'Premium-soft-crepe-fabric.jpeg',IMG + 'Stiched-soft-crepe-fabric-with-Tissue-Silk-Dupatta.jpeg',IMG + 'women-Premium-soft-crepe-fabric-with-Tissue-Silk-Dupatta.jpeg',IMG + 'Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg'], fabric: 'Soft Crepe', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'A premium soft crepe kurta finished with a luminous tissue silk dupatta. Drape that flows like poetry.' },
+  { id: 9, name: 'Elegant Viscose Muslin Embroidered Suit', category: 'premium-legacy', price: 3499, salePrice: 1999, images: [IMG + 'Elegant-Viscose-Muslin-Embroidered-Suit-Set.jpeg',IMG + 'Elegant-Viscose-Muslin-Embroidered-Suit.jpeg',IMG + 'Viscose-Muslin-Embroidered-Suit-Set.jpeg'], fabric: 'Viscose Muslin', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'Cloud-soft viscose muslin embroidered with restraint and intention. Light to wear, lasting to remember.' },
+  { id: 10, name: 'Office Wear Baby Pink Cotton Kurta Set', category: 'premium-legacy', price: 3299, salePrice: 1999, images: [IMG + 'Office-Wear-Kurta-Sets-for-Women-Affordable-Cotton.jpeg',IMG + 'Office-Wear-Kurta-Sets-for-Women-Baby-pink.jpeg',IMG + 'Kurta-Sets-for-Women-Affordable-Cotton.jpeg',IMG + 'Office-Wear-Kurta-Sets-for-Women.jpeg'], fabric: 'Cotton', sizes: ['XS','S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'A workwear kurta set in tender baby pink — composed, breathable, and quietly powerful.' },
+  { id: 11, name: 'Floral Cotton Kurti Set with Dupatta', category: 'premium-legacy', price: 3499, salePrice: 1999, images: [IMG + 'Floral-Cotton-Kurti-Set-with-Dupatta-for-women.jpeg',IMG + 'Best-Floral-Cotton-Kurti-Set-with-Dupatta.jpeg',IMG + 'Label-Aarfa-Floral-Cotton-Kurti-Set-with-Dupatta.jpeg',IMG + 'Floral-Cotton-Kurti-Set-with-Dupatta.jpeg'], fabric: 'Cotton', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'A garden in motion — floral prints on breathable cotton, finished with a flowing dupatta.' },
+  { id: 12, name: 'Designer Shirt & Dupatta Casual Set', category: 'premium-legacy', price: 3299, salePrice: 1999, images: [IMG + 'Best-Designer-Shirt-Dupatta-Casual-Collection.jpeg',IMG + 'Designer-Shirt-Dupatta-Casual-Muslim-Collection.jpeg',IMG + 'Designer-Shirt-Dupatta-Casual-Collection.jpeg',IMG + 'Shirt-Dupatta-Casual-Collection.jpeg'], fabric: 'Cotton Blend', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'A relaxed shirt paired with a soft dupatta — fluid, modern, effortlessly put-together.' },
+  { id: 13, name: 'Floral Silk Suit for Women', category: 'premium-legacy', price: 3499, salePrice: 1999, images: [IMG + 'silk-suits-for-women-sale-Online-at-Best-Price.jpeg',IMG + 'Buy-silk-suits-for-women-sale-Online-at-Best-Price.jpeg'], fabric: 'Silk', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'Silk suit blooming with floral motifs — luminous, ceremonial, and worth keeping forever.' },
+  { id: 14, name: 'Ivory Kurta Set with Blue Floral Embroidery', category: 'premium-legacy', price: 3499, salePrice: 1999, images: [IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg',IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery.jpeg',IMG + 'Ivory-Kurta-Set-with-Blue-Floral.jpeg',IMG + 'Label-AarfaIvory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg'], fabric: 'Cotton', sizes: ['XS','S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'Ivory canvas with cobalt embroidery — a study in restraint and contrast.' },
+  { id: 15, name: 'Original Long Pakistani Cordset', category: 'premium-legacy', price: 3499, salePrice: 1999, images: [IMG + 'orignal-long-pakistani-Cordset.jpeg',IMG + 'Premium-orignal-long-pakistani-Cordset-in-Delhi.jpeg',IMG + 'Premium-orignal-long-pakistani-Cordset.jpeg'], fabric: 'Lawn', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'Long Pakistani coordset with authentic detailing — a long-line silhouette for graceful presence.' },
+  { id: 16, name: 'Lavender 3-Piece Stitched Dress', category: 'premium-legacy', price: 3299, salePrice: 1999, images: [IMG + 'Lavender-3-Piece-Dress-Stitched.jpeg',IMG + 'Label-Aarfa-Lavender-3-Piece-Dress.jpeg'], fabric: 'Georgette', sizes: ['S','M','L','XL','XXL'], isNew: false, stock: 0, description: 'A three-piece in soft lavender — modern proportions, romantic palette, ready-to-wear.' },
+
+  // ------- PREMIUM COLLECTION (new) -------
+  { id: 101, name: 'Sabrina Maroon Co-Ord Set', category: 'premium', price: 1999, images: [IMG + 'premium-1-1.jpg', IMG + 'premium-1-2.jpg', IMG + 'premium-1-3.jpg', IMG + 'premium-1-4.jpg', IMG + 'premium-1-5.jpg'], fabric: 'Berry Crepe (wrinkle-resistant)', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 8, colorName: 'Maroon', colorHex: '#6E1F2A', description: 'A Pakistani-inspired kaftan set in wrinkle-resistant berry crepe — comfort, style, and modern appeal. A versatile piece for holidays and beyond.' },
+  { id: 102, name: 'Mehnaaz Co-ord Set with Dupatta', category: 'premium', price: 2499, images: [IMG + 'premium-2-1.jpg', IMG + 'premium-2-2.jpg', IMG + 'premium-2-3.jpg', IMG + 'premium-2-4.jpg'], fabric: 'Premium Soft Crepe', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 3, colorName: 'Off White', colorHex: '#F2EBDD', description: 'A versatile two-piece coord with a flowing dupatta — wear it together or styled separately for endless looks. Considered cuts, considered drape.' },
+  { id: 103, name: 'Ayra Studded Co-Ord Set', category: 'premium', price: 1499, images: [IMG + 'premium-3-1.jpg', IMG + 'premium-3-2.jpg'], fabric: 'Berry Crepe', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 4, colorName: 'Black', colorHex: '#1A1612', description: 'Classic beauty redefined — elegant diamond-studded neckline with anti-tarnish detail. Feel both graceful and comfortable, every time.' },
+  { id: 104, name: 'Farinah Co-Ord Set', category: 'premium', price: 1999, images: [IMG + 'premium-4-1.jpg', IMG + 'premium-4-2.jpg', IMG + 'premium-4-3.jpg'], fabric: 'Premium Soft Crepe', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 5, colorName: 'Powder Blue', colorHex: '#B7C9D8', description: 'Pakistani craftsmanship meets contemporary tailoring — bold, beautiful, and effortlessly stylish. Luxury that feels as good as it looks.' },
+  { id: 105, name: 'Raha Co-Ord Set', category: 'premium', price: 1999, groupId: 'raha', images: [IMG + 'premium-5a-1.jpg', IMG + 'premium-5a-2.jpg', IMG + 'premium-5a-3.jpg'], fabric: 'Premium Blend Soft Cotton Crepe', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 3, colorName: 'Blue', colorHex: '#3F5878', description: 'From the intricate stitching to the elegant silhouette, the Raha Pakistani-inspired suit exudes quiet sophistication. Make every occasion feel considered.' },
+  { id: 106, name: 'Raha Co-Ord Set', category: 'premium', price: 1999, groupId: 'raha', images: [IMG + 'premium-5b-1.jpg', IMG + 'premium-5b-2.jpg', IMG + 'premium-5b-3.jpg'], fabric: 'Premium Blend Soft Cotton Crepe', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 3, colorName: 'Pink', colorHex: '#E4A3B0', description: 'From the intricate stitching to the elegant silhouette, the Raha Pakistani-inspired suit exudes quiet sophistication. Make every occasion feel considered.' },
+  { id: 107, name: 'Aliza Co-ord Set', category: 'premium', price: 1999, groupId: 'aliza', images: [IMG + 'premium-6a-1.jpg', IMG + 'premium-6a-2.jpg', IMG + 'premium-6a-3.jpg'], fabric: 'Soft Cotton Crepe', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 3, colorName: 'Green', colorHex: '#5B7A57', description: 'Luxury meets comfort — a cotton-silk-blend coord set crafted for effortless elegance, day to evening.' },
+  { id: 108, name: 'Aliza Co-ord Set', category: 'premium', price: 1999, groupId: 'aliza', images: [IMG + 'premium-6b-1.jpg', IMG + 'premium-6b-2.jpg', IMG + 'premium-6b-3.jpg'], fabric: 'Soft Cotton Crepe', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 3, colorName: 'Dark Blue', colorHex: '#1F2D4A', description: 'Luxury meets comfort — a cotton-silk-blend coord set crafted for effortless elegance, day to evening.' },
+  { id: 109, name: 'Renee Printed Co-Ord Set', category: 'premium', price: 1550, images: [IMG + 'premium-7-1.jpg', IMG + 'premium-7-2.jpg'], fabric: 'Premium Soft Crepe', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 4, colorName: 'Grey', colorHex: '#9A958F', description: 'Effortlessly elegant and timelessly chic — delicate floral detailing in soft neutral tones. Made for both everyday composure and graceful evenings.' },
+  { id: 110, name: 'Mia Co-ord Set', category: 'premium', price: 1650, images: [IMG + 'premium-8-1.jpg', IMG + 'premium-8-2.jpg', IMG + 'premium-8-3.jpg'], fabric: 'Pure Cotton Rayon', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 5, colorName: 'Red', colorHex: '#A23A2E', description: 'A Turkish-style coord with elegant floral prints and a relaxed silhouette. Modern style with effortless grace — for brunches, outings, and easy days.' },
+  { id: 111, name: 'Rebecca Co-ord Set', category: 'premium', price: 1999, images: [IMG + 'premium-9-1.jpg', IMG + 'premium-9-2.jpg'], fabric: 'Premium Soft Crepe', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 1, colorName: 'Black Multi', colorHex: '#2B221C', description: 'A statement piece designed for women who love bold prints and effortless elegance — vibrant artistic patterns with striking contrast details.' },
+  { id: 112, name: 'Ambrina Embroidered Co-ord Set', category: 'premium', price: 1850, images: [IMG + 'premium-10-1.jpg', IMG + 'premium-10-2.jpg', IMG + 'premium-10-3.jpg'], fabric: 'Embroidered Rayon', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 10, colorName: 'Black', colorHex: '#1A1612', description: 'Embroidered two-shaded coord set — comfortable and stylish, made for festive evenings and considered everyday wear.' },
+  { id: 113, name: 'Lyra Co-ord Set with Dupatta', category: 'premium', price: 2350, images: [IMG + 'premium-11-1.jpg', IMG + 'premium-11-2.jpg', IMG + 'premium-11-3.jpg', IMG + 'premium-11-4.jpg'], fabric: 'Soft Premium Crepe', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 3, colorName: 'Off White', colorHex: '#F2EBDD', description: 'Vibrant floral and bird-inspired prints come together in this elegant ensemble — timeless charm with modern sophistication for festive and daytime wear.' },
+  { id: 114, name: 'Myra Polka Co-Ord Set', category: 'premium', price: 1750, images: [IMG + 'premium-12-1.jpg', IMG + 'premium-12-2.jpg', IMG + 'premium-12-3.jpg', IMG + 'premium-12-4.jpg'], fabric: 'Premium Soft Crepe', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 5, colorName: 'Beige & Black', colorHex: '#C9B5A0', description: 'Playful polka dots meet effortless elegance — a relaxed silhouette with delicate fabric-button detailing and contrast polka accents on the palazzo hem.' },
+  { id: 115, name: 'Faizah Royal Blue Lounge Co-ord Set', category: 'premium', price: 1650, images: [IMG + 'premium-13-1.jpg', IMG + 'premium-13-2.jpg', IMG + 'premium-13-3.jpg', IMG + 'premium-13-4.jpg', IMG + 'premium-13-5.jpg'], fabric: 'Soft Korean BSY', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 10, colorName: 'Royal Blue', colorHex: '#2C3E76', description: 'A graceful Pakistani-style coord designed for effortless elegance and everyday comfort — flowy unique-cut sleeves, breathable summer-friendly fabric, imported quality.' },
+
+  // ------- CO-ORD SETS (new) — Solid Farshi Salwar (5 colour variants of one design) -------
+  { id: 201, name: 'Solid Farshi Salwar Co-ord Set', category: 'coords', price: 1250, groupId: 'farshi', images: [IMG + 'coord-1a-1.jpg', IMG + 'coord-1a-2.jpg'], fabric: 'Premium Natural Rayon Cotton with Lace Detailing', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 10, colorName: 'Pink', colorHex: '#E4A3B0', description: 'Step into elegance — gorgeous shades and graceful lace detailing for casual brunches, get-togethers, or everyday wear. Comfort with a luxe touch.' },
+  { id: 202, name: 'Solid Farshi Salwar Co-ord Set', category: 'coords', price: 1250, groupId: 'farshi', images: [IMG + 'coord-1b-1.jpg', IMG + 'coord-1b-2.jpg'], fabric: 'Premium Natural Rayon Cotton with Lace Detailing', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 10, colorName: 'Black', colorHex: '#1A1612', description: 'Step into elegance — gorgeous shades and graceful lace detailing for casual brunches, get-togethers, or everyday wear. Comfort with a luxe touch.' },
+  { id: 203, name: 'Solid Farshi Salwar Co-ord Set', category: 'coords', price: 1250, groupId: 'farshi', images: [IMG + 'coord-1c-1.jpg', IMG + 'coord-1c-2.jpg'], fabric: 'Premium Natural Rayon Cotton with Lace Detailing', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 10, colorName: 'Red', colorHex: '#A23A2E', description: 'Step into elegance — gorgeous shades and graceful lace detailing for casual brunches, get-togethers, or everyday wear. Comfort with a luxe touch.' },
+  { id: 204, name: 'Solid Farshi Salwar Co-ord Set', category: 'coords', price: 1250, groupId: 'farshi', images: [IMG + 'coord-1d-1.jpg', IMG + 'coord-1d-2.jpg'], fabric: 'Premium Natural Rayon Cotton with Lace Detailing', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 10, colorName: 'Lavender', colorHex: '#B7A9D4', description: 'Step into elegance — gorgeous shades and graceful lace detailing for casual brunches, get-togethers, or everyday wear. Comfort with a luxe touch.' },
+  { id: 205, name: 'Solid Farshi Salwar Co-ord Set', category: 'coords', price: 1250, groupId: 'farshi', images: [IMG + 'coord-1e-1.jpg', IMG + 'coord-1e-2.jpg'], fabric: 'Premium Natural Rayon Cotton with Lace Detailing', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 10, colorName: 'Grey', colorHex: '#9A958F', description: 'Step into elegance — gorgeous shades and graceful lace detailing for casual brunches, get-togethers, or everyday wear. Comfort with a luxe touch.' },
+
+  // ------- PAKISTANI READY-TO-WEAR (new) -------
+  { id: 301, name: 'Designer Ajrakh Print Suit Set', category: 'pakistani', price: 1250, images: [IMG + 'pakistani-1-1.jpg', IMG + 'pakistani-1-2.jpg', IMG + 'pakistani-1-3.jpg', IMG + 'pakistani-1-4.jpg'], fabric: 'Pure Jaipuri Cotton · Ajrakh Print Lace · Pure Cotton Lining', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 8, colorName: 'Yellow', colorHex: '#E1C56A', description: 'Elevate your daily and office wardrobe with Kalamkari-inspired patterns. Detailed neck work and woven accents pair with matching cotton pants and an Ajrakh-print-lace dupatta. Breathable, fully lined, made for all-day wear.' },
+  { id: 302, name: 'Ombre Luxury Suit', category: 'pakistani', price: 1499, images: [IMG + 'pakistani-2-1.jpg', IMG + 'pakistani-2-2.jpg'], fabric: 'Cotton with Chiffon Printed Dupatta', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 6, colorName: 'Pink', colorHex: '#E4A3B0', description: 'An elegant Pakistani suit designed to bring timeless grace to your festive and formal wardrobe — intricate traditional-inspired detailing, delicate lace, and a beautifully printed floral dupatta.' },
+  { id: 303, name: 'Pakistani Turkish Coord Set · Edit 01', category: 'pakistani', price: 1499, images: [IMG + 'pakistani-3-1.jpg'], fabric: 'Soft Crepe with Printed Silk Crepe Dupatta', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 7, description: 'Exquisite long Turkish coords with a printed silk-crepe dupatta — soft-crepe drape with festive presence.' },
+  { id: 304, name: 'Pakistani Turkish Coord Set · Edit 02', category: 'pakistani', price: 1499, images: [IMG + 'pakistani-4-1.jpg'], fabric: 'Soft Crepe with Printed Silk Crepe Dupatta', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 7, description: 'Exquisite long Turkish coords with a printed silk-crepe dupatta — soft-crepe drape with festive presence.' },
+  { id: 305, name: 'Pakistani Turkish Coord Set · Edit 03', category: 'pakistani', price: 1499, images: [IMG + 'pakistani-5-1.jpg'], fabric: 'Soft Crepe with Printed Silk Crepe Dupatta', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 7, description: 'Exquisite long Turkish coords with a printed silk-crepe dupatta — soft-crepe drape with festive presence.' },
+  { id: 306, name: 'Pakistani Turkish Coord Set · Edit 04', category: 'pakistani', price: 1499, images: [IMG + 'pakistani-6-1.jpg'], fabric: 'Soft Crepe with Printed Silk Crepe Dupatta', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 7, description: 'Exquisite long Turkish coords with a printed silk-crepe dupatta — soft-crepe drape with festive presence.' },
+  { id: 307, name: 'Pakistani Turkish Coord Set · Edit 05', category: 'pakistani', price: 1499, images: [IMG + 'pakistani-7-1.jpg'], fabric: 'Soft Crepe with Printed Silk Crepe Dupatta', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 7, description: 'Exquisite long Turkish coords with a printed silk-crepe dupatta — soft-crepe drape with festive presence.' },
+  { id: 308, name: 'Pakistani Turkish Coord Set · Edit 06', category: 'pakistani', price: 1499, images: [IMG + 'pakistani-8-1.jpg'], fabric: 'Soft Crepe with Printed Silk Crepe Dupatta', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 7, description: 'Exquisite long Turkish coords with a printed silk-crepe dupatta — soft-crepe drape with festive presence.' },
+  { id: 309, name: 'Pakistani Cutwork Printed Suit', category: 'pakistani', price: 1550, groupId: 'cutwork', images: [IMG + 'pakistani-9a-1.jpg', IMG + 'pakistani-9a-2.jpg', IMG + 'pakistani-9a-3.jpg'], fabric: 'Rayon · Heavy Rayon Cotton Pant · Cotton Muslin Digital Print Dupatta', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 7, colorName: 'Black Multi', colorHex: '#2B221C', description: 'Detailed embroidery on neckline, daman, and sleeves with stylish latkan detailing. Three-piece suit with Miyani-finished stitched pants and a digital-print cotton-muslin dupatta.' },
+  { id: 310, name: 'Pakistani Cutwork Printed Suit', category: 'pakistani', price: 1550, groupId: 'cutwork', images: [IMG + 'pakistani-9b-1.jpg', IMG + 'pakistani-9b-2.jpg', IMG + 'pakistani-9b-3.jpg'], fabric: 'Rayon · Heavy Rayon Cotton Pant · Cotton Muslin Digital Print Dupatta', sizes: ['S','M','L','XL','XXL'], isNew: true, stock: 7, colorName: 'Black Lavender', colorHex: '#605070', description: 'Detailed embroidery on neckline, daman, and sleeves with stylish latkan detailing. Three-piece suit with Miyani-finished stitched pants and a digital-print cotton-muslin dupatta.' },
+
+  // ------- UNSTITCHED COLLECTION (new) -------
+  // Generic unstitched suits 1-19 share fabric & care; each numbered as Karachi-print edits.
+  { id: 401, name: 'Unstitched Karachi-Print Suit · Edit 01', category: 'unstitched', price: 999, images: [IMG + 'unstitched-1-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 402, name: 'Unstitched Karachi-Print Suit · Edit 02', category: 'unstitched', price: 999, images: [IMG + 'unstitched-2-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 403, name: 'Unstitched Karachi-Print Suit · Edit 03', category: 'unstitched', price: 999, images: [IMG + 'unstitched-3-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 404, name: 'Unstitched Karachi-Print Suit · Edit 04', category: 'unstitched', price: 999, images: [IMG + 'unstitched-4-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 405, name: 'Unstitched Karachi-Print Suit · Edit 05', category: 'unstitched', price: 999, images: [IMG + 'unstitched-5-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 406, name: 'Unstitched Karachi-Print Suit · Edit 06', category: 'unstitched', price: 999, images: [IMG + 'unstitched-6-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 407, name: 'Unstitched Karachi-Print Suit · Edit 07', category: 'unstitched', price: 999, images: [IMG + 'unstitched-7-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 408, name: 'Unstitched Karachi-Print Suit · Edit 08', category: 'unstitched', price: 999, images: [IMG + 'unstitched-8-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 409, name: 'Unstitched Karachi-Print Suit · Edit 09', category: 'unstitched', price: 999, images: [IMG + 'unstitched-9-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 410, name: 'Unstitched Karachi-Print Suit · Edit 10', category: 'unstitched', price: 999, images: [IMG + 'unstitched-10-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 411, name: 'Unstitched Karachi-Print Suit · Edit 11', category: 'unstitched', price: 999, images: [IMG + 'unstitched-11-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 412, name: 'Unstitched Karachi-Print Suit · Edit 12', category: 'unstitched', price: 999, images: [IMG + 'unstitched-12-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 413, name: 'Unstitched Karachi-Print Suit · Edit 13', category: 'unstitched', price: 999, images: [IMG + 'unstitched-13-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 414, name: 'Unstitched Karachi-Print Suit · Edit 14', category: 'unstitched', price: 999, images: [IMG + 'unstitched-14-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 415, name: 'Unstitched Karachi-Print Suit · Edit 15', category: 'unstitched', price: 999, images: [IMG + 'unstitched-15-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 416, name: 'Unstitched Karachi-Print Suit · Edit 16', category: 'unstitched', price: 999, images: [IMG + 'unstitched-16-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 417, name: 'Unstitched Karachi-Print Suit · Edit 17', category: 'unstitched', price: 999, images: [IMG + 'unstitched-17-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 418, name: 'Unstitched Karachi-Print Suit · Edit 18', category: 'unstitched', price: 999, images: [IMG + 'unstitched-18-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 419, name: 'Unstitched Karachi-Print Suit · Edit 19', category: 'unstitched', price: 999, images: [IMG + 'unstitched-19-1.jpg'], fabric: 'Pure Jam Cotton & Premium Cotton (Karachi Print) · Rayon Cotton Bottom · Cotton Dupatta', sizes: ['Free Size'], isNew: true, stock: 5, description: 'Beautifully crafted unstitched suit with Karachi-inspired print and work-lace border detailing — designed for comfort and everyday elegance.' },
+  { id: 420, name: 'Unstitched Party Wear Suit', category: 'unstitched', price: 1600, groupId: 'partywear', images: [IMG + 'unstitched-20a-1.jpg'], fabric: 'Pure Viscose Muslin Digital Print with Hand Work · Viscose Rayon Bottom · Viscose Muslin Digital Print Dupatta', sizes: ['Free Size'], isNew: true, stock: 3, colorName: 'Black', colorHex: '#1A1612', description: 'A beautifully crafted unstitched party-wear suit set — digital-print viscose muslin with hand work, designed for comfort and everyday elegance with a luxe finish.' },
+  { id: 421, name: 'Unstitched Party Wear Suit', category: 'unstitched', price: 1600, groupId: 'partywear', images: [IMG + 'unstitched-20b-1.jpg'], fabric: 'Pure Viscose Muslin Digital Print with Hand Work · Viscose Rayon Bottom · Viscose Muslin Digital Print Dupatta', sizes: ['Free Size'], isNew: true, stock: 3, colorName: 'White', colorHex: '#F4EFE5', description: 'A beautifully crafted unstitched party-wear suit set — digital-print viscose muslin with hand work, designed for comfort and everyday elegance with a luxe finish.' },
 ];
+
+// Helper: collapse color-variant peers (same groupId) to the lowest-id variant
+// for grid listings. Standalone products (no groupId) pass through as-is.
+function uniqueByGroup(list) {
+  const seen = new Set();
+  const out = [];
+  for (const p of list) {
+    if (p.groupId) {
+      if (seen.has(p.groupId)) continue;
+      seen.add(p.groupId);
+    }
+    out.push(p);
+  }
+  return out;
+}
+// Peers in the same color group, ordered by id. Includes the product itself.
+function peersOf(product) {
+  if (!product?.groupId) return [product];
+  return PRODUCTS.filter((p) => p.groupId === product.groupId).sort((a, b) => a.id - b.id);
+}
 
 /* ================================================================
    PALETTE — warm pearl whites, eggshell layers, deep wine accent
@@ -432,11 +525,13 @@ const SITE_URL = 'https://www.labelaarfa.com';
 const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 const CATEGORY_SEO = {
-  newarrivals: { title: 'New Arrivals — Label Aarfa', desc: 'Fresh designs from our Delhi atelier — new kurtas, coord sets, and stitched suits in handloom cotton, soft crepe, and silk.', path: '/collections/new-arrivals' },
-  stitched:    { title: 'Stitched Collection — Ready-to-Wear Ethnic Suits | Label Aarfa', desc: 'Ready-to-wear stitched kurtas and suits, finished by hand in our Delhi atelier. Sizes XS–XXL, free shipping over ₹2,999.', path: '/collections/stitched' },
-  coords:      { title: 'Coord Sets — Matching Kurta & Palazzo Sets | Label Aarfa', desc: 'Matching coord sets in coordinated fabrics and prints — kurta with palazzo or pants. Handcrafted, ready to wear.', path: '/collections/coords' },
-  sale:        { title: 'Sale — Ethnic Wear at Gentle Prices | Label Aarfa', desc: 'Selected pieces from the Label Aarfa atelier at gentle prices. Handcrafted stitched suits, coord sets, and kurtas.', path: '/collections/sale' },
-  all:         { title: 'All Products — Label Aarfa Couture', desc: 'The complete Label Aarfa collection — 16 handcrafted pieces from our Delhi atelier.', path: '/collections/all' },
+  premium:       { title: 'Premium Collection — Label Aarfa Couture', desc: 'Our premium line — Pakistani-inspired coord sets and luxury suits in premium crepe, cotton-silk, and Korean BSY. Handcrafted, in stock now.', path: '/collections/premium' },
+  coords:        { title: 'Co-ord Sets — Matching Kurta & Palazzo Sets | Label Aarfa', desc: 'Matching coord sets in coordinated fabrics and prints — premium natural rayon cotton with graceful lace detailing. Five colours.', path: '/collections/coords' },
+  pakistani:     { title: 'Pakistani Ready-to-Wear — Stitched Suits | Label Aarfa', desc: 'Ready-to-wear Pakistani suits, Turkish coords, and Ajrakh prints — fully stitched, hand-finished, summer-friendly.', path: '/collections/pakistani' },
+  unstitched:    { title: 'Unstitched Collection — Karachi Print Suit Sets | Label Aarfa', desc: 'Unstitched suit fabric sets featuring Karachi-inspired prints with work-lace border detailing. Stitch to your fit.', path: '/collections/unstitched' },
+  newarrivals:   { title: 'New Arrivals — Label Aarfa', desc: 'Fresh from the atelier — premium coords, Pakistani ready-to-wear, and unstitched suits added this season.', path: '/collections/new-arrivals' },
+  sale:          { title: 'Sale — Ethnic Wear at Gentle Prices | Label Aarfa', desc: 'Selected pieces from the Label Aarfa atelier at gentle prices.', path: '/collections/sale' },
+  all:           { title: 'All Products — Label Aarfa Couture', desc: 'The complete Label Aarfa collection across our premium, coord, Pakistani ready-to-wear, and unstitched lines.', path: '/collections/all' },
 };
 
 function setMeta(name, content, attr = 'name') {
@@ -457,7 +552,7 @@ function setJsonLd(id, data) {
 function clearJsonLd(id) { document.getElementById(id)?.remove(); }
 
 function applySeo(page) {
-  const home = { title: 'Label Aarfa — Handcrafted Ethnic Wear from Delhi | Est. 2019', desc: 'Label Aarfa is a Delhi atelier crafting handmade kurtas, coord sets, and stitched suits since 2019. Slow couture in handloom cotton, soft crepe, silk, and pashmina.', url: SITE_URL + '/', image: IMG + 'Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg' };
+  const home = { title: 'Label Aarfa — Handcrafted Ethnic Wear from Delhi | Est. 2019', desc: 'Label Aarfa is a Delhi atelier crafting handmade kurtas, coord sets, and stitched suits since 2019. Slow couture in handloom cotton, soft crepe, silk, and pashmina.', url: SITE_URL + '/', image: IMG + 'premium-1-1.jpg' };
   let cur = { ...home };
 
   clearJsonLd('ld-product');
@@ -612,13 +707,14 @@ function Header() {
   const cartCount = cart.reduce((a, b) => a + b.quantity, 0);
 
   const links = [
-    { key: 'category', label: 'New', data: 'newarrivals' },
-    { key: 'category', label: 'Stitched', data: 'stitched' },
-    { key: 'category', label: 'Coords', data: 'coords' },
-    { key: 'category', label: 'All', data: 'all' },
-    { key: 'category', label: 'Sale', data: 'sale' },
-    { key: 'about', label: 'About' },
-    { key: 'contact', label: 'Contact' },
+    { key: 'category', label: 'Premium', data: 'premium' },
+    { key: 'category', label: 'Coords',  data: 'coords' },
+    { key: 'category', label: 'Pakistani', data: 'pakistani' },
+    { key: 'category', label: 'Unstitched', data: 'unstitched' },
+    { key: 'category', label: 'All',     data: 'all' },
+    { key: 'category', label: 'Sale',    data: 'sale' },
+    { key: 'about',    label: 'About' },
+    { key: 'contact',  label: 'Contact' },
   ];
 
   return (
@@ -715,9 +811,10 @@ function MobileMenu() {
   if (!mobileMenuOpen) return null;
   const links = [
     { key: 'home', label: 'Home' },
-    { key: 'category', label: 'New Arrivals', data: 'newarrivals' },
-    { key: 'category', label: 'Stitched Collection', data: 'stitched' },
-    { key: 'category', label: 'Coords', data: 'coords' },
+    { key: 'category', label: 'Premium', data: 'premium' },
+    { key: 'category', label: 'Co-ord Sets', data: 'coords' },
+    { key: 'category', label: 'Pakistani Ready-to-Wear', data: 'pakistani' },
+    { key: 'category', label: 'Unstitched Collection', data: 'unstitched' },
     { key: 'category', label: 'All Products', data: 'all' },
     { key: 'category', label: 'Sale', data: 'sale' },
     { key: 'about', label: 'About' },
@@ -785,9 +882,9 @@ function MobileMenu() {
 function Hero() {
   const { navigate } = useApp();
   const slides = [
-    { image: IMG + 'Premium-soft-crepe-fabric-with-Tissue-Silk.jpeg', eyebrow: 'New Edit · 2026', title: 'Crafted', accent: 'Elegance', sub: 'A collection composed in silk, breath, and stillness.' },
-    { image: IMG + 'Label-Aarfa-Yellow-Pashmina-A-line-Kurta-with-Salwar-and-Shawl-.jpeg', eyebrow: 'Heritage Weaves', title: 'Hand-loomed', accent: 'Stories', sub: 'Each thread carries the memory of the loom that made it.' },
-    { image: IMG + 'Ivory-Kurta-Set-with-Blue-Floral-Embroidery-Dupatta.jpeg', eyebrow: 'Festive 2026', title: 'Quietly', accent: 'Regal', sub: 'Pieces meant for moments you want to remember.' },
+    { image: IMG + 'premium-1-1.jpg',  eyebrow: 'Premium · 2026',    title: 'Crafted',   accent: 'Elegance', sub: 'A premium edit composed in soft crepe, silk, and stillness.', cta: 'premium' },
+    { image: IMG + 'pakistani-1-1.jpg', eyebrow: 'Pakistani Ready-to-Wear', title: 'Heritage', accent: 'Detail',   sub: 'Ajrakh prints, Kalamkari neckwork, and considered Pakistani tailoring.', cta: 'pakistani' },
+    { image: IMG + 'premium-11-1.jpg', eyebrow: 'Festive 2026',      title: 'Quietly',   accent: 'Regal',    sub: 'Pieces meant for moments you want to remember.', cta: 'premium' },
   ];
   const [active, setActive] = useState(0);
   // Same pause-when-hidden treatment as AnnouncementBar.
@@ -837,10 +934,10 @@ function Hero() {
               {slides[active].sub}
             </p>
             <div className="flex flex-wrap gap-3 animate-slideUp" style={{ animationDelay: '360ms', animationFillMode: 'both' }}>
-              <button onClick={() => navigate('category', 'all')} className="px-8 py-4 text-white text-[11px] tracking-[0.25em] uppercase font-medium transition-all duration-300 hover:opacity-90" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
+              <button onClick={() => navigate('category', slides[active].cta || 'premium')} className="px-8 py-4 text-white text-[11px] tracking-[0.25em] uppercase font-medium transition-all duration-300 hover:opacity-90" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
                 Shop Now
               </button>
-              <button onClick={() => navigate('category', 'newarrivals')} className="px-8 py-4 text-[11px] tracking-[0.25em] uppercase font-light transition-all duration-300" style={{ border: '1px solid #1F1A14', color: '#1F1A14', borderRadius: '4px' }}>
+              <button onClick={() => navigate('category', 'all')} className="px-8 py-4 text-[11px] tracking-[0.25em] uppercase font-light transition-all duration-300" style={{ border: '1px solid #1F1A14', color: '#1F1A14', borderRadius: '4px' }}>
                 Explore Collection
               </button>
             </div>
@@ -860,12 +957,16 @@ function ProductCard({ product }) {
   const [hover, setHover] = useState(false);
   const isWished = wishlist.includes(product.id);
   const hasSale = product.salePrice && product.salePrice < product.price;
+  const soldOut = product.stock === 0;
   // Hover-swap image only renders on devices that actually hover.
   // Touch devices never see it, so don't ship the bytes.
   const hoverImg = SUPPORTS_HOVER ? product.images[1] : null;
   const mouseHandlers = SUPPORTS_HOVER
     ? { onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false) }
     : {};
+  // Show colour swatches under the card when the product is part of a multi-colour group.
+  const peers = product.groupId ? peersOf(product) : [];
+  const showSwatches = peers.length > 1;
 
   return (
     <div className="group cursor-pointer" {...mouseHandlers}>
@@ -875,13 +976,18 @@ function ProductCard({ product }) {
         boxShadow: hover ? '0 12px 28px -10px rgba(31, 26, 20, 0.18)' : '0 2px 8px -2px rgba(31, 26, 20, 0.06)',
       }}>
         <div className="relative aspect-[4/5] overflow-hidden" style={{ backgroundColor: '#F6F0E5' }}>
-          <DiscountBadge priceInr={product.price} salePriceInr={product.salePrice} />
-          {product.isNew && !hasSale && (
+          {!soldOut && <DiscountBadge priceInr={product.price} salePriceInr={product.salePrice} />}
+          {soldOut && (
+            <div className="absolute top-3 left-3 z-10 px-2.5 py-1 text-white text-[10px] tracking-[0.2em] uppercase font-medium shadow-sm" style={{ backgroundColor: '#6B5F4F', borderRadius: '4px' }}>
+              Sold Out
+            </div>
+          )}
+          {!soldOut && product.isNew && !hasSale && (
             <div className="absolute top-3 left-3 z-10 px-2.5 py-1 text-white text-[10px] tracking-[0.2em] uppercase font-light" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
               New
             </div>
           )}
-          {typeof product.stock === 'number' && product.stock > 0 && product.stock <= 5 && (
+          {!soldOut && typeof product.stock === 'number' && product.stock > 0 && product.stock <= 5 && (
             <div className="absolute top-3 left-3 z-10 px-2.5 py-1 text-[10px] tracking-[0.18em] uppercase font-medium shadow-sm" style={{ backgroundColor: '#FBF8F3', color: '#7B1E28', borderRadius: '4px', marginTop: (hasSale || product.isNew) ? '34px' : '0' }}>
               Only {product.stock} left
             </div>
@@ -892,7 +998,7 @@ function ProductCard({ product }) {
             sizes="(min-width: 1024px) 33vw, 50vw"
             onClick={() => navigate('product', product.id)}
             className="absolute inset-0 w-full h-full object-cover transition-all duration-[1100ms] group-hover:scale-[1.04]"
-            style={{ opacity: hover && hoverImg ? 0 : 1 }}
+            style={{ opacity: hover && hoverImg ? 0 : 1, filter: soldOut ? 'grayscale(40%)' : 'none' }}
           />
           {hoverImg && (
             <ProductImage
@@ -901,7 +1007,7 @@ function ProductCard({ product }) {
               sizes="(min-width: 1024px) 33vw, 50vw"
               onClick={() => navigate('product', product.id)}
               className="absolute inset-0 w-full h-full object-cover transition-all duration-[1100ms]"
-              style={{ opacity: hover ? 1 : 0 }}
+              style={{ opacity: hover ? 1 : 0, filter: soldOut ? 'grayscale(40%)' : 'none' }}
             />
           )}
 
@@ -914,33 +1020,53 @@ function ProductCard({ product }) {
             <Heart className="w-4 h-4" style={{ fill: isWished ? '#7B1E28' : 'none', stroke: isWished ? '#7B1E28' : '#1F1A14' }} strokeWidth={1.5} />
           </button>
 
-          {/* Quick add — desktop only, one tap per size */}
-          <div className="absolute bottom-3 inset-x-3 transition-all duration-500 hidden sm:block" style={{ transform: hover ? 'translateY(0)' : 'translateY(calc(100% + 16px))', opacity: hover ? 1 : 0 }}>
-            <div className="flex items-center gap-1 p-1.5" style={{ backgroundColor: 'rgba(31, 26, 20, 0.92)', borderRadius: '6px', backdropFilter: 'blur(6px)' }}>
-              <span className="text-[9px] tracking-[0.22em] uppercase font-light pl-2 pr-1 shrink-0" style={{ color: 'rgba(246, 240, 229, 0.65)' }}>Add</span>
-              {product.sizes.map((size) => (
-                <button
-                  key={size}
-                  onClick={(e) => { e.stopPropagation(); addToCart(product, size); }}
-                  className="flex-1 py-1.5 text-[11px] font-medium tracking-wider text-white transition-colors"
-                  style={{ borderRadius: '4px', backgroundColor: 'transparent' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.16)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-                  aria-label={`Add size ${size} to bag`}
-                >
-                  {size}
-                </button>
-              ))}
+          {/* Quick add — desktop only, one tap per size. Hidden for sold-out items. */}
+          {!soldOut && (
+            <div className="absolute bottom-3 inset-x-3 transition-all duration-500 hidden sm:block" style={{ transform: hover ? 'translateY(0)' : 'translateY(calc(100% + 16px))', opacity: hover ? 1 : 0 }}>
+              <div className="flex items-center gap-1 p-1.5" style={{ backgroundColor: 'rgba(31, 26, 20, 0.92)', borderRadius: '6px', backdropFilter: 'blur(6px)' }}>
+                <span className="text-[9px] tracking-[0.22em] uppercase font-light pl-2 pr-1 shrink-0" style={{ color: 'rgba(246, 240, 229, 0.65)' }}>Add</span>
+                {product.sizes.map((size) => (
+                  <button
+                    key={size}
+                    onClick={(e) => { e.stopPropagation(); addToCart(product, size); }}
+                    className="flex-1 py-1.5 text-[11px] font-medium tracking-wider text-white transition-colors"
+                    style={{ borderRadius: '4px', backgroundColor: 'transparent' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.16)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    aria-label={`Add size ${size} to bag`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div onClick={() => navigate('product', product.id)} className="p-3 sm:p-4 space-y-1">
           <h3 className="text-[13px] sm:text-sm font-light leading-snug line-clamp-2 transition-colors group-hover:text-[#7B1E28]" style={{ color: '#1F1A14' }}>
             {product.name}
           </h3>
-          <div className="text-[10px] sm:text-[11px] tracking-[0.14em] uppercase font-light" style={{ color: '#A89888' }}>{product.fabric}</div>
+          <div className="text-[10px] sm:text-[11px] tracking-[0.14em] uppercase font-light line-clamp-1" style={{ color: '#A89888' }}>{product.fabric}</div>
           <Price priceInr={product.price} salePriceInr={product.salePrice} size="sm" />
+          {showSwatches && (
+            <div className="flex items-center gap-1.5 pt-1.5" aria-label={`${peers.length} colours available`} onClick={(e) => e.stopPropagation()}>
+              {peers.map((peer) => (
+                <button
+                  key={peer.id}
+                  onClick={(e) => { e.stopPropagation(); navigate('product', peer.id); }}
+                  title={peer.colorName || ''}
+                  className="w-3.5 h-3.5 rounded-full border transition-transform hover:scale-110"
+                  style={{
+                    backgroundColor: peer.colorHex || '#E8DDC9',
+                    borderColor: peer.id === product.id ? '#1F1A14' : '#E8DDC9',
+                    boxShadow: peer.id === product.id ? '0 0 0 1.5px #FBF8F3 inset' : 'none',
+                  }}
+                  aria-label={peer.colorName || 'Colour variant'}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -978,7 +1104,7 @@ function EditorialBanner() {
     <section style={{ backgroundColor: '#1F1A14' }}>
       <div className="max-w-[1440px] mx-auto grid lg:grid-cols-2 min-h-[440px] sm:min-h-[500px] lg:min-h-[560px]">
         <div className="relative h-[320px] sm:h-[400px] lg:h-auto order-1 lg:order-none overflow-hidden">
-          <ProductImage src={IMG + 'Coffee-Shaded-Embroidered-Cotton-Suit-Set.jpeg'} alt="Editorial" sizes="(min-width: 1024px) 50vw, 100vw" className="absolute inset-0 w-full h-full object-cover" />
+          <ProductImage src={IMG + 'premium-2-1.jpg'} alt="Editorial" sizes="(min-width: 1024px) 50vw, 100vw" className="absolute inset-0 w-full h-full object-cover object-top" />
         </div>
         <div className="flex items-center justify-center px-6 py-12 sm:p-12 lg:p-20 order-2" style={{ color: '#F6F0E5' }}>
           <div className="max-w-md">
@@ -996,31 +1122,6 @@ function EditorialBanner() {
               Our Story
             </button>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SaleStrip({ products }) {
-  const { navigate } = useApp();
-  return (
-    <section className="py-14 sm:py-20" style={{ backgroundColor: '#F6F0E5' }}>
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
-        <div className="text-center mb-8 sm:mb-12">
-          <div className="inline-block px-4 py-1.5 text-white text-[10px] tracking-[0.28em] uppercase mb-5 font-medium shadow-sm" style={{ backgroundColor: '#7B1E28', borderRadius: '20px' }}>Limited Time</div>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl mb-2 sm:mb-3" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>
-            The <em className="italic" style={{ color: '#7B1E28' }}>Sale</em> Edit
-          </h2>
-          <p className="font-light text-sm" style={{ color: '#6B5F4F' }}>Selected pieces, gently priced</p>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
-          {products.slice(0, 4).map((p) => <ProductCard key={p.id} product={p} />)}
-        </div>
-        <div className="text-center mt-10 sm:mt-12">
-          <button onClick={() => navigate('category', 'sale')} className="px-9 sm:px-10 py-3.5 sm:py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
-            Shop Sale
-          </button>
         </div>
       </div>
     </section>
@@ -1140,21 +1241,182 @@ function Newsletter() {
 }
 
 function HomePage() {
-  const newArrivals = useMemo(() => PRODUCTS.filter((p) => p.isNew), []);
-  const coords = useMemo(() => PRODUCTS.filter((p) => p.category === 'coords'), []);
-  const stitched = useMemo(() => PRODUCTS.filter((p) => p.category === 'stitched'), []);
-  const sale = useMemo(() => PRODUCTS.filter((p) => p.salePrice && p.salePrice < p.price), []);
+  // Each scroll-down section pulls from a single category and collapses color
+  // peers so we don't show the same design five times in a row.
+  const premium    = useMemo(() => uniqueByGroup(PRODUCTS.filter((p) => p.category === 'premium')),    []);
+  const coords     = useMemo(() => uniqueByGroup(PRODUCTS.filter((p) => p.category === 'coords')),     []);
+  const pakistani  = useMemo(() => uniqueByGroup(PRODUCTS.filter((p) => p.category === 'pakistani')),  []);
+  const unstitched = useMemo(() => uniqueByGroup(PRODUCTS.filter((p) => p.category === 'unstitched')), []);
   return (
     <main>
       <Hero />
-      <CategoryPreview title="New Arrivals" sub="Fresh from the atelier" products={newArrivals} target="newarrivals" />
+      <CollectionsScroller />
+      <CategoryPreview title="Premium Collection" sub="Our luxury line · in stock now" products={premium}    target="premium" />
       <EditorialBanner />
-      <CategoryPreview title="The Coord Edit" sub="Matching sets" products={coords} target="coords" />
-      <SaleStrip products={sale} />
-      <CategoryPreview title="Stitched Collection" sub="Ready to wear" products={stitched} target="stitched" />
+      <CategoryPreview title="Pakistani Ready-to-Wear" sub="Stitched · intricate detailing" products={pakistani}  target="pakistani" />
+      <CategoryPreview title="Co-ord Sets"           sub="Solid Farshi · five colourways"  products={coords}     target="coords" />
+      <CategoryPreview title="Unstitched Collection"  sub="Karachi prints · stitch to fit"   products={unstitched} target="unstitched" />
+      <ClientDiaries />
       <ValueProps />
       <Newsletter />
     </main>
+  );
+}
+
+/* ================================================================
+   COLLECTIONS SCROLLER — Galoir-style category tiles right under hero.
+   Horizontally scrollable on mobile, 4-up grid on lg. Each tile is
+   a hero image + label that navigates to the category.
+   ================================================================ */
+function CollectionsScroller() {
+  const { navigate } = useApp();
+  const tiles = [
+    { label: 'Premium',    sub: 'Couture · in stock',   image: IMG + 'premium-13-1.jpg',  target: 'premium' },
+    { label: 'Co-ord Sets', sub: 'Five colourways',     image: IMG + 'coord-1c-1.jpg',    target: 'coords' },
+    { label: 'Pakistani',  sub: 'Ready to wear',        image: IMG + 'pakistani-1-1.jpg', target: 'pakistani' },
+    { label: 'Unstitched', sub: 'Stitch to your fit',   image: IMG + 'unstitched-12-1.jpg', target: 'unstitched' },
+  ];
+  return (
+    <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-14 lg:pt-16 pb-2 sm:pb-4">
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="text-[10px] sm:text-[11px] tracking-[0.32em] uppercase font-light mb-2" style={{ color: '#7B1E28' }}>The Collections</div>
+        <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>
+          Browse the Atelier
+        </h2>
+      </div>
+      {/* Horizontal scroll on small screens, grid on lg. snap-x for thumbed feel. */}
+      <div className="flex gap-3 sm:gap-4 lg:grid lg:grid-cols-4 lg:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 lg:overflow-visible scroll-pl-4">
+        {tiles.map((t) => (
+          <button
+            key={t.target}
+            onClick={() => navigate('category', t.target)}
+            className="group relative shrink-0 w-[68%] sm:w-[44%] lg:w-auto aspect-[4/5] overflow-hidden snap-start transition-shadow"
+            style={{ borderRadius: '14px', backgroundColor: '#F6F0E5', boxShadow: '0 2px 8px -2px rgba(31,26,20,0.06)' }}
+            aria-label={`Shop ${t.label}`}
+          >
+            <ProductImage
+              src={t.image}
+              alt={t.label}
+              sizes="(min-width: 1024px) 22vw, 70vw"
+              className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-[1100ms] group-hover:scale-[1.05]"
+            />
+            {/* Bottom gradient + label */}
+            <div className="absolute inset-x-0 bottom-0 px-4 sm:px-5 pt-12 pb-4 sm:pb-5 text-left" style={{ background: 'linear-gradient(to top, rgba(31,26,20,0.78) 0%, rgba(31,26,20,0.35) 60%, rgba(31,26,20,0) 100%)' }}>
+              <div className="text-[9px] sm:text-[10px] tracking-[0.3em] uppercase font-light mb-1" style={{ color: 'rgba(246,240,229,0.75)' }}>{t.sub}</div>
+              <div className="flex items-end justify-between gap-2">
+                <div className="font-serif text-xl sm:text-2xl lg:text-[26px]" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#F6F0E5' }}>{t.label}</div>
+                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" style={{ color: '#F6F0E5' }} strokeWidth={1.4} />
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ================================================================
+   CLIENT DIARIES — Our Events grid + Client Reviews mosaic +
+   Celebrity Review featured card. Sits between the category previews
+   and the value props on the home page.
+   ================================================================ */
+function ClientDiaries() {
+  const DIARIES = `${import.meta.env.BASE_URL}images/diaries/`;
+  const events  = [1, 2, 3, 4, 5, 6].map((i) => `${DIARIES}event-${i}.jpg`);
+  // Reviews mosaic — 12 selected from the 20 available to keep page weight reasonable.
+  const reviews = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => `${DIARIES}review-${i}.jpg`);
+  return (
+    <section className="py-14 sm:py-20 lg:py-24" style={{ backgroundColor: '#FBF8F3', borderTop: '1px solid #E8DDC9' }}>
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="text-center mb-10 sm:mb-14">
+          <div className="text-[10px] sm:text-[11px] tracking-[0.32em] uppercase font-light mb-3" style={{ color: '#7B1E28' }}>Client Diaries</div>
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>
+            Worn by <em className="italic" style={{ color: '#7B1E28' }}>you</em>
+          </h2>
+          <p className="font-light text-sm sm:text-base mt-3 sm:mt-4 max-w-xl mx-auto" style={{ color: '#6B5F4F' }}>
+            Moments from our atelier and the women who wear Label Aarfa beautifully.
+          </p>
+        </div>
+
+        {/* Celebrity Review — featured editorial card */}
+        <div className="relative overflow-hidden mb-12 sm:mb-16 grid lg:grid-cols-12 items-stretch min-h-[420px] sm:min-h-[500px] lg:min-h-[540px]" style={{ backgroundColor: '#1F1A14', borderRadius: '14px' }}>
+          {/* Image (full width on mobile, 7-col on lg) */}
+          <div className="relative aspect-[4/5] lg:aspect-auto lg:col-span-7 overflow-hidden">
+            <ProductImage
+              src={DIARIES + 'celebrity.jpg'}
+              alt="Celebrity spotted in Label Aarfa"
+              sizes="(min-width: 1024px) 58vw, 100vw"
+              className="absolute inset-0 w-full h-full object-cover object-top"
+            />
+            {/* Featured ribbon */}
+            <div className="absolute top-4 left-4 sm:top-5 sm:left-5 px-3 py-1.5 text-[10px] tracking-[0.28em] uppercase font-medium shadow-sm" style={{ backgroundColor: '#B8924A', color: '#1F1A14', borderRadius: '4px' }}>
+              ★ Celebrity Spotted
+            </div>
+          </div>
+          {/* Quote */}
+          <div className="lg:col-span-5 flex items-center px-6 sm:px-10 lg:px-12 py-10 lg:py-14" style={{ color: '#F6F0E5' }}>
+            <div className="max-w-md">
+              <Sparkles className="w-5 h-5 mb-4" style={{ color: '#B8924A' }} strokeWidth={1.2} />
+              <div className="text-[10px] sm:text-[11px] tracking-[0.32em] uppercase mb-4" style={{ color: '#B8924A' }}>As Seen On</div>
+              <h3 className="font-serif text-2xl sm:text-3xl lg:text-[34px] leading-[1.15] mb-5" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}>
+                A piece from the <em className="italic" style={{ color: '#B8924A' }}>atelier</em>, in the spotlight.
+              </h3>
+              <p className="text-sm sm:text-base font-light leading-relaxed" style={{ color: 'rgba(246,240,229,0.78)' }}>
+                When favourite faces choose Label Aarfa, we celebrate the craft and the artisans behind every stitch.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Our Events */}
+        <div className="mb-12 sm:mb-16">
+          <div className="flex items-end justify-between mb-6 sm:mb-8 gap-4">
+            <div>
+              <div className="text-[10px] sm:text-[11px] tracking-[0.28em] uppercase font-light mb-2" style={{ color: '#7B1E28' }}>Our Events</div>
+              <h3 className="font-serif text-2xl sm:text-3xl lg:text-4xl" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>
+                Moments from the atelier
+              </h3>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
+            {events.map((src, i) => (
+              <div key={i} className="aspect-[4/5] overflow-hidden" style={{ borderRadius: '10px', backgroundColor: '#F6F0E5' }}>
+                <ProductImage
+                  src={src}
+                  alt={`Atelier event ${i + 1}`}
+                  sizes="(min-width: 1024px) 22vw, 50vw"
+                  className="w-full h-full object-cover hover:scale-[1.04] transition-transform duration-[1100ms]"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Client Reviews mosaic */}
+        <div>
+          <div className="flex items-end justify-between mb-6 sm:mb-8 gap-4">
+            <div>
+              <div className="text-[10px] sm:text-[11px] tracking-[0.28em] uppercase font-light mb-2" style={{ color: '#7B1E28' }}>Client Reviews</div>
+              <h3 className="font-serif text-2xl sm:text-3xl lg:text-4xl" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: '#1F1A14' }}>
+                Loved & lived in
+              </h3>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {reviews.map((src, i) => (
+              <div key={i} className="aspect-square overflow-hidden" style={{ borderRadius: '10px', backgroundColor: '#F6F0E5' }}>
+                <ProductImage
+                  src={src}
+                  alt={`Client review ${i + 1}`}
+                  sizes="(min-width: 1024px) 22vw, 50vw"
+                  className="w-full h-full object-cover hover:scale-[1.04] transition-transform duration-[1100ms]"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -1170,19 +1432,52 @@ function CategoryPage({ slug }) {
 
   const filtered = useMemo(() => {
     let list = [...PRODUCTS];
-    if (slug === 'newarrivals') list = list.filter((p) => p.isNew);
-    else if (slug === 'sale') list = list.filter((p) => p.salePrice && p.salePrice < p.price);
-    else if (slug !== 'all') list = list.filter((p) => p.category === slug);
+    if (slug === 'premium') {
+      // Active premium line first (in-stock new pieces), then the sold-out
+      // legacy edit below so existing wishlists/share-links still resolve.
+      list = list.filter((p) => p.category === 'premium' || p.category === 'premium-legacy');
+    } else if (slug === 'newarrivals') {
+      list = list.filter((p) => p.isNew && p.category !== 'premium-legacy');
+    } else if (slug === 'sale') {
+      // Only buyable sale items — sold-out legacy stays on the Premium archive
+      // grid, not here.
+      list = list.filter((p) => p.salePrice && p.salePrice < p.price && p.stock > 0);
+    } else if (slug === 'all') {
+      // 'all' keeps everything but hides legacy from the headline grid; users
+      // can still reach them via direct product URLs.
+      list = list.filter((p) => p.category !== 'premium-legacy');
+    } else {
+      list = list.filter((p) => p.category === slug);
+    }
+    list = uniqueByGroup(list);   // collapse color peers to one card per group
     if (sizeFilter) list = list.filter((p) => p.sizes.includes(sizeFilter));
     list = list.filter((p) => (p.salePrice || p.price) <= priceMax);
+    // Always show in-stock pieces before sold-out within a sort group.
+    list.sort((a, b) => (a.stock === 0 ? 1 : 0) - (b.stock === 0 ? 1 : 0));
     if (sortBy === 'price-asc') list.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
     if (sortBy === 'price-desc') list.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
     if (sortBy === 'newest') list.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
     return list;
   }, [slug, sortBy, sizeFilter, priceMax]);
 
-  const titles = { stitched: 'Stitched Collection', newarrivals: 'New Arrivals', coords: 'Coords', sale: 'The Sale Edit', all: 'All Products' };
-  const subs = { stitched: 'Ready to wear, made with care', newarrivals: 'Fresh from the atelier', coords: 'Matching sets, effortlessly composed', sale: 'Selected pieces, gently priced', all: `Every piece in the Label Aarfa collection (${PRODUCTS.length})` };
+  const titles = {
+    premium: 'Premium Collection',
+    coords: 'Co-ord Sets',
+    pakistani: 'Pakistani Ready-to-Wear',
+    unstitched: 'Unstitched Collection',
+    newarrivals: 'New Arrivals',
+    sale: 'The Sale Edit',
+    all: 'All Products',
+  };
+  const subs = {
+    premium: 'Our luxury line — small-batch couture',
+    coords: 'Matching sets, effortlessly composed',
+    pakistani: 'Stitched suits with intricate Pakistani detailing',
+    unstitched: 'Premium fabric sets, stitch to your fit',
+    newarrivals: 'Fresh from the atelier',
+    sale: 'Selected pieces, gently priced',
+    all: `Every piece in the Label Aarfa collection`,
+  };
 
   return (
     <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10 lg:py-14">
@@ -1294,28 +1589,51 @@ function ProductPage({ id }) {
   const [tab, setTab] = useState('description');
   const [sizeError, setSizeError] = useState(false);
 
+  // Reset the gallery + selection whenever the id changes (e.g. user clicks a
+  // colour swatch and we navigate to the peer variant).
+  useEffect(() => { setMainImage(0); setSize(null); setSizeError(false); setQty(1); }, [id]);
+
   if (!product) return <div className="py-20 text-center">Product not found.</div>;
   const isWished = wishlist.includes(product.id);
-  const related = PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
+  const soldOut = product.stock === 0;
+  const peers = product.groupId ? peersOf(product) : [];
+  const showSwatches = peers.length > 1;
+  // Related strip — exclude both this product and any of its colour peers.
+  const peerIds = new Set(peers.map((p) => p.id));
+  const related = uniqueByGroup(
+    PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id && !peerIds.has(p.id))
+  ).slice(0, 4);
 
-  const handleAdd = () => { if (!size) { setSizeError(true); return; } addToCart(product, size, qty); };
-  const handleBuyNow = () => { if (!size) { setSizeError(true); return; } addToCart(product, size, qty); setTimeout(() => { setCartOpen(false); navigate('checkout'); }, 200); };
+  const handleAdd = () => { if (soldOut) return; if (!size) { setSizeError(true); return; } addToCart(product, size, qty); };
+  const handleBuyNow = () => { if (soldOut) return; if (!size) { setSizeError(true); return; } addToCart(product, size, qty); setTimeout(() => { setCartOpen(false); navigate('checkout'); }, 200); };
 
   return (
     <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-5 sm:py-8 lg:py-12">
-      <div className="text-[10px] sm:text-[11px] tracking-[0.18em] uppercase font-light mb-5 sm:mb-6" style={{ color: '#6B5F4F' }}>
-        <button onClick={() => navigate('home')} className="hover:opacity-70">Home</button>
-        <span className="mx-2">/</span>
-        <button onClick={() => navigate('category', product.category)} className="hover:opacity-70">{product.category}</button>
-        <span className="mx-2">/</span>
-        <span style={{ color: '#1F1A14' }}>{product.name}</span>
-      </div>
+      {(() => {
+        // Friendly breadcrumb label per category — falls back to slug.
+        const catLabels = { premium: 'Premium', 'premium-legacy': 'Premium (Archive)', coords: 'Co-ord Sets', pakistani: 'Pakistani Ready-to-Wear', unstitched: 'Unstitched' };
+        const catSlug = product.category === 'premium-legacy' ? 'premium' : product.category;
+        return (
+          <div className="text-[10px] sm:text-[11px] tracking-[0.18em] uppercase font-light mb-5 sm:mb-6" style={{ color: '#6B5F4F' }}>
+            <button onClick={() => navigate('home')} className="hover:opacity-70">Home</button>
+            <span className="mx-2">/</span>
+            <button onClick={() => navigate('category', catSlug)} className="hover:opacity-70">{catLabels[product.category] || product.category}</button>
+            <span className="mx-2">/</span>
+            <span style={{ color: '#1F1A14' }}>{product.name}</span>
+          </div>
+        );
+      })()}
 
       <div className="grid lg:grid-cols-2 gap-6 sm:gap-10 lg:gap-14">
         <div className="space-y-3 sm:space-y-4">
           <div className="relative aspect-[4/5] overflow-hidden" style={{ backgroundColor: '#F6F0E5', borderRadius: '12px' }}>
-            <DiscountBadge priceInr={product.price} salePriceInr={product.salePrice} />
-            <ProductImage src={product.images[mainImage]} alt={product.name} sizes="(min-width: 1024px) 45vw, 100vw" loading="eager" fetchPriority="high" className="absolute inset-0 w-full h-full object-cover" />
+            {!soldOut && <DiscountBadge priceInr={product.price} salePriceInr={product.salePrice} />}
+            {soldOut && (
+              <div className="absolute top-4 left-4 z-10 px-3 py-1.5 text-white text-[10px] tracking-[0.28em] uppercase font-medium shadow-sm" style={{ backgroundColor: '#6B5F4F', borderRadius: '4px' }}>
+                Sold Out
+              </div>
+            )}
+            <ProductImage src={product.images[mainImage]} alt={product.name} sizes="(min-width: 1024px) 45vw, 100vw" loading="eager" fetchPriority="high" className="absolute inset-0 w-full h-full object-cover" style={{ filter: soldOut ? 'grayscale(35%)' : 'none' }} />
             {product.images.length > 1 && (
               <>
                 <button onClick={() => setMainImage((mainImage - 1 + product.images.length) % product.images.length)} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shadow-md transition-colors" style={{ backgroundColor: '#FBF8F3', borderRadius: '50%' }} aria-label="Previous">
@@ -1368,6 +1686,45 @@ function ProductPage({ id }) {
 
           <p className="text-sm leading-relaxed font-light" style={{ color: '#6B5F4F' }}>{product.description}</p>
 
+          {showSwatches && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-[11px] tracking-[0.22em] uppercase font-medium" style={{ color: '#1F1A14' }}>
+                  Colour {product.colorName ? <span className="ml-2 font-light tracking-normal normal-case" style={{ color: '#6B5F4F' }}>· {product.colorName}</span> : null}
+                </div>
+                <div className="text-[10px] tracking-[0.18em] uppercase font-light" style={{ color: '#A89888' }}>{peers.length} available</div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2.5">
+                {peers.map((peer) => {
+                  const active = peer.id === product.id;
+                  const out = peer.stock === 0;
+                  return (
+                    <button
+                      key={peer.id}
+                      onClick={() => !active && navigate('product', peer.id)}
+                      title={`${peer.colorName || 'Colour'}${out ? ' — sold out' : ''}`}
+                      aria-label={peer.colorName || 'Colour variant'}
+                      className="relative w-10 h-10 rounded-full transition-all"
+                      style={{
+                        backgroundColor: peer.colorHex || '#E8DDC9',
+                        border: active ? '2px solid #1F1A14' : '1px solid #E8DDC9',
+                        boxShadow: active ? '0 0 0 2px #FBF8F3 inset' : '0 1px 3px -1px rgba(31,26,20,0.15)',
+                        opacity: out ? 0.55 : 1,
+                        cursor: active ? 'default' : 'pointer',
+                      }}
+                    >
+                      {out && (
+                        <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+                          <span className="block w-[140%] h-[2px] rotate-45" style={{ backgroundColor: 'rgba(31,26,20,0.55)' }} />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="text-[11px] tracking-[0.22em] uppercase font-medium" style={{ color: '#1F1A14' }}>Size</div>
@@ -1375,12 +1732,14 @@ function ProductPage({ id }) {
             </div>
             <div className="grid grid-cols-6 gap-2">
               {product.sizes.map((s) => (
-                <button key={s} onClick={() => { setSize(s); setSizeError(false); }} className="py-3 text-xs tracking-wider transition-all" style={{
+                <button key={s} onClick={() => { if (soldOut) return; setSize(s); setSizeError(false); }} disabled={soldOut} className="py-3 text-xs tracking-wider transition-all" style={{
                   backgroundColor: size === s ? '#1F1A14' : '#FBF8F3',
                   color: size === s ? 'white' : '#1F1A14',
                   border: '1px solid ' + (size === s ? '#1F1A14' : '#E8DDC9'),
                   borderRadius: '8px',
                   boxShadow: size === s ? '0 2px 8px -2px rgba(31,26,20,0.15)' : 'none',
+                  opacity: soldOut ? 0.55 : 1,
+                  cursor: soldOut ? 'not-allowed' : 'pointer',
                 }}>
                   {s}
                 </button>
@@ -1399,20 +1758,39 @@ function ProductPage({ id }) {
           </div>
 
           <div className="space-y-3 pt-2 sm:pt-4">
-            <button onClick={handleAdd} className="w-full py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
-              Add to Bag
-            </button>
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={handleBuyNow} className="py-4 text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-colors shadow-sm" style={{ backgroundColor: '#B8924A', color: '#1F1A14', borderRadius: '4px' }}>
-                Buy Now
-              </button>
-              <button onClick={() => toggleWishlist(product.id)} className="py-4 text-[11px] sm:text-xs tracking-[0.25em] uppercase font-light transition-all flex items-center justify-center gap-2" style={{ border: '1px solid #1F1A14', color: '#1F1A14', backgroundColor: 'transparent', borderRadius: '4px' }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1F1A14'; e.currentTarget.style.color = 'white'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#1F1A14'; }}>
-                <Heart className="w-4 h-4" style={{ fill: isWished ? '#7B1E28' : 'none' }} strokeWidth={1.5} />
-                <span className="hidden sm:inline">{isWished ? 'Saved' : 'Wishlist'}</span>
-              </button>
-            </div>
+            {soldOut ? (
+              <>
+                <button disabled className="w-full py-4 text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium shadow-sm" style={{ backgroundColor: '#E8DDC9', color: '#6B5F4F', borderRadius: '4px', cursor: 'not-allowed' }}>
+                  Sold Out
+                </button>
+                <button onClick={() => toggleWishlist(product.id)} className="w-full py-4 text-[11px] sm:text-xs tracking-[0.25em] uppercase font-light transition-all flex items-center justify-center gap-2" style={{ border: '1px solid #1F1A14', color: '#1F1A14', backgroundColor: 'transparent', borderRadius: '4px' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1F1A14'; e.currentTarget.style.color = 'white'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#1F1A14'; }}>
+                  <Heart className="w-4 h-4" style={{ fill: isWished ? '#7B1E28' : 'none' }} strokeWidth={1.5} />
+                  {isWished ? 'Saved to Wishlist' : 'Save for Later'}
+                </button>
+                <p className="text-[12px] font-light text-center pt-1" style={{ color: '#6B5F4F' }}>
+                  This piece is from our archive and is no longer in stock. Browse the <button onClick={() => navigate('category', 'premium')} className="underline" style={{ color: '#7B1E28' }}>current Premium edit</button>.
+                </p>
+              </>
+            ) : (
+              <>
+                <button onClick={handleAdd} className="w-full py-4 text-white text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-opacity hover:opacity-90 shadow-sm" style={{ backgroundColor: '#1F1A14', borderRadius: '4px' }}>
+                  Add to Bag
+                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={handleBuyNow} className="py-4 text-[11px] sm:text-xs tracking-[0.25em] uppercase font-medium transition-colors shadow-sm" style={{ backgroundColor: '#B8924A', color: '#1F1A14', borderRadius: '4px' }}>
+                    Buy Now
+                  </button>
+                  <button onClick={() => toggleWishlist(product.id)} className="py-4 text-[11px] sm:text-xs tracking-[0.25em] uppercase font-light transition-all flex items-center justify-center gap-2" style={{ border: '1px solid #1F1A14', color: '#1F1A14', backgroundColor: 'transparent', borderRadius: '4px' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1F1A14'; e.currentTarget.style.color = 'white'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#1F1A14'; }}>
+                    <Heart className="w-4 h-4" style={{ fill: isWished ? '#7B1E28' : 'none' }} strokeWidth={1.5} />
+                    <span className="hidden sm:inline">{isWished ? 'Saved' : 'Wishlist'}</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="pt-6 sm:pt-7 space-y-3" style={{ borderTop: '1px solid #E8DDC9' }}>
@@ -1581,7 +1959,7 @@ function SearchOverlay() {
           <div className="mt-8 sm:mt-10">
             <div className="text-[11px] tracking-[0.22em] uppercase font-light mb-4" style={{ color: '#6B5F4F' }}>Popular</div>
             <div className="flex flex-wrap gap-2">
-              {['Kurta', 'Coords', 'Cotton', 'Silk', 'Embroidered', 'Lavender'].map((t) => (
+              {['Premium', 'Pakistani', 'Coord', 'Unstitched', 'Crepe', 'Karachi'].map((t) => (
                 <button key={t} onClick={() => setQ(t)} className="px-5 py-2.5 text-xs transition-all" style={{ border: '1px solid #E8DDC9', borderRadius: '20px', color: '#1F1A14', backgroundColor: '#FFFFFF' }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1F1A14'; e.currentTarget.style.color = 'white'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.color = '#1F1A14'; }}>
@@ -2773,9 +3151,10 @@ function Footer() {
           </div>
 
           <FooterCol title="Shop" links={[
-            { label: 'New Arrivals', onClick: () => navigate('category', 'newarrivals') },
-            { label: 'Stitched Collection', onClick: () => navigate('category', 'stitched') },
-            { label: 'Coords', onClick: () => navigate('category', 'coords') },
+            { label: 'Premium Collection', onClick: () => navigate('category', 'premium') },
+            { label: 'Co-ord Sets', onClick: () => navigate('category', 'coords') },
+            { label: 'Pakistani Ready-to-Wear', onClick: () => navigate('category', 'pakistani') },
+            { label: 'Unstitched Collection', onClick: () => navigate('category', 'unstitched') },
             { label: 'All Products', onClick: () => navigate('category', 'all') },
             { label: 'Sale', onClick: () => navigate('category', 'sale') },
           ]} />

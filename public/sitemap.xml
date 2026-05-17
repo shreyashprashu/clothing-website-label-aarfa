@@ -8,13 +8,9 @@
     <priority>1.0</priority>
   </url>
 
+  <!-- Active category collections -->
   <url>
-    <loc>https://www.labelaarfa.com/collections/new-arrivals</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/collections/stitched</loc>
+    <loc>https://www.labelaarfa.com/collections/premium</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -24,9 +20,24 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.labelaarfa.com/collections/sale</loc>
+    <loc>https://www.labelaarfa.com/collections/pakistani</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.labelaarfa.com/collections/unstitched</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.labelaarfa.com/collections/new-arrivals</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.labelaarfa.com/collections/sale</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.labelaarfa.com/collections/all</loc>
@@ -76,87 +87,31 @@
     <priority>0.3</priority>
   </url>
 
-  <url>
-    <loc>https://www.labelaarfa.com/products/luxury-wine-rayon-tunic-printed-palazzo</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-    <image:image><image:loc>https://www.labelaarfa.com/wp-content/uploads/2026/03/Luxury-Wine-Rayon-Tunic-Printed-Palazzo.jpeg</image:loc></image:image>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/brown-kurta-cream-heart-palazzo</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-    <image:image><image:loc>https://www.labelaarfa.com/wp-content/uploads/2026/03/Brown-Kurta-with-Cream-Heart-Printed-Palazzo-Set-for-Women.jpeg</image:loc></image:image>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/stitched-red-black-coord-set</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/designer-cords-set-women</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/coffee-embroidered-cotton-suit</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/jaipur-royal-blue-handloom-kurta</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/yellow-pashmina-aline-kurta-salwar</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/soft-crepe-kurta-tissue-silk-dupatta</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/viscose-muslin-embroidered-suit</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/office-baby-pink-cotton-kurta-set</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/floral-cotton-kurti-dupatta</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/designer-shirt-dupatta-casual-set</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/floral-silk-suit-women</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/ivory-kurta-blue-floral-embroidery</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/long-pakistani-cordset</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.labelaarfa.com/products/lavender-3-piece-stitched-dress</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
+  <!-- Premium Collection (active) -->
+  <url><loc>https://www.labelaarfa.com/products/sabrina-maroon-co-ord-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-1-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/mehnaaz-co-ord-set-with-dupatta</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-2-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/ayra-studded-co-ord-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-3-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/farinah-co-ord-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-4-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/raha-co-ord-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-5a-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/aliza-co-ord-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-6a-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/renee-printed-co-ord-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-7-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/mia-co-ord-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-8-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/rebecca-co-ord-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-9-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/ambrina-embroidered-co-ord-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-10-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/lyra-co-ord-set-with-dupatta</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-11-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/myra-polka-co-ord-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-12-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/faizah-royal-blue-lounge-co-ord-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/premium-13-1.jpg</image:loc></image:image></url>
+
+  <!-- Co-ord Sets -->
+  <url><loc>https://www.labelaarfa.com/products/solid-farshi-salwar-co-ord-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/coord-1a-1.jpg</image:loc></image:image></url>
+
+  <!-- Pakistani Ready-to-Wear -->
+  <url><loc>https://www.labelaarfa.com/products/designer-ajrakh-print-suit-set</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/pakistani-1-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/ombre-luxury-suit</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/pakistani-2-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/pakistani-cutwork-printed-suit</loc><changefreq>monthly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/pakistani-9a-1.jpg</image:loc></image:image></url>
+
+  <!-- Unstitched Collection -->
+  <url><loc>https://www.labelaarfa.com/products/unstitched-karachi-print-suit-edit-01</loc><changefreq>monthly</changefreq><priority>0.7</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/unstitched-1-1.jpg</image:loc></image:image></url>
+  <url><loc>https://www.labelaarfa.com/products/unstitched-party-wear-suit</loc><changefreq>monthly</changefreq><priority>0.7</priority><image:image><image:loc>https://www.labelaarfa.com/images/products/unstitched-20a-1.jpg</image:loc></image:image></url>
 
 </urlset>
