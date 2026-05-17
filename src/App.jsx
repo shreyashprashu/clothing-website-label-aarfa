@@ -1288,16 +1288,14 @@ function CategoryPreview({ title, sub, products, target }) {
 
 function EditorialBanner() {
   const { navigate } = useApp();
-  // Single image — reverted from the 3-slide carousel after the user
-  // judged the carousel imagery (premium-11-1 / 4-1 / 6a-1, then
-  // pakistani-9a-2 etc.) didn't suit the section. Back to the original
-  // premium-2-1.jpg (Mehnaaz Off White) that was here before any of the
-  // "upgrade" attempts.
+  // User-picked image: pakistani-2-1.jpg (Ombre Luxury Suit). Replaces the
+  // earlier Mehnaaz Off White (premium-2-1.jpg) and the various carousel
+  // experiments before it.
   return (
     <section style={{ backgroundColor: '#1F1A14' }}>
       <div className="max-w-[1440px] mx-auto grid lg:grid-cols-2 min-h-[440px] sm:min-h-[500px] lg:min-h-[560px]">
         <div className="relative h-[320px] sm:h-[400px] lg:h-auto order-1 lg:order-none overflow-hidden">
-          <ProductImage src={IMG + 'premium-2-1.jpg'} alt="Editorial" sizes="(min-width: 1024px) 50vw, 100vw" className="absolute inset-0 w-full h-full object-cover object-top" />
+          <ProductImage src={IMG + 'pakistani-2-1.jpg'} alt="Editorial" sizes="(min-width: 1024px) 50vw, 100vw" className="absolute inset-0 w-full h-full object-cover object-top" />
         </div>
         <div className="flex items-center justify-center px-6 py-12 sm:p-12 lg:p-20 order-2" style={{ color: '#F6F0E5' }}>
           <div className="max-w-md">
@@ -1798,7 +1796,7 @@ function FilterContent({ sizeFilter, setSizeFilter, priceMax, setPriceMax }) {
    PRODUCT PAGE
    ================================================================ */
 function ProductPage({ id }) {
-  const { navigate, addToCart, toggleWishlist, wishlist, setCartOpen, currency, getStock } = useApp();
+  const { navigate, addToCart, toggleWishlist, wishlist, setCartOpen, currency, getStock, showToast } = useApp();
   const product = PRODUCTS.find((p) => p.id === id);
   const [mainImage, setMainImage] = useState(0);
   const [size, setSize] = useState(null);
@@ -1969,10 +1967,38 @@ function ProductPage({ id }) {
           <div>
             <div className="text-[11px] tracking-[0.22em] uppercase font-medium mb-3" style={{ color: '#1F1A14' }}>Quantity</div>
             <div className="inline-flex items-center overflow-hidden" style={{ border: '1px solid #E8DDC9', borderRadius: '8px', backgroundColor: '#FBF8F3' }}>
-              <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 sm:w-11 sm:h-11 hover:bg-[#F6F0E5] transition-colors"><Minus className="w-4 h-4 mx-auto" /></button>
-              <div className="w-12 text-center font-medium">{qty}</div>
-              <button onClick={() => setQty(qty + 1)} className="w-10 h-10 sm:w-11 sm:h-11 hover:bg-[#F6F0E5] transition-colors"><Plus className="w-4 h-4 mx-auto" /></button>
+              <button
+                onClick={() => setQty(Math.max(1, qty - 1))}
+                disabled={qty <= 1 || soldOut}
+                className="w-10 h-10 sm:w-11 sm:h-11 hover:bg-[#F6F0E5] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Decrease quantity"
+              >
+                <Minus className="w-4 h-4 mx-auto" />
+              </button>
+              <div className="w-12 text-center font-medium" aria-live="polite">{qty}</div>
+              <button
+                onClick={() => {
+                  // Cap at LIVE stock, not the hardcoded seed — same source of
+                  // truth addToCart uses, so the qty in the picker can never
+                  // outrun what the cart will actually accept.
+                  if (typeof liveStock === 'number' && qty >= liveStock) {
+                    showToast(liveStock === 1 ? 'Only 1 available' : `Only ${liveStock} available`);
+                    return;
+                  }
+                  setQty(qty + 1);
+                }}
+                disabled={soldOut || (typeof liveStock === 'number' && qty >= liveStock)}
+                className="w-10 h-10 sm:w-11 sm:h-11 hover:bg-[#F6F0E5] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Increase quantity"
+              >
+                <Plus className="w-4 h-4 mx-auto" />
+              </button>
             </div>
+            {!soldOut && typeof liveStock === 'number' && qty >= liveStock && (
+              <div className="text-[11px] mt-2 font-light" style={{ color: '#7B1E28' }}>
+                Maximum available reached.
+              </div>
+            )}
           </div>
 
           <div className="space-y-3 pt-2 sm:pt-4">
@@ -2069,7 +2095,7 @@ function ProductPage({ id }) {
    CART DRAWER
    ================================================================ */
 function CartDrawer() {
-  const { cartOpen, setCartOpen, cart, updateQty, removeFromCart, currency, navigate } = useApp();
+  const { cartOpen, setCartOpen, cart, updateQty, removeFromCart, currency, navigate, getStock } = useApp();
   if (!cartOpen) return null;
   const subtotal = cart.reduce((a, b) => a + (b.product.salePrice || b.product.price) * b.quantity, 0);
   const isIntl = currency !== 'INR';
@@ -2114,14 +2140,35 @@ function CartDrawer() {
                       )}
                     </div>
                     <Price priceInr={item.product.price} salePriceInr={item.product.salePrice} size="sm" />
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="inline-flex items-center overflow-hidden" style={{ border: '1px solid #E8DDC9', borderRadius: '6px' }}>
-                        <button onClick={() => updateQty(item.key, -1)} className="w-7 h-7 hover:bg-[#F6F0E5]"><Minus className="w-3 h-3 mx-auto" /></button>
-                        <div className="w-8 text-center text-xs">{item.quantity}</div>
-                        <button onClick={() => updateQty(item.key, 1)} className="w-7 h-7 hover:bg-[#F6F0E5]"><Plus className="w-3 h-3 mx-auto" /></button>
-                      </div>
-                      <button onClick={() => removeFromCart(item.key)} className="text-[11px] underline" style={{ color: '#6B5F4F' }}>Remove</button>
-                    </div>
+                    {(() => {
+                      // Cap at live stock so the "+" button visually dims
+                      // when the customer has reserved the entire run of a
+                      // size. updateQty has the same guard, so the click is
+                      // still safe if the disabled state lags a tick behind
+                      // a stock refresh.
+                      const itemStock = getStock(item.product.id);
+                      const atMax = typeof itemStock === 'number' && item.quantity >= itemStock;
+                      return (
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="inline-flex items-center overflow-hidden" style={{ border: '1px solid #E8DDC9', borderRadius: '6px' }}>
+                            <button
+                              onClick={() => updateQty(item.key, -1)}
+                              disabled={item.quantity <= 1}
+                              className="w-7 h-7 hover:bg-[#F6F0E5] disabled:opacity-40 disabled:cursor-not-allowed"
+                              aria-label="Decrease quantity"
+                            ><Minus className="w-3 h-3 mx-auto" /></button>
+                            <div className="w-8 text-center text-xs" aria-live="polite">{item.quantity}</div>
+                            <button
+                              onClick={() => updateQty(item.key, 1)}
+                              disabled={atMax}
+                              className="w-7 h-7 hover:bg-[#F6F0E5] disabled:opacity-40 disabled:cursor-not-allowed"
+                              aria-label="Increase quantity"
+                            ><Plus className="w-3 h-3 mx-auto" /></button>
+                          </div>
+                          <button onClick={() => removeFromCart(item.key)} className="text-[11px] underline" style={{ color: '#6B5F4F' }}>Remove</button>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}
