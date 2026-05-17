@@ -17,15 +17,24 @@ const FROM = (process.env.FROM_EMAIL || 'Label Aarfa <onboarding@resend.dev>').t
 const SITE_URL = (process.env.SITE_URL || 'https://www.labelaarfa.com').replace(/\/$/, '');
 const LOGO_URL = `${SITE_URL}/logo-mark-email.png`;
 
-// Reusable branded header for every email. Centered logo + tagline. Keeps the
-// inbox preview consistent and gives the templates a single source of truth
-// for our "above the headline" branding.
+// Reusable branded header for every email. Logo on the left, brand wordmark
+// stacked on the right — table layout (not flex) for Outlook/Gmail safety.
+// Centered as a block by wrapping in a text-align: center div, which is what
+// every major email client honours for inline-block / fixed-width child tables.
 function brandHeader() {
   return `
-    <div style="text-align:center;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #E8DDC9">
-      <img src="${LOGO_URL}" alt="Label Aarfa" width="56" height="56" style="display:inline-block;width:56px;height:56px;border:0;margin-bottom:10px" />
-      <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:0.22em;font-weight:500;color:#1F1A14">LABEL AARFA</div>
-      <div style="font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#7B1E28;margin-top:6px">Fashion Redefined · Est. 2019</div>
+    <div style="text-align:center;margin:0 0 28px;padding-bottom:20px;border-bottom:1px solid #E8DDC9">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="border-collapse:collapse;margin:0 auto">
+        <tr>
+          <td valign="middle" style="padding-right:16px">
+            <img src="${LOGO_URL}" alt="Label Aarfa" width="56" height="40" style="display:block;width:56px;height:40px;border:0" />
+          </td>
+          <td valign="middle" style="text-align:left">
+            <div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:0.22em;font-weight:500;color:#1F1A14;line-height:1">LABEL AARFA</div>
+            <div style="font-size:10px;letter-spacing:0.32em;text-transform:uppercase;color:#7B1E28;margin-top:6px;line-height:1">Fashion Redefined · Est. 2019</div>
+          </td>
+        </tr>
+      </table>
     </div>`;
 }
 
@@ -152,12 +161,12 @@ export async function sendOrderAdminNotification({ order, items, address }) {
   <div style="font-family:Georgia,'Times New Roman',serif;max-width:640px;margin:0 auto;color:#1F1A14;background:#FBF8F3;padding:28px">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-bottom:24px;border-bottom:2px solid #7B1E28;padding-bottom:14px">
       <tr>
-        <td valign="middle" style="width:56px;padding-right:14px">
-          <img src="${LOGO_URL}" alt="Label Aarfa" width="44" height="44" style="display:block;width:44px;height:44px;border:0" />
+        <td valign="middle" style="width:72px;padding-right:16px">
+          <img src="${LOGO_URL}" alt="Label Aarfa" width="56" height="40" style="display:block;width:56px;height:40px;border:0" />
         </td>
         <td valign="middle">
-          <div style="font-size:20px;letter-spacing:0.18em;font-weight:500">LABEL AARFA</div>
-          <div style="font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:#7B1E28;margin-top:4px">New Order — Ship Required</div>
+          <div style="font-size:20px;letter-spacing:0.22em;font-weight:500;line-height:1">LABEL AARFA</div>
+          <div style="font-size:10px;letter-spacing:0.32em;text-transform:uppercase;color:#7B1E28;margin-top:6px;line-height:1">New Order — Ship Required</div>
         </td>
       </tr>
     </table>

@@ -1288,14 +1288,16 @@ function CategoryPreview({ title, sub, products, target }) {
 
 function EditorialBanner() {
   const { navigate } = useApp();
-  // 3-slide carousel using the largest-source premium edits we have. Each
-  // crossfades on a 5.5s interval, matched to the Hero cadence so the two
-  // moving sections don't feel like they're racing each other on screen.
-  // Pauses when the tab is hidden (same iOS-Safari-burst defence Hero uses).
+  // 3-slide carousel. Uses SECOND-position product images (the detail /
+  // alt-angle shots that aren't the primary card hero) so the editorial
+  // banner never repeats whatever's already showing in the Premium /
+  // Pakistani grid below. All three are 1200w sources, giving the
+  // 1280w WebP variant something near-native to upscale from. Pauses when
+  // the tab is hidden (same iOS-Safari-burst defence Hero uses).
   const slides = useMemo(() => ([
-    IMG + 'premium-11-1.jpg',
-    IMG + 'premium-4-1.jpg',
-    IMG + 'premium-6a-1.jpg',
+    IMG + 'pakistani-9a-2.jpg',
+    IMG + 'pakistani-9b-2.jpg',
+    IMG + 'pakistani-9a-3.jpg',
   ]), []);
   const [active, setActive] = useState(0);
   useEffect(() => {
@@ -3048,10 +3050,12 @@ function AboutPage() {
   return (
     <main>
       <div className="relative h-[50vh] sm:h-[60vh] min-h-[340px] sm:min-h-[400px] overflow-hidden" style={{ backgroundColor: '#1F1A14' }}>
-        {/* Hero image is the highest-resolution source we have on file
-            (premium-10-1.jpg, 1204×1600) — picked because it fills the
-            full-bleed hero without visibly pixelating on a 1440px display. */}
-        <ProductImage src={IMG + 'premium-10-1.jpg'} alt="" sizes="100vw" loading="eager" fetchPriority="high" className="w-full h-full object-cover object-top" />
+        {/* "Slow couture" hero — chose an unstitched flat-lay (no model
+            face, all fabric + textile detail) for the editorial vibe the
+            About page wants. unstitched-12-1.jpg is 1200×1600 which is the
+            highest-resolution source we have, so the 1280w WebP variant
+            renders crisply at full-bleed instead of being upscaled. */}
+        <ProductImage src={IMG + 'unstitched-12-1.jpg'} alt="" sizes="100vw" loading="eager" fetchPriority="high" className="w-full h-full object-cover object-center" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(31,26,20,0.35) 0%, rgba(31,26,20,0.6) 100%)' }} />
         <div className="absolute inset-0 flex items-center justify-center text-center px-5">
           <div className="max-w-2xl" style={{ color: '#F6F0E5' }}>
@@ -3138,18 +3142,18 @@ function ContactPage() {
             <ContactItem icon={Phone} title="Phone" body={<a href="tel:+918368807626" style={{ color: 'inherit', textDecoration: 'none' }}>+91 83688 07626</a>} />
             <ContactItem icon={Mail} title="Email" body="care@labelaarfa.com" />
             <ContactItem icon={null} title="Hours" body={<>Monday – Saturday<br />11:00 AM – 8:00 PM IST</>} />
-          </div>
-          <div className="flex gap-3 pt-2">
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Label Aarfa on Instagram"
-              className="w-11 h-11 flex items-center justify-center transition-colors hover:bg-[#F6F0E5]"
-              style={{ border: '1px solid #E8DDC9', borderRadius: '50%', color: '#1F1A14', backgroundColor: '#FFFFFF' }}
-            >
-              <Instagram className="w-4 h-4" strokeWidth={1.5} />
-            </a>
+            {/* Follow moves INTO the Contact list (rather than floating as
+                an orphan icon row below) so it reads like one of the ways
+                to reach the atelier, not a stranded decoration. */}
+            <ContactItem
+              icon={Instagram}
+              title="Follow"
+              body={(
+                <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" style={{ color: '#7B1E28', textDecoration: 'none', borderBottom: '1px solid currentColor', paddingBottom: '1px' }}>
+                  @labelaarfa on Instagram
+                </a>
+              )}
+            />
           </div>
         </div>
       </div>
@@ -3442,21 +3446,26 @@ function Footer() {
       <div className="max-w-[1440px] mx-auto px-5 sm:px-6 lg:px-10 py-12 sm:py-16 lg:py-20">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-16">
           <div>
-            <div className="font-serif text-xl sm:text-2xl tracking-[0.18em] mb-1" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500 }}>LABEL AARFA</div>
-            <div className="text-[10px] tracking-[0.4em] uppercase font-light mb-5" style={{ color: '#B8924A' }}>Fashion Redefined · Est. 2019</div>
-            <p className="text-sm font-light leading-relaxed mb-6" style={{ color: 'rgba(246, 240, 229, 0.65)' }}>Handcrafted ethnic wear from our Delhi atelier since 2019. Made slowly, made with care.</p>
-            <div className="flex gap-3">
+            {/* Brand wordmark + Instagram inline. The icon used to float in
+                its own row below the paragraph and felt orphaned — sitting
+                right next to LABEL AARFA reads as an integral part of the
+                brand mark instead. */}
+            <div className="flex items-baseline gap-3 mb-1">
+              <div className="font-serif text-xl sm:text-2xl tracking-[0.18em]" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500 }}>LABEL AARFA</div>
               <a
                 href={INSTAGRAM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Label Aarfa on Instagram"
-                className="w-10 h-10 flex items-center justify-center transition-colors hover:bg-white/10"
-                style={{ border: '1px solid rgba(246, 240, 229, 0.2)', borderRadius: '50%' }}
+                title="Follow on Instagram"
+                className="inline-flex items-center justify-center w-7 h-7 transition-opacity opacity-70 hover:opacity-100"
+                style={{ color: '#B8924A', borderRadius: '50%', border: '1px solid rgba(184, 146, 74, 0.4)' }}
               >
-                <Instagram className="w-4 h-4" strokeWidth={1.5} />
+                <Instagram className="w-3.5 h-3.5" strokeWidth={1.4} />
               </a>
             </div>
+            <div className="text-[10px] tracking-[0.4em] uppercase font-light mb-5" style={{ color: '#B8924A' }}>Fashion Redefined · Est. 2019</div>
+            <p className="text-sm font-light leading-relaxed mb-6" style={{ color: 'rgba(246, 240, 229, 0.65)' }}>Handcrafted ethnic wear from our Delhi atelier since 2019. Made slowly, made with care.</p>
           </div>
 
           <FooterCol title="Shop" links={[
