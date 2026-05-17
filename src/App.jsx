@@ -35,10 +35,11 @@ function ProductImage({
   // when callers expect "w-full h-full" / "absolute inset-0" to fill an
   // aspect-ratio parent (Hero, ProductCard). We make <picture> THE rendered
   // box — caller's className + style land on it — and the inner <img> just
-  // fills <picture> at 100%/100%. object-position is parsed out of the
-  // className (e.g. "object-top") since `object-*` only has meaning on
-  // replaced elements (the img), not the picture wrapper.
+  // fills <picture> at 100%/100%. object-position AND object-fit are parsed
+  // out of the className since `object-*` only has meaning on the replaced
+  // element (the img), not the picture wrapper. Default fit is 'cover'.
   const objectPosition = (/\bobject-(top|bottom|left|right|center)\b/.exec(className || '') || [, 'center'])[1];
+  const objectFit      = (/\bobject-(cover|contain|fill|none|scale-down)\b/.exec(className || '') || [, 'cover'])[1];
   return (
     <picture className={className} style={{ display: 'block', ...style }} onClick={onClick}>
       <source type="image/webp" srcSet={srcSet} sizes={sizes} />
@@ -50,7 +51,7 @@ function ProductImage({
         fetchPriority={fetchPriority}
         width={width}
         height={height}
-        style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover', objectPosition }}
+        style={{ width: '100%', height: '100%', display: 'block', objectFit, objectPosition }}
       />
     </picture>
   );
@@ -707,12 +708,14 @@ function Header() {
   const cartCount = cart.reduce((a, b) => a + b.quantity, 0);
 
   const links = [
-    { key: 'category', label: 'Premium', data: 'premium' },
-    { key: 'category', label: 'Coords',  data: 'coords' },
-    { key: 'category', label: 'Pakistani', data: 'pakistani' },
+    { key: 'category', label: 'Premium',    data: 'premium' },
+    { key: 'category', label: 'Coords',     data: 'coords' },
+    // Tab label is "Stitched" (user-chosen). The category page heading
+    // stays "Pakistani Ready-to-Wear" via titles[slug] in CategoryPage.
+    { key: 'category', label: 'Stitched',   data: 'pakistani' },
     { key: 'category', label: 'Unstitched', data: 'unstitched' },
-    { key: 'category', label: 'All',     data: 'all' },
-    { key: 'category', label: 'Sale',    data: 'sale' },
+    { key: 'category', label: 'All',        data: 'all' },
+    { key: 'category', label: 'Sale',       data: 'sale' },
     { key: 'about',    label: 'About' },
     { key: 'contact',  label: 'Contact' },
   ];
@@ -813,7 +816,7 @@ function MobileMenu() {
     { key: 'home', label: 'Home' },
     { key: 'category', label: 'Premium', data: 'premium' },
     { key: 'category', label: 'Co-ord Sets', data: 'coords' },
-    { key: 'category', label: 'Pakistani Ready-to-Wear', data: 'pakistani' },
+    { key: 'category', label: 'Stitched', data: 'pakistani' },
     { key: 'category', label: 'Unstitched Collection', data: 'unstitched' },
     { key: 'category', label: 'All Products', data: 'all' },
     { key: 'category', label: 'Sale', data: 'sale' },
@@ -1339,17 +1342,32 @@ function ClientDiaries() {
         </div>
 
         {/* Celebrity Review — featured editorial card */}
-        <div className="relative overflow-hidden mb-12 sm:mb-16 grid lg:grid-cols-12 items-stretch min-h-[420px] sm:min-h-[500px] lg:min-h-[540px]" style={{ backgroundColor: '#1F1A14', borderRadius: '14px' }}>
-          {/* Image (full width on mobile, 7-col on lg) */}
-          <div className="relative aspect-[4/5] lg:aspect-auto lg:col-span-7 overflow-hidden">
+        <div className="relative overflow-hidden mb-12 sm:mb-16 grid lg:grid-cols-12 items-stretch min-h-[420px] sm:min-h-[500px] lg:min-h-[600px]" style={{ backgroundColor: '#1F1A14', borderRadius: '14px' }}>
+          {/* Image (full width on mobile, 7-col on lg). The source is a tall
+              portrait (≈5:8), but the desktop panel is landscape — so we use
+              an "ambient" technique: a heavily blurred + dimmed copy of the
+              same image fills the panel as a backdrop, and the real image
+              sits on top with object-contain so the whole frame is visible
+              on every screen. Mobile gets a tighter aspect so the figure
+              still fills the viewport. */}
+          <div className="relative lg:col-span-7 overflow-hidden min-h-[460px] sm:min-h-[540px] lg:min-h-[600px]">
+            {/* Blurred ambient backdrop — fills the panel, gives the contained image a soft frame */}
+            <ProductImage
+              src={DIARIES + 'celebrity.jpg'}
+              alt=""
+              sizes="(min-width: 1024px) 58vw, 100vw"
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ filter: 'blur(38px) brightness(0.45) saturate(1.1)', transform: 'scale(1.12)' }}
+            />
+            {/* The real image — contained so nothing crops */}
             <ProductImage
               src={DIARIES + 'celebrity.jpg'}
               alt="Celebrity spotted in Label Aarfa"
               sizes="(min-width: 1024px) 58vw, 100vw"
-              className="absolute inset-0 w-full h-full object-cover object-top"
+              className="absolute inset-0 w-full h-full object-contain object-center"
             />
             {/* Featured ribbon */}
-            <div className="absolute top-4 left-4 sm:top-5 sm:left-5 px-3 py-1.5 text-[10px] tracking-[0.28em] uppercase font-medium shadow-sm" style={{ backgroundColor: '#B8924A', color: '#1F1A14', borderRadius: '4px' }}>
+            <div className="absolute top-4 left-4 sm:top-5 sm:left-5 px-3 py-1.5 text-[10px] tracking-[0.28em] uppercase font-medium shadow-sm" style={{ backgroundColor: '#B8924A', color: '#1F1A14', borderRadius: '4px', zIndex: 2 }}>
               ★ Celebrity Spotted
             </div>
           </div>
@@ -3153,7 +3171,7 @@ function Footer() {
           <FooterCol title="Shop" links={[
             { label: 'Premium Collection', onClick: () => navigate('category', 'premium') },
             { label: 'Co-ord Sets', onClick: () => navigate('category', 'coords') },
-            { label: 'Pakistani Ready-to-Wear', onClick: () => navigate('category', 'pakistani') },
+            { label: 'Stitched', onClick: () => navigate('category', 'pakistani') },
             { label: 'Unstitched Collection', onClick: () => navigate('category', 'unstitched') },
             { label: 'All Products', onClick: () => navigate('category', 'all') },
             { label: 'Sale', onClick: () => navigate('category', 'sale') },
